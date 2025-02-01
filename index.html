@@ -58,7 +58,7 @@
 
 <div class="survey-container">
     <h2>Website Survey</h2>
-    <form id="surveyForm" onsubmit="return validateForm()">
+    <form id="surveyForm">
         <div class="question">
             <label for="q1">1. How satisfied are you with our website?</label>
             <select id="q1" name="q1">
@@ -114,63 +114,49 @@
     </form>
 </div>
 
+<!-- Include EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-    function validateForm() {
-        let isValid = true;
+    // Initialize EmailJS with your User ID
+    (function() {
+        emailjs.init('YOUR_EMAILJS_USER_ID'); // Replace with your EmailJS User ID
+    })();
 
-        // Validate Q1
+    // Function to validate and send the form
+    document.getElementById('surveyForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent form submission
+
+        // Validate form
         const q1 = document.getElementById('q1').value;
-        if (!q1) {
-            document.getElementById('q1-error').textContent = 'Please select an option.';
-            isValid = false;
-        } else {
-            document.getElementById('q1-error').textContent = '';
-        }
-
-        // Validate Q2
         const q2 = document.getElementById('q2').value;
-        if (!q2) {
-            document.getElementById('q2-error').textContent = 'Please select an option.';
-            isValid = false;
-        } else {
-            document.getElementById('q2-error').textContent = '';
-        }
-
-        // Validate Q3
         const q3 = document.getElementById('q3').value;
-        if (!q3) {
-            document.getElementById('q3-error').textContent = 'Please select an option.';
-            isValid = false;
-        } else {
-            document.getElementById('q3-error').textContent = '';
-        }
-
-        // Validate Q4
         const q4 = document.getElementById('q4').value.trim();
-        if (!q4) {
-            document.getElementById('q4-error').textContent = 'Please provide an answer.';
-            isValid = false;
-        } else {
-            document.getElementById('q4-error').textContent = '';
-        }
-
-        // Validate Q5
         const q5 = document.getElementById('q5').value.trim();
-        if (!q5) {
-            document.getElementById('q5-error').textContent = 'Please provide an answer.';
-            isValid = false;
-        } else {
-            document.getElementById('q5-error').textContent = '';
+
+        if (!q1 || !q2 || !q3 || !q4 || !q5) {
+            alert('Please answer all questions before submitting.');
+            return;
         }
 
-        if (isValid) {
-            alert('Thank you for completing the survey!');
-            // Here you can add code to submit the form data to a server
-            // document.getElementById('surveyForm').submit();
-        }
+        // Prepare email parameters
+        const templateParams = {
+            q1: q1,
+            q2: q2,
+            q3: q3,
+            q4: q4,
+            q5: q5
+        };
 
-        return isValid;
-    }
+        // Send email using EmailJS
+        emailjs.send('YOUR_EMAILJS_SERVICE_ID', 'YOUR_EMAILJS_TEMPLATE_ID', templateParams)
+            .then(function(response) {
+                alert('Thank you for completing the survey! Your responses have been sent.');
+                document.getElementById('surveyForm').reset(); // Clear the form
+            }, function(error) {
+                alert('Failed to send the survey. Please try again later.');
+                console.error('EmailJS Error:', error);
+            });
+    });
 </script>
 
 </body>
