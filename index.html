@@ -1,31 +1,179 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-<script>
-$(document).ready(function(){
-  $("button").click(function(){
-    $("p").hide();
-  });
-});
-</script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Survey</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        .survey-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background-color: #f9f9f9;
+        }
+        .question {
+            margin-bottom: 20px;
+        }
+        .question label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .question input[type="text"], .question select, .question textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .question textarea {
+            resize: vertical;
+            height: 100px;
+        }
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
 
-<h2>This is a heading</h2>
+<div class="survey-container">
+    <h2>Website Survey</h2>
+    <form id="surveyForm" onsubmit="return validateForm()">
+        <div class="question">
+            <label for="q1">1. How satisfied are you with our website?</label>
+            <select id="q1" name="q1">
+                <option value="">Select an option</option>
+                <option value="very-satisfied">Very Satisfied</option>
+                <option value="satisfied">Satisfied</option>
+                <option value="neutral">Neutral</option>
+                <option value="dissatisfied">Dissatisfied</option>
+                <option value="very-dissatisfied">Very Dissatisfied</option>
+            </select>
+            <div id="q1-error" class="error"></div>
+        </div>
 
-<p>This is a paragraph.</p>
-<p>This is another paragraph.</p>
+        <div class="question">
+            <label for="q2">2. How easy was it to navigate our website?</label>
+            <select id="q2" name="q2">
+                <option value="">Select an option</option>
+                <option value="very-easy">Very Easy</option>
+                <option value="easy">Easy</option>
+                <option value="neutral">Neutral</option>
+                <option value="difficult">Difficult</option>
+                <option value="very-difficult">Very Difficult</option>
+            </select>
+            <div id="q2-error" class="error"></div>
+        </div>
 
-<button>Click me</button>
+        <div class="question">
+            <label for="q3">3. How likely are you to recommend our website to others?</label>
+            <select id="q3" name="q3">
+                <option value="">Select an option</option>
+                <option value="very-likely">Very Likely</option>
+                <option value="likely">Likely</option>
+                <option value="neutral">Neutral</option>
+                <option value="unlikely">Unlikely</option>
+                <option value="very-unlikely">Very Unlikely</option>
+            </select>
+            <div id="q3-error" class="error"></div>
+        </div>
 
-</body>
-</html>
+        <div class="question">
+            <label for="q4">4. What features do you like the most on our website?</label>
+            <textarea id="q4" name="q4"></textarea>
+            <div id="q4-error" class="error"></div>
+        </div>
 
-<p>This is a paragraph.</p>
-<p>This is another paragraph.</p>
+        <div class="question">
+            <label for="q5">5. What improvements would you suggest for our website?</label>
+            <textarea id="q5" name="q5"></textarea>
+            <div id="q5-error" class="error"></div>
+        </div>
 
-<button>Click me</button>
+        <button type="submit" class="submit-btn">Submit Survey</button>
+    </form>
+</div>
+
+<script>
+    function validateForm() {
+        let isValid = true;
+
+        // Validate Q1
+        const q1 = document.getElementById('q1').value;
+        if (!q1) {
+            document.getElementById('q1-error').textContent = 'Please select an option.';
+            isValid = false;
+        } else {
+            document.getElementById('q1-error').textContent = '';
+        }
+
+        // Validate Q2
+        const q2 = document.getElementById('q2').value;
+        if (!q2) {
+            document.getElementById('q2-error').textContent = 'Please select an option.';
+            isValid = false;
+        } else {
+            document.getElementById('q2-error').textContent = '';
+        }
+
+        // Validate Q3
+        const q3 = document.getElementById('q3').value;
+        if (!q3) {
+            document.getElementById('q3-error').textContent = 'Please select an option.';
+            isValid = false;
+        } else {
+            document.getElementById('q3-error').textContent = '';
+        }
+
+        // Validate Q4
+        const q4 = document.getElementById('q4').value.trim();
+        if (!q4) {
+            document.getElementById('q4-error').textContent = 'Please provide an answer.';
+            isValid = false;
+        } else {
+            document.getElementById('q4-error').textContent = '';
+        }
+
+        // Validate Q5
+        const q5 = document.getElementById('q5').value.trim();
+        if (!q5) {
+            document.getElementById('q5-error').textContent = 'Please provide an answer.';
+            isValid = false;
+        } else {
+            document.getElementById('q5-error').textContent = '';
+        }
+
+        if (isValid) {
+            alert('Thank you for completing the survey!');
+            // Here you can add code to submit the form data to a server
+            // document.getElementById('surveyForm').submit();
+        }
+
+        return isValid;
+    }
+</script>
 
 </body>
 </html>
