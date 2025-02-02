@@ -64,7 +64,7 @@
 
         // Load shrimp image
         const birdImage = new Image();
-        birdImage.src = 'shrimp.png'; // Replace 'shrimp.png' with your shrimp image file
+        birdImage.src = 'NFT_Shrimp_float (1).png'; // Replace 'shrimp.png' with your shrimp image file
 
         // Initialize game
         function init() {
