@@ -64,7 +64,7 @@
 
         // Load shrimp image
         const birdImage = new Image();
-        birdImage.src = 'NFT_Shrimp_float (1).png'; // Replace 'shrimp.png' with your shrimp image file
+        birdImage.src = 'https://github.com/Bamboobies/kelcie/blob/9d5e4d2741da11e1d0aa376929e35cfa57edb028/NFT_Shrimp_float%20(1).png'; // Replace 'shrimp.png' with your shrimp image file
 
         // Initialize game
         function init() {
