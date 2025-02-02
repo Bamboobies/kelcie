@@ -1,11 +1,11 @@
 // === GAME SETTINGS ===
-const GRAVITY = 1000;
+const GRAVITY = 900;
 const FLAP_STRENGTH = -300;
 const PIPE_SPEED = -200;
-const PIPE_GAP = 100;
+const PIPE_GAP = 175;
 const PIPE_WIDTH = 80;
 const PIPE_CAP_HEIGHT = 20;
-const PIPE_SPAWN_DELAY = 800;
+const PIPE_SPAWN_DELAY = 1400;
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let startText, gameOverText, restartText;
