@@ -1,199 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flappy Shrimp</title>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
-        #startScreen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            color: white;
-            z-index: 10;
-        }
-        #startButton {
-            padding: 10px 20px;
-            font-size: 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        #startButton:hover {
-            background-color: #45a049;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Flappy Bird Clone</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; overflow: hidden; background: black; }
+    canvas { display: block; }
+  </style>
 </head>
 <body>
-    <!-- Start Screen -->
-    <div id="startScreen">
-        <h1>Flappy Shrimp</h1>
-        <button id="startButton">Start Game</button>
-        <p>Tap or press Space to flap!</p>
-    </div>
 
-    <!-- Phaser Game Container -->
-    <div id="gameContainer"></div>
+<script>
+  // === GAME SETTINGS ===
+  const GRAVITY = 800
+  const FLAP_STRENGTH = -300
+  const PIPE_SPEED = -200
+  const PIPE_GAP = 250
+  const PIPE_WIDTH = 80
+  const PIPE_CAP_HEIGHT = 20
+  const PIPE_SPAWN_DELAY = 2000
 
-    <!-- Include Phaser from CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+  let game, bird, pipes, scoreZones, scoreText, highScoreText
+  let startText, gameOverText, restartText
+  let score = 0, highScore = 0, gameStarted = false, gameOver = false
 
-    <script>
-        // Game variables
-        let bird, pipes, scoreText, gameOver, score, startScreen;
+  window.onload = () => {
+    game = new Phaser.Game({
+      type: Phaser.AUTO,
+      scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
+      physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
+      scene: { preload, create, update }
+    })
+  }
 
-        // Phaser game configuration
-        const config = {
-            type: Phaser.AUTO,
-            width: 400,
-            height: 600,
-            parent: 'gameContainer',
-            physics: {
-                default: 'arcade',
-                arcade: {
-                    gravity: { y: 500 },
-                    debug: false
-                }
-            },
-            scene: {
-                preload: preload,
-                create: create,
-                update: update
-            }
-        };
+  function preload() {}
 
-        // Initialize Phaser game
-        const game = new Phaser.Game(config);
+  function create() {
+    const scene = this
+    const gameWidth = game.scale.width
+    const gameHeight = game.scale.height
 
-        // Preload assets
-        function preload() {
-            this.load.image('background', 'https://i.imgur.com/3e5z5Qz.png'); // Replace with your background image
-            this.load.image('shrimp', 'shrimp.png'); // Replace with your shrimp image
-            this.load.image('pipe', 'https://i.imgur.com/1Q7Q7Q7.png'); // Replace with your pipe image
-        }
+    // Background color
+    scene.cameras.main.setBackgroundColor('#70c5ce')
 
-        // Create game objects
-        function create() {
-            // Add background
-            this.add.image(200, 300, 'background');
+    // Bird (Yellow Rectangle)
+    bird = this.add.rectangle(gameWidth * 0.2, gameHeight / 2, 40, 30, 0xffff00)
+    this.physics.add.existing(bird)
+    bird.body.setCollideWorldBounds(true)
+    bird.body.allowGravity = false
 
-            // Add shrimp
-            bird = this.physics.add.sprite(100, 300, 'shrimp');
-            bird.setCollideWorldBounds(true);
+    // Pipes Group
+    pipes = this.physics.add.group()
 
-            // Add pipes group
-            pipes = this.physics.add.group();
+    // Score Zones Group
+    scoreZones = this.physics.add.group()
 
-            // Add score text
-            scoreText = this.add.text(20, 20, 'Score: 0', { fontSize: '24px', fill: '#fff' });
+    // UI Text
+    const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '16px', fill: '#fff' }
 
-            // Start screen
-            startScreen = document.getElementById('startScreen');
-            startScreen.style.display = 'block';
+    startText = this.add.text(gameWidth / 2, gameHeight / 2, 'TAP TO START', textStyle).setOrigin(0.5)
+    gameOverText = this.add.text(gameWidth / 2, gameHeight / 2, '', textStyle).setOrigin(0.5)
+    restartText = this.add.text(gameWidth / 2, gameHeight / 2 + 50, '', textStyle).setOrigin(0.5)
 
-            // Start game button
-            document.getElementById('startButton').addEventListener('click', () => {
-                startScreen.style.display = 'none';
-                startGame();
-            });
+    scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle)
+    highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle)
 
-            // Touch controls
-            this.input.on('pointerdown', flap);
+    // Input to Start / Restart
+    this.input.on('pointerdown', () => {
+      if (!gameStarted) startGame.call(scene)
+      else if (gameOver) restartGame.call(scene)
+      else flap()
+    })
 
-            // Keyboard controls
-            this.input.keyboard.on('keydown-SPACE', flap);
-        }
+    // Collision Detection (with pipe bodies and caps)
+    this.physics.add.collider(bird, pipes, hitPipe, null, this)
 
-        // Update game logic
-        function update() {
-            if (gameOver) return;
+    // Load High Score
+    highScore = localStorage.getItem('flappyHighScore') || 0
+    highScoreText.setText('HIGH SCORE: ' + highScore)
+  }
 
-            // Check for collisions with pipes
-            this.physics.overlap(bird, pipes, () => {
-                gameOver = true;
-                this.physics.pause();
-                this.add.text(100, 300, 'Game Over!', { fontSize: '40px', fill: '#ff0000' });
-            });
+  function update() {
+    if (gameOver) return
+    bird.angle = bird.body.velocity.y > 0 ? 20 : -20
+    checkScore()
+  }
 
-            // Move pipes
-            pipes.children.iterate((pipe) => {
-                pipe.setVelocityX(-200);
+  function startGame() {
+    gameStarted = true
+    bird.body.allowGravity = true
+    startText.setText('')
+    this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this })
+  }
 
-                // Increase score when shrimp passes a pipe
-                if (pipe.x < bird.x && !pipe.passed) {
-                    pipe.passed = true;
-                    score++;
-                    scoreText.setText(`Score: ${score}`);
+  function flap() {
+    bird.body.setVelocityY(FLAP_STRENGTH)
+  }
 
-                    // Redirect if score is 10 or more
-                    if (score >= 10) {
-                        gameOver = true;
-                        this.physics.pause();
-                        this.add.text(50, 250, 'Congratulations!', { fontSize: '40px', fill: '#00ff00' });
-                        this.add.text(80, 300, 'Redirecting...', { fontSize: '30px', fill: '#00ff00' });
+  function addPipes() {
+    if (gameOver) return
 
-                        // Redirect to kelcie.net/valentines after 3 seconds
-                        setTimeout(() => {
-                            window.location.href = 'https://kelcie.net/valentines';
-                        }, 3000);
-                    }
-                }
+    const gameHeight = game.scale.height
+    let gapY = Phaser.Math.Between(100, gameHeight - PIPE_GAP - 100)
 
-                // Remove off-screen pipes
-                if (pipe.x < -50) {
-                    pipes.remove(pipe, true, true);
-                }
-            });
-        }
+    // Pipe Shafts (Green)
+    let pipeTopBody = this.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1)
+    let pipeBottomBody = this.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0)
 
-        // Start the game
-        function startGame() {
-            gameOver = false;
-            score = 0;
-            scoreText.setText('Score: 0');
-            bird.setVelocity(0, 0);
-            bird.y = 300;
+    // Pipe Caps (Darker Green) - Centered
+    let pipeTopCap = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1)
+    let pipeBottomCap = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0)
 
-            // Spawn pipes
-            this.time.addEvent({
-                delay: 1500,
-                callback: spawnPipe,
-                callbackScope: this,
-                loop: true
-            });
-        }
+    // Score Zone (Invisible Rectangle)
+    let scoreZone = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5)
 
-        // Spawn a pipe
-        function spawnPipe() {
-            const gap = 150;
-            const pipeHeight = Phaser.Math.Between(100, 400);
-            const upperPipe = pipes.create(400, pipeHeight - gap, 'pipe');
-            const lowerPipe = pipes.create(400, pipeHeight + gap, 'pipe');
-            upperPipe.setVelocityX(-200);
-            lowerPipe.setVelocityX(-200);
-            upperPipe.passed = false;
-            lowerPipe.passed = false;
-        }
+    // Add physics
+    this.physics.add.existing(pipeTopBody)
+    this.physics.add.existing(pipeBottomBody)
+    this.physics.add.existing(pipeTopCap)
+    this.physics.add.existing(pipeBottomCap)
+    this.physics.add.existing(scoreZone)
 
-        // Make the shrimp flap
-        function flap() {
-            if (!gameOver) {
-                bird.setVelocityY(-300);
-            }
-            if (gameOver) {
-                startGame();
-            }
-        }
-    </script>
+    // Make pipes immovable (so the bird can't move them)
+    pipeTopBody.body.immovable = true
+    pipeBottomBody.body.immovable = true
+    pipeTopCap.body.immovable = true
+    pipeBottomCap.body.immovable = true
+
+    // Add to groups
+    pipes.add(pipeTopBody)
+    pipes.add(pipeBottomBody)
+    pipes.add(pipeTopCap)
+    pipes.add(pipeBottomCap)
+    scoreZones.add(scoreZone)
+
+    // Move pipes and score zones
+    let allPipes = [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone]
+    allPipes.forEach(pipe => {
+      pipe.body.setVelocityX(PIPE_SPEED)
+      pipe.body.allowGravity = false
+      pipe.body.checkWorldBounds = true
+      pipe.body.outOfBoundsKill = true
+    })
+
+    // Score Zone Settings
+    scoreZone.passed = false
+  }
+
+  function checkScore() {
+    scoreZones.getChildren().forEach(scoreZone => {
+      if (!scoreZone.passed && scoreZone.x < bird.x) {
+        scoreZone.passed = true
+        score++
+        scoreText.setText('SCORE: ' + score)
+      }
+    })
+  }
+
+  function hitPipe() {
+    if (gameOver) return
+
+    gameOver = true
+    bird.fillColor = 0xff0000
+    this.physics.pause()
+
+    // Show Game Over Text
+    gameOverText.setText('GAME OVER')
+    restartText.setText('TAP TO RESTART')
+
+    // Save High Score
+    if (score > highScore) {
+      highScore = score
+      localStorage.setItem('flappyHighScore', highScore)
+      highScoreText.setText('HIGH SCORE: ' + highScore)
+    }
+  }
+
+  function restartGame() {
+    gameOver = false
+    score = 0
+    scoreText.setText('SCORE: 0')
+    bird.fillColor = 0xffff00
+    bird.setPosition(game.scale.width * 0.2, game.scale.height / 2)
+    bird.body.setVelocity(0, 0)
+    pipes.clear(true, true)
+    scoreZones.clear(true, true)
+    this.physics.resume()
+    gameOverText.setText('')
+    restartText.setText('')
+  }
+</script>
+
 </body>
 </html>
