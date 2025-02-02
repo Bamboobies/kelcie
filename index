@@ -9,13 +9,7 @@
             margin: 0;
             padding: 0;
             overflow: hidden;
-            background-color: #70c5ce;
             font-family: Arial, sans-serif;
-        }
-        canvas {
-            display: block;
-            margin: 0 auto;
-            background-color: #70c5ce;
         }
         #startScreen {
             position: absolute;
@@ -24,6 +18,7 @@
             transform: translate(-50%, -50%);
             text-align: center;
             color: white;
+            z-index: 10;
         }
         #startButton {
             padding: 10px 20px;
@@ -40,8 +35,6 @@
     </style>
 </head>
 <body>
-    <canvas id="gameCanvas" width="400" height="600"></canvas>
-
     <!-- Start Screen -->
     <div id="startScreen">
         <h1>Flappy Shrimp</h1>
@@ -49,98 +42,105 @@
         <p>Tap or press Space to flap!</p>
     </div>
 
+    <!-- Phaser Game Container -->
+    <div id="gameContainer"></div>
+
+    <!-- Include Phaser from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const startScreen = document.getElementById('startScreen');
-
         // Game variables
-        let bird, pipes, gameOver, score, gameStarted;
-        const gravity = 0.5;
-        const jumpStrength = -8;
-        const pipeGap = 150;
-        const pipeWidth = 50;
-        const pipeSpeed = 2;
+        let bird, pipes, scoreText, gameOver, score, startScreen;
 
-        // Load shrimp image
-        const birdImage = new Image();
-        birdImage.src = 'https://github.com/Bamboobies/kelcie/blob/9d5e4d2741da11e1d0aa376929e35cfa57edb028/NFT_Shrimp_float%20(1).png'; // Replace 'shrimp.png' with your shrimp image file
-
-        // Initialize game
-        function init() {
-            bird = {
-                x: 50,
-                y: canvas.height / 2,
-                width: 40,
-                height: 30,
-                velocity: 0
-            };
-            pipes = [];
-            gameOver = false;
-            gameStarted = false;
-            score = 0;
-            spawnPipe();
-        }
-
-        // Draw the shrimp
-        function drawBird() {
-            ctx.drawImage(birdImage, bird.x, bird.y, bird.width, bird.height);
-        }
-
-        // Draw pipes
-        function drawPipes() {
-            ctx.fillStyle = 'green';
-            pipes.forEach(pipe => {
-                ctx.fillRect(pipe.x, 0, pipeWidth, pipe.topHeight);
-                ctx.fillRect(pipe.x, canvas.height - pipe.bottomHeight, pipeWidth, pipe.bottomHeight);
-            });
-        }
-
-        // Spawn a new pipe
-        function spawnPipe() {
-            const topHeight = Math.random() * (canvas.height - pipeGap - 100) + 50;
-            const bottomHeight = canvas.height - topHeight - pipeGap;
-            pipes.push({
-                x: canvas.width,
-                topHeight: topHeight,
-                bottomHeight: bottomHeight,
-                passed: false
-            });
-        }
-
-        // Update game state
-        function update() {
-            if (gameOver || !gameStarted) return;
-
-            // Update shrimp
-            bird.velocity += gravity;
-            bird.y += bird.velocity;
-
-            // Update pipes
-            for (let i = pipes.length - 1; i >= 0; i--) {
-                pipes[i].x -= pipeSpeed;
-
-                // Check for collisions
-                if (
-                    bird.x < pipes[i].x + pipeWidth &&
-                    bird.x + bird.width > pipes[i].x &&
-                    (bird.y < pipes[i].topHeight || bird.y + bird.height > canvas.height - pipes[i].bottomHeight)
-                ) {
-                    gameOver = true;
+        // Phaser game configuration
+        const config = {
+            type: Phaser.AUTO,
+            width: 400,
+            height: 600,
+            parent: 'gameContainer',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 500 },
+                    debug: false
                 }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
 
-                // Increase score if pipe is passed
-                if (!pipes[i].passed && bird.x > pipes[i].x + pipeWidth) {
-                    pipes[i].passed = true;
+        // Initialize Phaser game
+        const game = new Phaser.Game(config);
+
+        // Preload assets
+        function preload() {
+            this.load.image('background', 'https://i.imgur.com/3e5z5Qz.png'); // Replace with your background image
+            this.load.image('shrimp', 'shrimp.png'); // Replace with your shrimp image
+            this.load.image('pipe', 'https://i.imgur.com/1Q7Q7Q7.png'); // Replace with your pipe image
+        }
+
+        // Create game objects
+        function create() {
+            // Add background
+            this.add.image(200, 300, 'background');
+
+            // Add shrimp
+            bird = this.physics.add.sprite(100, 300, 'shrimp');
+            bird.setCollideWorldBounds(true);
+
+            // Add pipes group
+            pipes = this.physics.add.group();
+
+            // Add score text
+            scoreText = this.add.text(20, 20, 'Score: 0', { fontSize: '24px', fill: '#fff' });
+
+            // Start screen
+            startScreen = document.getElementById('startScreen');
+            startScreen.style.display = 'block';
+
+            // Start game button
+            document.getElementById('startButton').addEventListener('click', () => {
+                startScreen.style.display = 'none';
+                startGame();
+            });
+
+            // Touch controls
+            this.input.on('pointerdown', flap);
+
+            // Keyboard controls
+            this.input.keyboard.on('keydown-SPACE', flap);
+        }
+
+        // Update game logic
+        function update() {
+            if (gameOver) return;
+
+            // Check for collisions with pipes
+            this.physics.overlap(bird, pipes, () => {
+                gameOver = true;
+                this.physics.pause();
+                this.add.text(100, 300, 'Game Over!', { fontSize: '40px', fill: '#ff0000' });
+            });
+
+            // Move pipes
+            pipes.children.iterate((pipe) => {
+                pipe.setVelocityX(-200);
+
+                // Increase score when shrimp passes a pipe
+                if (pipe.x < bird.x && !pipe.passed) {
+                    pipe.passed = true;
                     score++;
+                    scoreText.setText(`Score: ${score}`);
 
-                    // Check if score is 10 or more
+                    // Redirect if score is 10 or more
                     if (score >= 10) {
                         gameOver = true;
-                        ctx.fillStyle = 'white';
-                        ctx.font = '40px Arial';
-                        ctx.fillText('Congratulations!', canvas.width / 2 - 120, canvas.height / 2 - 20);
-                        ctx.fillText('Redirecting...', canvas.width / 2 - 100, canvas.height / 2 + 20);
+                        this.physics.pause();
+                        this.add.text(50, 250, 'Congratulations!', { fontSize: '40px', fill: '#00ff00' });
+                        this.add.text(80, 300, 'Redirecting...', { fontSize: '30px', fill: '#00ff00' });
 
                         // Redirect to kelcie.net/valentines after 3 seconds
                         setTimeout(() => {
@@ -150,86 +150,50 @@
                 }
 
                 // Remove off-screen pipes
-                if (pipes[i].x + pipeWidth < 0) {
-                    pipes.splice(i, 1);
+                if (pipe.x < -50) {
+                    pipes.remove(pipe, true, true);
                 }
-            }
-
-            // Spawn new pipes
-            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 200) {
-                spawnPipe();
-            }
-
-            // Check for shrimp out of bounds
-            if (bird.y + bird.height > canvas.height || bird.y < 0) {
-                gameOver = true;
-            }
+            });
         }
 
-        // Draw the game
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Start the game
+        function startGame() {
+            gameOver = false;
+            score = 0;
+            scoreText.setText('Score: 0');
+            bird.setVelocity(0, 0);
+            bird.y = 300;
 
-            // Draw shrimp
-            drawBird();
-
-            // Draw pipes
-            drawPipes();
-
-            // Draw score
-            ctx.fillStyle = 'white';
-            ctx.font = '24px Arial';
-            ctx.fillText(`Score: ${score}`, 10, 30);
-
-            // Draw game over message
-            if (gameOver && score < 10) {
-                ctx.fillStyle = 'red';
-                ctx.font = '40px Arial';
-                ctx.fillText('Game Over!', canvas.width / 2 - 100, canvas.height / 2);
-            }
+            // Spawn pipes
+            this.time.addEvent({
+                delay: 1500,
+                callback: spawnPipe,
+                callbackScope: this,
+                loop: true
+            });
         }
 
-        // Game loop
-        function gameLoop() {
-            update();
-            draw();
-            if (!gameOver && gameStarted) requestAnimationFrame(gameLoop);
+        // Spawn a pipe
+        function spawnPipe() {
+            const gap = 150;
+            const pipeHeight = Phaser.Math.Between(100, 400);
+            const upperPipe = pipes.create(400, pipeHeight - gap, 'pipe');
+            const lowerPipe = pipes.create(400, pipeHeight + gap, 'pipe');
+            upperPipe.setVelocityX(-200);
+            lowerPipe.setVelocityX(-200);
+            upperPipe.passed = false;
+            lowerPipe.passed = false;
         }
 
-        // Handle user input
+        // Make the shrimp flap
         function flap() {
-            if (!gameOver && gameStarted) {
-                bird.velocity = jumpStrength;
+            if (!gameOver) {
+                bird.setVelocityY(-300);
             }
-            if (gameOver && score < 10) {
-                init();
-                gameStarted = true;
-                startScreen.style.display = 'none';
+            if (gameOver) {
+                startGame();
             }
         }
-
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space') {
-                flap();
-            }
-        });
-
-        // Touch controls
-        canvas.addEventListener('touchstart', () => {
-            flap();
-        });
-
-        // Start game button
-        document.getElementById('startButton').addEventListener('click', () => {
-            init();
-            gameStarted = true;
-            startScreen.style.display = 'none';
-            gameLoop();
-        });
-
-        // Initialize the game
-        init();
     </script>
 </body>
 </html>
