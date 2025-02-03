@@ -1,11 +1,11 @@
 // === GAME SETTINGS ===
-const GRAVITY = 800;
+const GRAVITY = 900;
 const FLAP_STRENGTH = -300;
 const PIPE_SPEED = -200;
-const PIPE_GAP = 250;
+const PIPE_GAP = 175;
 const PIPE_WIDTH = 80;
 const PIPE_CAP_HEIGHT = 20;
-const PIPE_SPAWN_DELAY = 2000;
+const PIPE_SPAWN_DELAY = 1400;
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let startText, gameOverText, restartText;
@@ -34,7 +34,7 @@ function create() {
   scene.cameras.main.setBackgroundColor('#70c5ce');
 
   // Bird (Image)
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.15);
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.11);
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
 
