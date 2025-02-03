@@ -16,6 +16,15 @@ window.onload = () => {
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
+    plugins: {
+      scene: [
+        {
+          key: 'PixelPerfectCollision',
+          plugin: PhaserPluginPixelPerfect, // Use the plugin
+          mapping: 'pixelPerfect' // Map it to `this.pixelPerfect`
+        }
+      ]
+    },
     scene: { preload, create, update }
   });
 };
@@ -35,9 +44,8 @@ function create() {
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
 
-  // Create a BitmapMask for the bird
-  const birdMask = this.make.sprite({ key: 'bird', add: false }).setScale(0.09);
-  bird.mask = new Phaser.Display.Masks.BitmapMask(this, birdMask);
+  // Enable pixel-perfect collision for the bird
+  this.pixelPerfect.enable(bird);
 
   pipes = this.physics.add.group();
   scoreZones = this.physics.add.group();
@@ -62,7 +70,7 @@ function create() {
     if (gameOver) return;
 
     pipes.getChildren().forEach(pipe => {
-      if (this.physics.overlap(bird, pipe)) {
+      if (this.pixelPerfect.check(bird, pipe)) { // Use pixel-perfect collision
         hitPipe.call(this);
       }
     });
