@@ -16,15 +16,6 @@ window.onload = () => {
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
-    plugins: {
-      scene: [
-        {
-          key: 'PixelPerfectCollision',
-          plugin: PhaserPluginPixelPerfect, // Use the plugin
-          mapping: 'pixelPerfect' // Map it to `this.pixelPerfect`
-        }
-      ]
-    },
     scene: { preload, create, update }
   });
 };
@@ -44,8 +35,9 @@ function create() {
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
 
-  // Enable pixel-perfect collision for the bird
-  this.pixelPerfect.enable(bird);
+  // Create a BitmapMask for the bird
+  const birdMask = this.make.sprite({ key: 'bird', add: false }).setScale(0.09);
+  bird.mask = new Phaser.Display.Masks.BitmapMask(this, birdMask);
 
   pipes = this.physics.add.group();
   scoreZones = this.physics.add.group();
@@ -70,7 +62,7 @@ function create() {
     if (gameOver) return;
 
     pipes.getChildren().forEach(pipe => {
-      if (this.pixelPerfect.check(bird, pipe)) { // Use pixel-perfect collision
+      if (checkPixelCollision(bird, pipe)) {
         hitPipe.call(this);
       }
     });
@@ -185,4 +177,31 @@ function restartGame() {
   this.physics.resume();
   gameOverText.setText('');
   restartText.setText('');
+}
+
+function checkPixelCollision(sprite1, sprite2) {
+  const ctx = game.context; // Use a temporary canvas context for pixel checks
+
+  // Draw sprite1 onto the canvas
+  ctx.clearRect(0, 0, game.scale.width, game.scale.height);
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.drawImage(sprite1.texture.getSourceImage(), sprite1.x - sprite1.width / 2, sprite1.y - sprite1.height / 2, sprite1.width, sprite1.height);
+  ctx.restore();
+
+  // Draw sprite2 onto the canvas
+  ctx.save();
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.drawImage(sprite2.texture.getSourceImage(), sprite2.x - sprite2.width / 2, sprite2.y - sprite2.height / 2, sprite2.width, sprite2.height);
+  ctx.restore();
+
+  // Check for overlapping non-transparent pixels
+  const imageData = ctx.getImageData(0, 0, game.scale.width, game.scale.height);
+  for (let i = 0; i < imageData.data.length; i += 4) {
+    if (imageData.data[i + 3] > 0) { // Check alpha channel
+      return true; // Collision detected
+    }
+  }
+
+  return false; // No collision
 }
