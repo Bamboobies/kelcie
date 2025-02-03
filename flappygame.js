@@ -31,7 +31,6 @@ window.onload = () => {
 
 function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
-  this.load.image('pipe', 'assets/pipe.png'); // Load pipe image for pixel-perfect collision
 }
 
 function create() {
@@ -113,35 +112,39 @@ function addPipes() {
   const gameHeight = game.scale.height;
   let gapY = Phaser.Math.Between(100, gameHeight - PIPE_GAP - 100);
 
-  // Create pipes using an image for pixel-perfect collision
-  let pipeTop = this.add.sprite(game.scale.width, gapY - PIPE_CAP_HEIGHT, 'pipe').setOrigin(0, 1);
-  let pipeBottom = this.add.sprite(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipe').setOrigin(0, 0);
+  let pipeTopBody = this.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1);
+  let pipeBottomBody = this.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0);
 
-  this.physics.add.existing(pipeTop);
-  this.physics.add.existing(pipeBottom);
+  let pipeTopCap = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1);
+  let pipeBottomCap = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0);
 
-  pipeTop.body.setVelocityX(PIPE_SPEED);
-  pipeBottom.body.setVelocityX(PIPE_SPEED);
-
-  pipeTop.body.immovable = true;
-  pipeBottom.body.immovable = true;
-
-  pipes.add(pipeTop);
-  pipes.add(pipeBottom);
-
-  // Enable pixel-perfect collision for pipes
-  this.pixelPerfect.enable(pipeTop);
-  this.pixelPerfect.enable(pipeBottom);
-
-  // Add score zone
   let scoreZone = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5);
-  this.physics.add.existing(scoreZone);
-  scoreZone.body.setVelocityX(PIPE_SPEED);
-  scoreZone.body.allowGravity = false;
-  scoreZone.body.checkWorldBounds = true;
-  scoreZone.body.outOfBoundsKill = true;
 
+  this.physics.add.existing(pipeTopBody);
+  this.physics.add.existing(pipeBottomBody);
+  this.physics.add.existing(pipeTopCap);
+  this.physics.add.existing(pipeBottomCap);
+  this.physics.add.existing(scoreZone);
+
+  pipeTopBody.body.immovable = true;
+  pipeBottomBody.body.immovable = true;
+  pipeTopCap.body.immovable = true;
+  pipeBottomCap.body.immovable = true;
+
+  pipes.add(pipeTopBody);
+  pipes.add(pipeBottomBody);
+  pipes.add(pipeTopCap);
+  pipes.add(pipeBottomCap);
   scoreZones.add(scoreZone);
+
+  let allPipes = [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone];
+  allPipes.forEach(pipe => {
+    pipe.body.setVelocityX(PIPE_SPEED);
+    pipe.body.allowGravity = false;
+    pipe.body.checkWorldBounds = true;
+    pipe.body.outOfBoundsKill = true;
+  });
+
   scoreZone.passed = false;
 }
 
