@@ -1,7 +1,7 @@
 // === GAME SETTINGS ===
-const GRAVITY = 900
-const FLAP_STRENGTH = -300
-const PIPE_SPEED = -200
+const GRAVITY = 0.5
+const FLAP_STRENGTH = -7
+const PIPE_SPEED = -3
 const PIPE_GAP = 175
 const PIPE_WIDTH = 80
 const PIPE_CAP_HEIGHT = 20
@@ -10,15 +10,14 @@ const PIPE_SPAWN_DELAY = 1400
 let game, bird, pipes, scoreZones, scoreText, highScoreText
 let titleText, startText, gameOverText, restartText
 let score = 0, highScore = 0, gameStarted = false, gameOver = false
-let birdMaskCanvas, birdMaskContext, birdImage
 
 window.onload = () => {
   game = new Phaser.Game({
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { 
-      default: 'arcade', // ✅ Using Arcade physics (simpler for this method)
-      arcade: { gravity: { y: GRAVITY }, debug: false } 
+      default: 'matter',  // ✅ Switch to Matter.js for better collision
+      matter: { debug: false }
     },
     scene: { preload, create, update }
   })
@@ -35,13 +34,25 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce')
 
-  // ✅ Load Bird with Default Hitbox (Pixel-Perfect Collision Done Separately)
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.11)
-  bird.body.setCollideWorldBounds(true)
-  bird.body.allowGravity = false
+  // ✅ Load Bird with a Pixel-Perfect Polygon Hitbox
+  bird = this.matter.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird', null, {
+    shape: {
+      type: 'fromVerts',
+      verts: [
+        { x: 10, y: 5 }, { x: 20, y: 0 }, { x: 30, y: 5 },
+        { x: 35, y: 15 }, { x: 30, y: 30 }, { x: 20, y: 35 },
+        { x: 10, y: 30 }, { x: 5, y: 15 }
+      ],
+      flagInternal: true
+    }
+  })
 
-  pipes = this.physics.add.group()
-  scoreZones = this.physics.add.group()
+  bird.setScale(0.11)
+  bird.setFixedRotation()
+  bird.body.ignoreGravity = true
+
+  pipes = this.matter.world.nextGroup(true)
+  scoreZones = this.add.group()
 
   const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' }
 
@@ -59,13 +70,10 @@ function create() {
     else flap()
   })
 
-  // ✅ Setup Pixel Mask for True Pixel-Perfect Collision
-  setupPixelMask()
-
-  // ✅ Collision Detection with Pipes
-  this.physics.add.overlap(bird, pipes, (bird, pipe) => {
-    if (checkPixelCollision(bird, pipe)) {
-      hitPipe()
+  // ✅ Detect Collisions
+  this.matter.world.on('collisionstart', (event, bodyA, bodyB) => {
+    if (bodyA === bird.body || bodyB === bird.body) {
+      hitPipe.call(this)
     }
   })
 
@@ -80,7 +88,7 @@ function update() {
 
   // ✅ Game Over if Bird Hits Bottom
   if (bird.y >= game.scale.height) {
-    hitPipe()
+    hitPipe.call(this)
   }
 
   checkScore()
@@ -88,14 +96,14 @@ function update() {
 
 function startGame() {
   gameStarted = true
-  bird.body.allowGravity = true
+  bird.body.ignoreGravity = false
   titleText.setText('')
   startText.setText('')
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this })
 }
 
 function flap() {
-  bird.body.setVelocityY(FLAP_STRENGTH)
+  bird.setVelocityY(FLAP_STRENGTH)
 }
 
 function addPipes() {
@@ -104,16 +112,25 @@ function addPipes() {
   const gameHeight = game.scale.height
   let gapY = Phaser.Math.Between(100, gameHeight - PIPE_GAP - 100)
 
-  let pipeTop = this.physics.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1)
-  let pipeBottom = this.physics.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0)
+  let pipeTop = this.matter.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, { isStatic: true, label: 'pipe' })
+  let pipeBottom = this.matter.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), { isStatic: true, label: 'pipe' })
+
+  let scoreZone = this.matter.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, { isStatic: true, label: 'scoreZone', isSensor: true })
 
   pipes.add(pipeTop)
   pipes.add(pipeBottom)
+  scoreZones.add(scoreZone)
+
+  Matter.Body.setVelocity(pipeTop, { x: PIPE_SPEED, y: 0 })
+  Matter.Body.setVelocity(pipeBottom, { x: PIPE_SPEED, y: 0 })
+  Matter.Body.setVelocity(scoreZone, { x: PIPE_SPEED, y: 0 })
+
+  scoreZone.passed = false
 }
 
 function checkScore() {
   scoreZones.getChildren().forEach(scoreZone => {
-    if (!scoreZone.passed && scoreZone.x < bird.x) {
+    if (!scoreZone.passed && scoreZone.position.x < bird.x) {
       scoreZone.passed = true
       score++
       scoreText.setText('SCORE: ' + score)
@@ -125,7 +142,7 @@ function hitPipe() {
   if (gameOver) return
 
   gameOver = true
-  this.physics.pause()
+  this.matter.world.enabled = false // Stop physics world
 
   gameOverText.setText('GAME OVER')
   restartText.setText('TAP TO RESTART')
@@ -142,37 +159,10 @@ function restartGame() {
   score = 0
   scoreText.setText('SCORE: 0')
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2)
-  bird.body.setVelocity(0, 0)
+  bird.setVelocity(0, 0)
   pipes.clear(true, true)
-  this.physics.resume()
+  scoreZones.clear(true, true)
+  this.matter.world.enabled = true
   gameOverText.setText('')
   restartText.setText('')
-}
-
-// ✅ Setup a Canvas to Analyze Pixel Transparency
-function setupPixelMask() {
-  birdMaskCanvas = document.createElement('canvas')
-  birdMaskCanvas.width = 34 // Adjust to bird's real width
-  birdMaskCanvas.height = 24 // Adjust to bird's real height
-  birdMaskContext = birdMaskCanvas.getContext('2d')
-
-  birdImage = new Image()
-  birdImage.src = 'https://i.postimg.cc/prdzpSD2/trimmed-image.png'
-  birdImage.onload = () => {
-    birdMaskContext.drawImage(birdImage, 0, 0)
-  }
-}
-
-// ✅ Checks if the Bird's Pixels Actually Collide (Ignoring Transparency)
-function checkPixelCollision(bird, pipe) {
-  let x = Math.floor(bird.x - bird.width / 2)
-  let y = Math.floor(bird.y - bird.height / 2)
-
-  let imageData = birdMaskContext.getImageData(x, y, bird.width, bird.height).data
-
-  for (let i = 0; i < imageData.length; i += 4) {
-    let alpha = imageData[i + 3] // Get the alpha value of each pixel
-    if (alpha > 0) return true // If there's a visible pixel, register collision
-  }
-  return false
 }
