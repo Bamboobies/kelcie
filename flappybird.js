@@ -5,7 +5,7 @@ const PIPE_SPEED = -200
 const PIPE_GAP = 175
 const PIPE_WIDTH = 80
 const PIPE_CAP_HEIGHT = 20
-const PIPE_SPAWN_DELAY = 1500
+const PIPE_SPAWN_DELAY = 1600
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText
 let titleText, startText, gameOverText, restartText
@@ -31,7 +31,7 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce')
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.095)
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.09)
   bird.body.setCollideWorldBounds(true)
   bird.body.allowGravity = false
 
