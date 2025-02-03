@@ -16,6 +16,15 @@ window.onload = () => {
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
+    plugins: {
+      global: [
+        {
+          key: 'MakePixelPerfect',
+          plugin: MakePixelPerfect, // Use the plugin
+          mapping: 'makePixelPerfect' // Map it to `this.makePixelPerfect`
+        }
+      ]
+    },
     scene: { preload, create, update }
   });
 };
@@ -35,9 +44,8 @@ function create() {
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
 
-  // Adjust the bird's hitbox to better match its visible area
-  bird.body.setSize(40, 30); // Custom hitbox size (width, height)
-  bird.body.setOffset(20, 25); // Custom hitbox offset (x, y)
+  // Enable pixel-perfect collision for the bird
+  this.makePixelPerfect(bird);
 
   pipes = this.physics.add.group();
   scoreZones = this.physics.add.group();
