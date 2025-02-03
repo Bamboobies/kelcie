@@ -63,9 +63,11 @@ function create() {
 function update() {
   if (gameOver) return
 
+  // Rotate the bird based on velocity
   bird.angle = bird.body.velocity.y > 0 ? 20 : -20
 
-  if (bird.y >= game.scale.height) {
+  // Check if the bird touches the bottom of the playable area
+  if (bird.body.blocked.down) {
     hitPipe.call(this)
   }
 
