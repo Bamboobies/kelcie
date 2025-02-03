@@ -36,8 +36,8 @@ function create() {
   bird.body.allowGravity = false;
 
   // Adjust the bird's hitbox to better match its visible area
-  bird.body.setSize(50, 40); // Adjust these values to match the visible area of your bird
-  bird.body.setOffset(15, 20); // Adjust the offset to align the hitbox with the visible area
+  bird.body.setSize(40, 30); // Custom hitbox size (width, height)
+  bird.body.setOffset(20, 25); // Custom hitbox offset (x, y)
 
   pipes = this.physics.add.group();
   scoreZones = this.physics.add.group();
