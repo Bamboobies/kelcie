@@ -163,4 +163,3 @@ function restartGame() {
   gameOverText.setText('')
   restartText.setText('')
 }
-
