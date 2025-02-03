@@ -17,11 +17,11 @@ window.onload = () => {
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
     plugins: {
-      global: [
+      scene: [
         {
-          key: 'MakePixelPerfect',
-          plugin: MakePixelPerfect, // Use the plugin
-          mapping: 'makePixelPerfect' // Map it to `this.makePixelPerfect`
+          key: 'PixelPerfectCollision',
+          plugin: PhaserPluginPixelPerfect, // Use the plugin
+          mapping: 'pixelPerfect' // Map it to `this.pixelPerfect`
         }
       ]
     },
@@ -45,7 +45,7 @@ function create() {
   bird.body.allowGravity = false;
 
   // Enable pixel-perfect collision for the bird
-  this.makePixelPerfect(bird);
+  this.pixelPerfect.enable(bird);
 
   pipes = this.physics.add.group();
   scoreZones = this.physics.add.group();
@@ -66,7 +66,15 @@ function create() {
     else flap();
   });
 
-  this.physics.add.collider(bird, pipes, hitPipe, null, this);
+  this.physics.world.on('worldstep', () => {
+    if (gameOver) return;
+
+    pipes.getChildren().forEach(pipe => {
+      if (this.pixelPerfect.check(bird, pipe)) { // Use pixel-perfect collision
+        hitPipe.call(this);
+      }
+    });
+  });
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
