@@ -79,7 +79,7 @@ function create() {
     const pairs = event.pairs;
     for (let i = 0; i < pairs.length; i++) {
       const pair = pairs[i];
-      if (pair.bodyA.label === 'bird' || pair.bodyB.label === 'bird') {
+      if ((pair.bodyA.label === 'bird' && pair.bodyB.label === 'pipe') || (pair.bodyA.label === 'pipe' && pair.bodyB.label === 'bird')) {
         hitPipe.call(scene);
       }
     }
@@ -118,8 +118,8 @@ function addPipes() {
   const gameHeight = game.scale.height;
   let gapY = Phaser.Math.Between(100, gameHeight - PIPE_GAP - 100);
 
-  let pipeTop = Matter.Bodies.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, { isStatic: true, label: 'pipe' });
-  let pipeBottom = Matter.Bodies.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), { isStatic: true, label: 'pipe' });
+  let pipeTop = Matter.Bodies.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, { isStatic: false, label: 'pipe' });
+  let pipeBottom = Matter.Bodies.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), { isStatic: false, label: 'pipe' });
 
   Matter.World.add(world, [pipeTop, pipeBottom]);
   pipes.push(pipeTop, pipeBottom);
