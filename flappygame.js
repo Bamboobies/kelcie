@@ -10,7 +10,6 @@ const PIPE_SPAWN_DELAY = 1400
 let game, bird, pipes, scoreZones, scoreText, highScoreText
 let titleText, startText, gameOverText, restartText
 let score = 0, highScore = 0, gameStarted = false, gameOver = false
-let birdMaskCanvas, birdMaskContext, birdImage
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -35,11 +34,15 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce')
 
-  // ✅ Use a circular physics body but apply pixel mask collision separately
+  // ✅ Arcade Physics with Custom Hitbox to Ignore Transparent Pixels
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.11)
   bird.body.setCollideWorldBounds(true)
   bird.body.allowGravity = false
-  bird.body.setCircle(bird.width * 0.4, bird.width * 0.1, bird.height * 0.1) // Approximate hitbox
+
+  // ✅ Define Custom Hitbox (Matches Bird Shape More Closely)
+  bird.body.setSize(bird.width * 0.6, bird.height * 0.6) // Smaller than full image to avoid transparent pixels
+  bird.body.offset.x = bird.width * 0.2 // Adjust offset to fit visible area
+  bird.body.offset.y = bird.height * 0.2
 
   pipes = this.physics.add.group()
   scoreZones = this.physics.add.group()
@@ -60,15 +63,8 @@ function create() {
     else flap()
   })
 
-  // ✅ Pixel Mask Setup
-  setupPixelMask()
-
-  // ✅ Use a Custom Collision Check (Only Non-Transparent Pixels Trigger Collisions)
-  this.physics.add.overlap(bird, pipes, (bird, pipe) => {
-    if (checkPixelCollision(bird, pipe)) {
-      hitPipe()
-    }
-  })
+  // ✅ Collision Detection with Pipes
+  this.physics.add.collider(bird, pipes, hitPipe, null, this)
 
   highScore = localStorage.getItem('flappyHighScore') || 0
   highScoreText.setText('HIGH SCORE: ' + highScore)
@@ -149,32 +145,3 @@ function restartGame() {
   gameOverText.setText('')
   restartText.setText('')
 }
-
-// ✅ Create a Canvas to Analyze Transparent Pixels
-function setupPixelMask() {
-  birdMaskCanvas = document.createElement('canvas')
-  birdMaskCanvas.width = 34
-  birdMaskCanvas.height = 24
-  birdMaskContext = birdMaskCanvas.getContext('2d')
-
-  birdImage = new Image()
-  birdImage.src = 'https://i.postimg.cc/prdzpSD2/trimmed-image.png'
-  birdImage.onload = () => {
-    birdMaskContext.drawImage(birdImage, 0, 0)
-  }
-}
-
-// ✅ Only Register Collisions If Visible Pixels Touch
-function checkPixelCollision(bird, pipe) {
-  let x = Math.floor(bird.x - bird.width / 2)
-  let y = Math.floor(bird.y - bird.height / 2)
-
-  let imageData = birdMaskContext.getImageData(x, y, bird.width, bird.height).data
-
-  for (let i = 0; i < imageData.length; i += 4) {
-    let alpha = imageData[i + 3] 
-    if (alpha > 0) return true 
-  }
-  return false
-}
-
