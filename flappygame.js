@@ -16,15 +16,6 @@ window.onload = () => {
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
-    plugins: {
-      scene: [
-        {
-          key: 'PixelPerfectCollision',
-          plugin: PhaserPluginPixelPerfect, // Use the plugin
-          mapping: 'pixelPerfect' // Map it to `this.pixelPerfect`
-        }
-      ]
-    },
     scene: { preload, create, update }
   });
 };
@@ -40,12 +31,10 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce');
 
+  // Create the bird with a custom image
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.09);
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
-
-  // Enable pixel-perfect collision for the bird
-  this.pixelPerfect.enable(bird);
 
   pipes = this.physics.add.group();
   scoreZones = this.physics.add.group();
@@ -66,15 +55,8 @@ function create() {
     else flap();
   });
 
-  this.physics.world.on('worldstep', () => {
-    if (gameOver) return;
-
-    pipes.getChildren().forEach(pipe => {
-      if (this.pixelPerfect.check(bird, pipe)) { // Use pixel-perfect collision
-        hitPipe.call(this);
-      }
-    });
-  });
+  // Use overlap instead of collider for custom collision detection
+  this.physics.add.overlap(bird, pipes, hitPipe, checkPixelCollision, this);
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
@@ -115,37 +97,21 @@ function addPipes() {
   let pipeTopBody = this.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1);
   let pipeBottomBody = this.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0);
 
-  let pipeTopCap = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1);
-  let pipeBottomCap = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0);
-
-  let scoreZone = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5);
-
   this.physics.add.existing(pipeTopBody);
   this.physics.add.existing(pipeBottomBody);
-  this.physics.add.existing(pipeTopCap);
-  this.physics.add.existing(pipeBottomCap);
-  this.physics.add.existing(scoreZone);
 
   pipeTopBody.body.immovable = true;
   pipeBottomBody.body.immovable = true;
-  pipeTopCap.body.immovable = true;
-  pipeBottomCap.body.immovable = true;
 
   pipes.add(pipeTopBody);
   pipes.add(pipeBottomBody);
-  pipes.add(pipeTopCap);
-  pipes.add(pipeBottomCap);
-  scoreZones.add(scoreZone);
 
-  let allPipes = [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone];
-  allPipes.forEach(pipe => {
+  [pipeTopBody, pipeBottomBody].forEach(pipe => {
     pipe.body.setVelocityX(PIPE_SPEED);
     pipe.body.allowGravity = false;
     pipe.body.checkWorldBounds = true;
     pipe.body.outOfBoundsKill = true;
   });
-
-  scoreZone.passed = false;
 }
 
 function checkScore() {
@@ -185,4 +151,36 @@ function restartGame() {
   this.physics.resume();
   gameOverText.setText('');
   restartText.setText('');
+}
+
+// Custom pixel-perfect collision detection for the bird
+function checkPixelCollision(bird, pipe) {
+  const birdBounds = bird.getBounds();
+  const pipeBounds = pipe.getBounds();
+
+  if (!Phaser.Geom.Intersects.RectangleToRectangle(birdBounds, pipeBounds)) {
+    return false;
+  }
+
+  // Get the overlapping area
+  const x = Math.max(birdBounds.x, pipeBounds.x);
+  const y = Math.max(birdBounds.y, pipeBounds.y);
+  const width = Math.min(birdBounds.right, pipeBounds.right) - x;
+  const height = Math.min(birdBounds.bottom, pipeBounds.bottom) - y;
+
+  // Check for non-transparent pixels in the overlapping area
+  const birdTexture = bird.texture;
+  const birdFrame = bird.frame;
+
+  for (let i = x; i < x + width; i++) {
+    for (let j = y; j < y + height; j++) {
+      const birdPixel = birdTexture.getPixel(i - birdBounds.x, j - birdBounds.y, birdFrame);
+
+      if (birdPixel.alpha > 0) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
