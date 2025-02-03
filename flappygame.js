@@ -1,7 +1,7 @@
 // === GAME SETTINGS ===
-const GRAVITY = 0.5
-const FLAP_STRENGTH = -7
-const PIPE_SPEED = -3
+const GRAVITY = 900
+const FLAP_STRENGTH = -300
+const PIPE_SPEED = -200
 const PIPE_GAP = 175
 const PIPE_WIDTH = 80
 const PIPE_CAP_HEIGHT = 20
@@ -10,14 +10,15 @@ const PIPE_SPAWN_DELAY = 1400
 let game, bird, pipes, scoreZones, scoreText, highScoreText
 let titleText, startText, gameOverText, restartText
 let score = 0, highScore = 0, gameStarted = false, gameOver = false
+let birdMaskCanvas, birdMaskContext, birdImage
 
 window.onload = () => {
   game = new Phaser.Game({
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { 
-      default: 'matter',  
-      matter: { debug: false }
+      default: 'arcade',  
+      arcade: { gravity: { y: GRAVITY }, debug: false }
     },
     scene: { preload, create, update }
   })
@@ -34,22 +35,14 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce')
 
-  // ✅ Correcting Bird Hitbox (Simpler Polygon for Stability)
-  bird = this.matter.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird', null, {
-    shape: {
-      type: 'polygon',
-      sides: 5,  // Simple approximation instead of complex vertex shapes
-      radius: 10
-    }
-  })
+  // ✅ Use a circular physics body but apply pixel mask collision separately
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.11)
+  bird.body.setCollideWorldBounds(true)
+  bird.body.allowGravity = false
+  bird.body.setCircle(bird.width * 0.4, bird.width * 0.1, bird.height * 0.1) // Approximate hitbox
 
-  bird.setScale(0.11)
-  bird.setFixedRotation()
-  bird.setFrictionAir(0)
-  bird.body.ignoreGravity = true
-
-  pipes = this.add.group()
-  scoreZones = this.add.group()
+  pipes = this.physics.add.group()
+  scoreZones = this.physics.add.group()
 
   const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' }
 
@@ -67,10 +60,13 @@ function create() {
     else flap()
   })
 
-  // ✅ Collision Detection Fix
-  this.matter.world.on('collisionstart', (event, bodyA, bodyB) => {
-    if (bodyA === bird.body || bodyB === bird.body) {
-      hitPipe.call(this)
+  // ✅ Pixel Mask Setup
+  setupPixelMask()
+
+  // ✅ Use a Custom Collision Check (Only Non-Transparent Pixels Trigger Collisions)
+  this.physics.add.overlap(bird, pipes, (bird, pipe) => {
+    if (checkPixelCollision(bird, pipe)) {
+      hitPipe()
     }
   })
 
@@ -85,7 +81,7 @@ function update() {
 
   // ✅ Game Over if Bird Hits Bottom
   if (bird.y >= game.scale.height) {
-    hitPipe.call(this)
+    hitPipe()
   }
 
   checkScore()
@@ -93,14 +89,14 @@ function update() {
 
 function startGame() {
   gameStarted = true
-  bird.body.ignoreGravity = false
+  bird.body.allowGravity = true
   titleText.setText('')
   startText.setText('')
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this })
 }
 
 function flap() {
-  bird.setVelocityY(FLAP_STRENGTH)
+  bird.body.setVelocityY(FLAP_STRENGTH)
 }
 
 function addPipes() {
@@ -109,25 +105,16 @@ function addPipes() {
   const gameHeight = game.scale.height
   let gapY = Phaser.Math.Between(100, gameHeight - PIPE_GAP - 100)
 
-  let pipeTop = this.matter.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, { isStatic: true, label: 'pipe' })
-  let pipeBottom = this.matter.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), { isStatic: true, label: 'pipe' })
-
-  let scoreZone = this.matter.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, { isStatic: true, label: 'scoreZone', isSensor: true })
+  let pipeTop = this.physics.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1)
+  let pipeBottom = this.physics.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0)
 
   pipes.add(pipeTop)
   pipes.add(pipeBottom)
-  scoreZones.add(scoreZone)
-
-  Matter.Body.setVelocity(pipeTop, { x: PIPE_SPEED, y: 0 })
-  Matter.Body.setVelocity(pipeBottom, { x: PIPE_SPEED, y: 0 })
-  Matter.Body.setVelocity(scoreZone, { x: PIPE_SPEED, y: 0 })
-
-  scoreZone.passed = false
 }
 
 function checkScore() {
   scoreZones.getChildren().forEach(scoreZone => {
-    if (!scoreZone.passed && scoreZone.position.x < bird.x) {
+    if (!scoreZone.passed && scoreZone.x < bird.x) {
       scoreZone.passed = true
       score++
       scoreText.setText('SCORE: ' + score)
@@ -139,7 +126,7 @@ function hitPipe() {
   if (gameOver) return
 
   gameOver = true
-  this.matter.world.enabled = false // Stop physics world
+  this.physics.pause()
 
   gameOverText.setText('GAME OVER')
   restartText.setText('TAP TO RESTART')
@@ -156,10 +143,38 @@ function restartGame() {
   score = 0
   scoreText.setText('SCORE: 0')
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2)
-  bird.setVelocity(0, 0)
+  bird.body.setVelocity(0, 0)
   pipes.clear(true, true)
-  scoreZones.clear(true, true)
-  this.matter.world.enabled = true
+  this.physics.resume()
   gameOverText.setText('')
   restartText.setText('')
 }
+
+// ✅ Create a Canvas to Analyze Transparent Pixels
+function setupPixelMask() {
+  birdMaskCanvas = document.createElement('canvas')
+  birdMaskCanvas.width = 34
+  birdMaskCanvas.height = 24
+  birdMaskContext = birdMaskCanvas.getContext('2d')
+
+  birdImage = new Image()
+  birdImage.src = 'https://i.postimg.cc/prdzpSD2/trimmed-image.png'
+  birdImage.onload = () => {
+    birdMaskContext.drawImage(birdImage, 0, 0)
+  }
+}
+
+// ✅ Only Register Collisions If Visible Pixels Touch
+function checkPixelCollision(bird, pipe) {
+  let x = Math.floor(bird.x - bird.width / 2)
+  let y = Math.floor(bird.y - bird.height / 2)
+
+  let imageData = birdMaskContext.getImageData(x, y, bird.width, bird.height).data
+
+  for (let i = 0; i < imageData.length; i += 4) {
+    let alpha = imageData[i + 3] 
+    if (alpha > 0) return true 
+  }
+  return false
+}
+
