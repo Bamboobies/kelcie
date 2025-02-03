@@ -16,7 +16,7 @@ window.onload = () => {
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
     physics: { 
-      default: 'matter',  // ✅ Switch to Matter.js for better collision
+      default: 'matter',  
       matter: { debug: false }
     },
     scene: { preload, create, update }
@@ -34,24 +34,21 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce')
 
-  // ✅ Load Bird with a Pixel-Perfect Polygon Hitbox
+  // ✅ Correcting Bird Hitbox (Simpler Polygon for Stability)
   bird = this.matter.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird', null, {
     shape: {
-      type: 'fromVerts',
-      verts: [
-        { x: 10, y: 5 }, { x: 20, y: 0 }, { x: 30, y: 5 },
-        { x: 35, y: 15 }, { x: 30, y: 30 }, { x: 20, y: 35 },
-        { x: 10, y: 30 }, { x: 5, y: 15 }
-      ],
-      flagInternal: true
+      type: 'polygon',
+      sides: 5,  // Simple approximation instead of complex vertex shapes
+      radius: 10
     }
   })
 
   bird.setScale(0.11)
   bird.setFixedRotation()
+  bird.setFrictionAir(0)
   bird.body.ignoreGravity = true
 
-  pipes = this.matter.world.nextGroup(true)
+  pipes = this.add.group()
   scoreZones = this.add.group()
 
   const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' }
@@ -70,7 +67,7 @@ function create() {
     else flap()
   })
 
-  // ✅ Detect Collisions
+  // ✅ Collision Detection Fix
   this.matter.world.on('collisionstart', (event, bodyA, bodyB) => {
     if (bodyA === bird.body || bodyB === bird.body) {
       hitPipe.call(this)
@@ -166,3 +163,4 @@ function restartGame() {
   gameOverText.setText('')
   restartText.setText('')
 }
+
