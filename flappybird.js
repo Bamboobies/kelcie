@@ -1,5 +1,5 @@
 // === GAME SETTINGS ===
-const GRAVITY = 900;
+const GRAVITY = 1000;
 const FLAP_STRENGTH = -300;
 const PIPE_SPEED = -200;
 const PIPE_GAP = 175;
