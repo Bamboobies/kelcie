@@ -5,7 +5,7 @@ const PIPE_SPEED = -200
 const PIPE_GAP = 175
 const PIPE_WIDTH = 80
 const PIPE_CAP_HEIGHT = 20
-const PIPE_SPAWN_DELAY = 1400
+const PIPE_SPAWN_DELAY = 1500
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText
 let titleText, startText, gameOverText, restartText
