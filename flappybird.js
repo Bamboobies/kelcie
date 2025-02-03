@@ -22,7 +22,7 @@ window.onload = () => {
 
 function preload() {
   // Load the bird image
-  this.load.image('bird', 'https://i.imgur.com/PD183Pk.png');
+  this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
 }
 
 function create() {
