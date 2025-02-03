@@ -34,14 +34,14 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce')
 
-  // ✅ Arcade Physics with Custom Hitbox to Ignore Transparent Pixels
+  // ✅ Restore original Arcade Physics collision and manually refine the hitbox
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.11)
   bird.body.setCollideWorldBounds(true)
   bird.body.allowGravity = false
 
-  // ✅ Define Custom Hitbox (Matches Bird Shape More Closely)
-  bird.body.setSize(bird.width * 0.6, bird.height * 0.6) // Smaller than full image to avoid transparent pixels
-  bird.body.offset.x = bird.width * 0.2 // Adjust offset to fit visible area
+  // ✅ Adjust the hitbox to ignore transparent pixels
+  bird.body.setSize(bird.width * 0.6, bird.height * 0.6) // Reduce hitbox size
+  bird.body.offset.x = bird.width * 0.2 // Adjust offset to fit visible bird
   bird.body.offset.y = bird.height * 0.2
 
   pipes = this.physics.add.group()
@@ -63,7 +63,7 @@ function create() {
     else flap()
   })
 
-  // ✅ Collision Detection with Pipes
+  // ✅ Restore original collision detection
   this.physics.add.collider(bird, pipes, hitPipe, null, this)
 
   highScore = localStorage.getItem('flappyHighScore') || 0
@@ -145,3 +145,4 @@ function restartGame() {
   gameOverText.setText('')
   restartText.setText('')
 }
+
