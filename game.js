@@ -2,12 +2,11 @@ const config = {
   type: Phaser.AUTO,
   width: window.innerWidth,
   height: window.innerHeight,
-  backgroundColor: '#87CEEB', // Light blue background
+  backgroundColor: '#87CEEB',
   physics: {
     default: 'matter',
     matter: {
-      gravity: { y: 1 },
-      enableSleeping: true
+      gravity: { y: 1 }
     }
   },
   scene: {
@@ -31,9 +30,9 @@ const PIPE_INTERVAL = 1800
 function preload() {}
 
 function create() {
-  this.scale.on('resize', resizeGame, this)
+  // Fix canvas resizing issue
+  this.scale.setGameSize(window.innerWidth, window.innerHeight)
 
-  // Start & Restart text
   startText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Tap to Start', {
     fontSize: '32px',
     fill: '#fff'
@@ -46,6 +45,10 @@ function create() {
 
   this.input.on('pointerdown', startGame, this)
   this.input.keyboard.on('keydown-SPACE', startGame, this)
+
+  window.addEventListener('resize', () => {
+    game.scale.resize(window.innerWidth, window.innerHeight)
+  })
 }
 
 function startGame() {
@@ -72,17 +75,17 @@ function startGame() {
 function update() {
   if (!isGameStarted || isGameOver) return
 
-  // Check if bird goes out of bounds
-  if (bird.position.y > this.cameras.main.height || bird.position.y < 0) {
+  if (bird && (bird.position.y > this.cameras.main.height || bird.position.y < 0)) {
     gameOver.call(this)
   }
 
-  // Move pipes
   pipes.forEach(pipe => {
-    Matter.Body.setVelocity(pipe.body, { x: PIPE_SPEED, y: 0 })
-    if (pipe.body.position.x < -100) {
-      pipe.destroy()
-      pipes.shift()
+    if (pipe.body) {
+      Matter.Body.setVelocity(pipe.body, { x: PIPE_SPEED, y: 0 })
+      if (pipe.body.position.x < -100) {
+        pipe.destroy()
+        pipes.shift()
+      }
     }
   })
 }
@@ -123,10 +126,4 @@ function restartGame() {
   this.scene.restart()
   isGameOver = false
   isGameStarted = false
-}
-
-function resizeGame() {
-  let width = window.innerWidth
-  let height = window.innerHeight
-  game.scale.resize(width, height)
 }
