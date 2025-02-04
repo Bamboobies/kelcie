@@ -1,163 +1,96 @@
-// === GAME SETTINGS ===
-const GRAVITY = 1.5;
-const FLAP_STRENGTH = -5;
-const PIPE_SPEED = -3;
-const PIPE_GAP = 175;
-const PIPE_WIDTH = 80;
-const PIPE_CAP_HEIGHT = 20;
-const PIPE_SPAWN_DELAY = 1550;
-
-let game, bird, pipes, scoreZones, scoreText, highScoreText;
-let titleText, startText, gameOverText, restartText;
-let score = 0, highScore = 0, gameStarted = false, gameOver = false;
-
-window.onload = () => {
-  game = new Phaser.Game({
-    type: Phaser.AUTO,
-    scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
-    physics: {
-      default: 'matter', // Use Matter Physics
-      matter: {
-        gravity: { y: GRAVITY },
-        debug: false // Set to true to see physics bodies
-      }
-    },
-    scene: { preload, create, update }
-  });
-};
-
-function preload() {
-  this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
+const config = {
+  type: Phaser.AUTO,
+  width: 400,
+  height: 600,
+  backgroundColor: '#87CEEB', // Light blue background
+  physics: {
+    default: 'matter',
+    matter: {
+      gravity: { y: 1 },
+      enableSleeping: true
+    }
+  },
+  scene: {
+    preload,
+    create,
+    update
+  }
 }
 
+const PIPE_GAP = 150
+const PIPE_SPEED = -2
+const PIPE_SPAWN_INTERVAL = 2000
+
+let bird
+let pipes = []
+let isGameOver = false
+
+const game = new Phaser.Game(config)
+
+function preload() {}
+
 function create() {
-  const scene = this;
-  const gameWidth = game.scale.width;
-  const gameHeight = game.scale.height;
+  // Create the bird
+  bird = this.matter.add.rectangle(100, 300, 30, 30, {
+    restitution: 0.5,
+    frictionAir: 0.02
+  })
 
-  scene.cameras.main.setBackgroundColor('#70c5ce');
+  this.input.on('pointerdown', flap, this)
+  this.input.keyboard.on('keydown-SPACE', flap, this)
 
-  // Create the bird with Matter Physics
-  bird = this.matter.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.09);
-  bird.setCollideWorldBounds(true);
-  bird.setIgnoreGravity(true); // Disable gravity until the game starts
-
-  pipes = this.matter.add.group();
-  scoreZones = this.matter.add.group();
-
-  const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' };
-
-  titleText = this.add.text(gameWidth / 2, gameHeight * 0.3, 'FLAPPY SHRIMP', { fontFamily: '"Press Start 2P", sans-serif', fontSize: '32px', fill: '#ffcc00' }).setOrigin(0.5);
-  startText = this.add.text(gameWidth / 2, gameHeight * 0.5, 'TAP TO START', textStyle).setOrigin(0.5);
-  gameOverText = this.add.text(gameWidth / 2, gameHeight * 0.5, '', textStyle).setOrigin(0.5);
-  restartText = this.add.text(gameWidth / 2, gameHeight * 0.6, '', textStyle).setOrigin(0.5);
-
-  scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle);
-  highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle);
-
-  this.input.on('pointerdown', () => {
-    if (!gameStarted) startGame.call(scene);
-    else if (gameOver) restartGame.call(scene);
-    else flap();
-  });
-
-  // Collision detection
-  this.matter.world.on('collisionstart', (event) => {
-    event.pairs.forEach(pair => {
-      if (pair.bodyA === bird.body || pair.bodyB === bird.body) {
-        hitPipe.call(scene);
-      }
-    });
-  });
-
-  highScore = localStorage.getItem('flappyHighScore') || 0;
-  highScoreText.setText('HIGH SCORE: ' + highScore);
+  // Spawn pipes at intervals
+  this.time.addEvent({
+    delay: PIPE_SPAWN_INTERVAL,
+    callback: spawnPipes,
+    callbackScope: this,
+    loop: true
+  })
 }
 
 function update() {
-  if (gameOver) return;
+  if (isGameOver) return
 
-  // Rotate the bird based on velocity
-  bird.angle = bird.body.velocity.y > 0 ? 20 : -20;
-
-  // Check if the bird touches the bottom of the playable area
-  if (bird.y > game.scale.height) {
-    hitPipe.call(this);
+  // Check if bird hits the ground
+  if (bird.position.y > config.height || bird.position.y < 0) {
+    gameOver.call(this)
   }
 
-  checkScore();
-}
-
-function startGame() {
-  gameStarted = true;
-  bird.setIgnoreGravity(false); // Enable gravity
-  titleText.setText('');
-  startText.setText('');
-  this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
+  // Move pipes
+  pipes.forEach(pipe => {
+    Matter.Body.setVelocity(pipe.body, { x: PIPE_SPEED, y: 0 })
+    if (pipe.body.position.x < -50) {
+      pipe.destroy()
+      pipes.shift()
+    }
+  })
 }
 
 function flap() {
-  bird.setVelocityY(FLAP_STRENGTH);
+  if (isGameOver) return
+  Matter.Body.setVelocity(bird, { x: 0, y: -5 })
 }
 
-function addPipes() {
-  if (gameOver) return;
+function spawnPipes() {
+  let pipeX = config.width + 50
+  let pipeY = Phaser.Math.Between(100, 400)
 
-  const gameHeight = game.scale.height;
-  let gapY = Phaser.Math.Between(100, gameHeight - PIPE_GAP - 100);
+  let topPipe = this.matter.add.rectangle(pipeX, pipeY - PIPE_GAP / 2 - 200, 80, 200, { isStatic: true })
+  let bottomPipe = this.matter.add.rectangle(pipeX, pipeY + PIPE_GAP / 2, 80, 200, { isStatic: true })
 
-  // Create top and bottom pipes
-  let pipeTop = this.matter.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, { isStatic: true });
-  let pipeBottom = this.matter.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), { isStatic: true });
+  let topCap = this.matter.add.rectangle(pipeX, pipeY - PIPE_GAP / 2, 80, 20, { isStatic: true })
+  let bottomCap = this.matter.add.rectangle(pipeX, pipeY + PIPE_GAP / 2 + 200, 80, 20, { isStatic: true })
 
-  pipes.add(pipeTop);
-  pipes.add(pipeBottom);
+  pipes.push(topPipe, bottomPipe, topCap, bottomCap)
 
-  // Move pipes
-  pipeTop.setVelocityX(PIPE_SPEED);
-  pipeBottom.setVelocityX(PIPE_SPEED);
-
-  // Remove pipes when they go off-screen
-  setTimeout(() => {
-    pipes.remove(pipeTop, true, true);
-    pipes.remove(pipeBottom, true, true);
-  }, 5000); // Adjust timeout based on pipe speed
+  // Coloring pipes green
+  this.add.rectangle(pipeX, pipeY - PIPE_GAP / 2 - 200, 80, 200, 0x008000)
+  this.add.rectangle(pipeX, pipeY + PIPE_GAP / 2, 80, 200, 0x008000)
+  this.add.rectangle(pipeX, pipeY - PIPE_GAP / 2, 80, 20, 0x006600)
+  this.add.rectangle(pipeX, pipeY + PIPE_GAP / 2 + 200, 80, 20, 0x006600)
 }
 
-function checkScore() {
-  pipes.getChildren().forEach(pipe => {
-    if (!pipe.passed && pipe.x < bird.x) {
-      pipe.passed = true;
-      score++;
-      scoreText.setText('SCORE: ' + score);
-    }
-  });
-}
-
-function hitPipe() {
-  if (gameOver) return;
-
-  gameOver = true;
-  this.matter.pause();
-
-  gameOverText.setText('GAME OVER');
-  restartText.setText('TAP TO RESTART');
-
-  if (score > highScore) {
-    highScore = score;
-    localStorage.setItem('flappyHighScore', highScore);
-    highScoreText.setText('HIGH SCORE: ' + highScore);
-  }
-}
-
-function restartGame() {
-  gameOver = false;
-  score = 0;
-  scoreText.setText('SCORE: 0');
-  bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
-  bird.setVelocity(0, 0);
-  pipes.clear(true, true);
-  this.matter.resume();
-  gameOverText.setText('');
-  restartText.setText('');
+function gameOver() {
+  isGameOver = true
+  this.matter.world.pause()
 }
