@@ -6,8 +6,7 @@ const config = {
   physics: {
     default: 'matter',
     matter: {
-      gravity: { y: 1 },
-      enableSleeping: true
+      gravity: { y: 1 }
     }
   },
   scene: {
@@ -16,6 +15,8 @@ const config = {
     update
   }
 }
+
+let game = new Phaser.Game(config)
 
 let bird
 let pipes = []
@@ -27,19 +28,17 @@ const PIPE_GAP = 200
 const PIPE_SPEED = -3
 const PIPE_SPAWN_INTERVAL = 1800
 
-const game = new Phaser.Game(config)
-
 function preload() {}
 
 function create() {
   this.scale.on('resize', resizeGame, this)
 
-  startText = this.add.text(config.width / 2, config.height / 2, 'Tap to Start', {
+  startText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Tap to Start', {
     fontSize: '32px',
     fill: '#fff'
   }).setOrigin(0.5)
 
-  restartText = this.add.text(config.width / 2, config.height / 2 + 100, 'Tap to Restart', {
+  restartText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 100, 'Tap to Restart', {
     fontSize: '32px',
     fill: '#fff'
   }).setOrigin(0.5).setVisible(false)
@@ -53,7 +52,7 @@ function startGame() {
   isGameStarted = true
   startText.setVisible(false)
 
-  bird = this.matter.add.rectangle(config.width / 4, config.height / 2, 40, 40, {
+  bird = this.matter.add.rectangle(this.cameras.main.width / 4, this.cameras.main.height / 2, 40, 40, {
     restitution: 0.5,
     frictionAir: 0.02
   })
@@ -72,7 +71,7 @@ function startGame() {
 function update() {
   if (!isGameStarted || isGameOver) return
 
-  if (bird.position.y > config.height || bird.position.y < 0) {
+  if (bird.position.y > this.cameras.main.height || bird.position.y < 0) {
     gameOver.call(this)
   }
 
@@ -91,8 +90,8 @@ function flap() {
 }
 
 function spawnPipes() {
-  let pipeX = config.width + 50
-  let pipeY = Phaser.Math.Between(150, config.height - 150)
+  let pipeX = this.cameras.main.width + 50
+  let pipeY = Phaser.Math.Between(150, this.cameras.main.height - 150)
 
   let topPipe = this.matter.add.rectangle(pipeX, pipeY - PIPE_GAP / 2 - 250, 100, 250, { isStatic: true })
   let bottomPipe = this.matter.add.rectangle(pipeX, pipeY + PIPE_GAP / 2, 100, 250, { isStatic: true })
@@ -124,5 +123,7 @@ function restartGame() {
 }
 
 function resizeGame() {
-  game.scale.resize(window.innerWidth, window.innerHeight)
+  let width = window.innerWidth
+  let height = window.innerHeight
+  game.scale.resize(width, height)
 }
