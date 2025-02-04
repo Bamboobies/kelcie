@@ -2,11 +2,12 @@ const config = {
   type: Phaser.AUTO,
   width: window.innerWidth,
   height: window.innerHeight,
-  backgroundColor: '#87CEEB',
+  backgroundColor: '#87CEEB', // Light blue background
   physics: {
     default: 'matter',
     matter: {
-      gravity: { y: 1 }
+      gravity: { y: 1 },
+      enableSleeping: true
     }
   },
   scene: {
@@ -18,21 +19,21 @@ const config = {
 
 let game = new Phaser.Game(config)
 
-let bird
+let bird, startText, restartText
 let pipes = []
-let isGameOver = false
 let isGameStarted = false
-let startText, restartText
+let isGameOver = false
 
 const PIPE_GAP = 200
 const PIPE_SPEED = -3
-const PIPE_SPAWN_INTERVAL = 1800
+const PIPE_INTERVAL = 1800
 
 function preload() {}
 
 function create() {
   this.scale.on('resize', resizeGame, this)
 
+  // Start & Restart text
   startText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'Tap to Start', {
     fontSize: '32px',
     fill: '#fff'
@@ -61,7 +62,7 @@ function startGame() {
   this.input.keyboard.on('keydown-SPACE', flap, this)
 
   this.time.addEvent({
-    delay: PIPE_SPAWN_INTERVAL,
+    delay: PIPE_INTERVAL,
     callback: spawnPipes,
     callbackScope: this,
     loop: true
@@ -71,10 +72,12 @@ function startGame() {
 function update() {
   if (!isGameStarted || isGameOver) return
 
+  // Check if bird goes out of bounds
   if (bird.position.y > this.cameras.main.height || bird.position.y < 0) {
     gameOver.call(this)
   }
 
+  // Move pipes
   pipes.forEach(pipe => {
     Matter.Body.setVelocity(pipe.body, { x: PIPE_SPEED, y: 0 })
     if (pipe.body.position.x < -100) {
