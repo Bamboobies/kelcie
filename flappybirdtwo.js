@@ -41,7 +41,7 @@ function create() {
   const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' }
 
   // Dynamically adjust the font size for "Flappy Shrimp" based on screen width
-  const titleFontSize = Math.min(gameWidth * 0.07, 32) // Adjust the multiplier (0.1) as needed
+  const titleFontSize = Math.min(gameWidth * 0.075, 32) // Adjust the multiplier (0.1) as needed
   titleText = this.add.text(gameWidth / 2, gameHeight * 0.3, 'FLAPPY SHRIMP', { 
     fontFamily: '"Press Start 2P", sans-serif', 
     fontSize: `${titleFontSize}px`, 
