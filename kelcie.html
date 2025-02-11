@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yes or No Question</title>
+    <style>
+        /* Reset default margin and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Are you Kelcie?</h1>
+        <div class="buttons">
+            <button class="btn" onclick="handleResponse('yes')">Yes</button>
+            <button class="btn" onclick="handleResponse('no')">No</button>
+        </div>
+    </div>
+
+    <script>
+        // Function to handle the response
+        function handleResponse(response) {
+            if (response === 'yes') {
+                // Show the message and redirect
+                alert('Awesome, we just need to do a quick verification process!');
+                setTimeout(function() {
+                    window.location.href = 'https://kelcie.net/test1.html';
+                }, 2000); // Redirect after 2 seconds
+            } else {
+                // Show the message and redirect
+                alert('You don\'t belong here.');
+                setTimeout(function() {
+                    window.location.href = 'https://kelcie.net';
+                }, 2000); // Redirect after 2 seconds
+            }
+        }
+    </script>
+</body>
+</html>
