@@ -3,77 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Survey</title>
+    <title>Valentine's Day Survey</title>
     <style>
+        /* Reset default margin and padding */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            margin: 50px;
-        }
-        .survey-container {
-            max-width: 600px;
-            margin: auto;
+            font-family: 'Pacifico', cursive, Arial, sans-serif;
+            background: linear-gradient(135deg, #ff6b6b, #ffafbd);
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            background-color: #f9f9f9;
         }
+
+        .survey-container {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #ff6b6b;
+        }
+
         .question {
             margin-bottom: 20px;
         }
+
         .question label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: #333;
         }
-        .question input[type="text"], .question select, .question textarea {
+
+        .question select, .question textarea {
             width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 10px;
+            border: 1px solid #ff6b6b;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
         }
+
         .question textarea {
             resize: vertical;
             height: 100px;
         }
+
         .submit-btn {
-            background-color: #4CAF50;
+            background-color: #ff6b6b;
             color: white;
-            padding: 10px 20px;
+            padding: 12px 24px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 1.2rem;
+            transition: background-color 0.3s ease;
+            width: 100%;
         }
+
         .submit-btn:hover {
-            background-color: #45a049;
+            background-color: #ff4757;
         }
+
         .error {
-            color: red;
+            color: #ff4757;
             font-size: 0.9em;
             margin-top: 5px;
         }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            h2 {
+                font-size: 2rem;
+            }
+
+            .question label {
+                font-size: 1rem;
+            }
+
+            .question select, .question textarea {
+                font-size: 0.9rem;
+            }
+
+            .submit-btn {
+                font-size: 1rem;
+            }
+        }
     </style>
+    <!-- Add Google Font for Valentine's Day Theme -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 </head>
 <body>
 
 <div class="survey-container">
-    <h2>Website Survey</h2>
+    <h2>Valentine's Day Survey</h2>
     <form id="surveyForm">
         <div class="question">
-            <label for="q1">1. How satisfied are you with our website?</label>
+            <label for="q1">1. Will you be my valentine?</label>
             <select id="q1" name="q1">
                 <option value="">Select an option</option>
-                <option value="very-satisfied">Very Satisfied</option>
-                <option value="satisfied">Satisfied</option>
-                <option value="neutral">Neutral</option>
-                <option value="dissatisfied">Dissatisfied</option>
-                <option value="very-dissatisfied">Very Dissatisfied</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
             </select>
             <div id="q1-error" class="error"></div>
         </div>
 
         <div class="question">
-            <label for="q2">2. How easy was it to navigate our website?</label>
+            <label for="q2">2. How easy was our verification process?</label>
             <select id="q2" name="q2">
                 <option value="">Select an option</option>
                 <option value="very-easy">Very Easy</option>
@@ -86,7 +139,7 @@
         </div>
 
         <div class="question">
-            <label for="q3">3. How likely are you to recommend our website to others?</label>
+            <label for="q3">3. How likely are you to go skydiving?</label>
             <select id="q3" name="q3">
                 <option value="">Select an option</option>
                 <option value="very-likely">Very Likely</option>
@@ -99,13 +152,13 @@
         </div>
 
         <div class="question">
-            <label for="q4">4. What features do you like the most on our website?</label>
+            <label for="q4">4. What is something I don't know about you?</label>
             <textarea id="q4" name="q4"></textarea>
             <div id="q4-error" class="error"></div>
         </div>
 
         <div class="question">
-            <label for="q5">5. What improvements would you suggest for our website?</label>
+            <label for="q5">5. What is your favorite thing about our relationship?</label>
             <textarea id="q5" name="q5"></textarea>
             <div id="q5-error" class="error"></div>
         </div>
@@ -126,6 +179,9 @@
     document.getElementById('surveyForm').addEventListener('submit', function(event) {
         event.preventDefault(); // Prevent form submission
 
+        // Clear previous errors
+        document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
         // Validate form
         const q1 = document.getElementById('q1').value;
         const q2 = document.getElementById('q2').value;
@@ -133,10 +189,30 @@
         const q4 = document.getElementById('q4').value.trim();
         const q5 = document.getElementById('q5').value.trim();
 
-        if (!q1 || !q2 || !q3 || !q4 || !q5) {
-            alert('Please answer all questions before submitting.');
-            return;
+        let isValid = true;
+
+        if (!q1) {
+            document.getElementById('q1-error').textContent = 'Please answer this question.';
+            isValid = false;
         }
+        if (!q2) {
+            document.getElementById('q2-error').textContent = 'Please answer this question.';
+            isValid = false;
+        }
+        if (!q3) {
+            document.getElementById('q3-error').textContent = 'Please answer this question.';
+            isValid = false;
+        }
+        if (!q4) {
+            document.getElementById('q4-error').textContent = 'Please answer this question.';
+            isValid = false;
+        }
+        if (!q5) {
+            document.getElementById('q5-error').textContent = 'Please answer this question.';
+            isValid = false;
+        }
+
+        if (!isValid) return;
 
         // Prepare email parameters
         const templateParams = {
@@ -150,15 +226,16 @@
         // Send email using EmailJS
         emailjs.send('service_2ht15co', 'template_p9knnol', templateParams)
             .then(function(response) {
-                alert('Thank you for completing the survey! Your responses have been sent.');
+                // Show success alert
+                alert('Your response has been submitted to Loagan via email.');
                 document.getElementById('surveyForm').reset(); // Clear the form
+                setTimeout(function() {
+                    window.location.href = 'https://kelcie.net';
+                }, 5000); // Redirect after 5 seconds
             }, function(error) {
                 alert('Failed to send the survey. Please try again later.');
                 console.error('EmailJS Error:', error);
             });
-        setTimeout(function() {
-      window.location.href = 'https://kelcie.net/valentine.html';
-  }, 3000); // Redirect after 3 seconds
     });
 </script>
 
