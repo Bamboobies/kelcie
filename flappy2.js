@@ -54,7 +54,6 @@ function create() {
 
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10)
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10)
-  let goalText = this.add.text(20, 80, 'GOAL: 20', textStyle).setDepth(10)
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene)
