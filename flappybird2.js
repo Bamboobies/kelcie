@@ -1,4 +1,3 @@
-ok now a different project. Here is my code: 
 // === GAME SETTINGS ===
 const GRAVITY = 900
 const FLAP_STRENGTH = -300
