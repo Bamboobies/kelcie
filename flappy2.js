@@ -5,7 +5,7 @@ const PIPE_SPEED = -200
 const PIPE_GAP = 175
 const PIPE_WIDTH = 80
 const PIPE_CAP_HEIGHT = 20
-const PIPE_SPAWN_DELAY = 1540
+const PIPE_SPAWN_DELAY = 1600
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText
 let titleText, startText, gameOverText, restartText
@@ -35,7 +35,7 @@ function create() {
   bird.body.setCollideWorldBounds(true)
   bird.body.allowGravity = false
 
-  pipes = this.physics.add.group({ immovable: true, allowGravity: false })
+  pipes = this.physics.add.group()
   scoreZones = this.physics.add.group()
 
   const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' }
@@ -56,10 +56,6 @@ function create() {
 
   this.physics.add.collider(bird, pipes, hitPipe, null, this)
 
-  this.physics.world.on('worldbounds', (body) => {
-    if (body.gameObject) body.gameObject.destroy()
-  })
-
   highScore = localStorage.getItem('flappyHighScore') || 0
   highScoreText.setText('HIGH SCORE: ' + highScore)
 }
@@ -67,9 +63,10 @@ function create() {
 function update() {
   if (gameOver) return
 
+  // Smoother rotation
   bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20)
 
-  if (bird.y >= game.scale.height - bird.height / 2) {
+  if (bird.body.blocked.down) {
     hitPipe.call(this)
   }
 
@@ -93,27 +90,43 @@ function addPipes() {
 
   let gameWidth = game.scale.width
   let gameHeight = game.scale.height
+
+  // Improved pipe gap positioning
   let minGapY = 120
   let maxGapY = gameHeight - PIPE_GAP - 120
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY)
 
-  let pipeTop = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1)
-  let pipeBottom = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0)
+  let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1)
+  let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0)
 
   let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1)
   let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0)
 
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5)
 
+  this.physics.add.existing(pipeTopBody)
+  this.physics.add.existing(pipeBottomBody)
+  this.physics.add.existing(pipeTopCap)
+  this.physics.add.existing(pipeBottomCap)
   this.physics.add.existing(scoreZone)
-  pipes.addMultiple([pipeTop, pipeBottom, pipeTopCap, pipeBottomCap])
+
+  pipeTopBody.body.immovable = true
+  pipeBottomBody.body.immovable = true
+  pipeTopCap.body.immovable = true
+  pipeBottomCap.body.immovable = true
+
+  pipes.add(pipeTopBody)
+  pipes.add(pipeBottomBody)
+  pipes.add(pipeTopCap)
+  pipes.add(pipeBottomCap)
   scoreZones.add(scoreZone)
 
-  let allPipes = [pipeTop, pipeBottom, pipeTopCap, pipeBottomCap, scoreZone]
+  let allPipes = [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone]
   allPipes.forEach(pipe => {
     pipe.body.setVelocityX(PIPE_SPEED)
+    pipe.body.allowGravity = false
     pipe.body.checkWorldBounds = true
-    pipe.body.onWorldBounds = true
+    pipe.body.outOfBoundsKill = true
   })
 
   scoreZone.passed = false
@@ -133,14 +146,7 @@ function hitPipe() {
   if (gameOver) return
 
   gameOver = true
-  this.tweens.add({
-    targets: bird,
-    alpha: 0,
-    duration: 100,
-    yoyo: true,
-    repeat: 3,
-    onComplete: () => this.physics.pause()
-  })
+  this.physics.pause()
 
   gameOverText.setText('GAME OVER')
   restartText.setText('TAP TO RESTART')
@@ -164,3 +170,4 @@ function restartGame() {
   gameOverText.setText('')
   restartText.setText('')
 }
+
