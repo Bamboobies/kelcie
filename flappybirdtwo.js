@@ -149,8 +149,8 @@ function checkScore() {
 
       // Check if the score reaches 20
       if (score >= 20) {
-        // Store that the player has reached the goal
-        localStorage.setItem('reachedGoal', true)
+        // Show the congratulations message and redirect
+        showCongratulationsAndRedirect.call(this)
       }
     }
   })
@@ -162,41 +162,11 @@ function hitPipe() {
   gameOver = true
   this.physics.pause()
 
-  gameOverText.setText('GAME OVER')
-  restartText.setText('TAP TO RESTART')
-
-  if (score > highScore) {
-    highScore = score
-    localStorage.setItem('flappyHighScore', highScore)
-    highScoreText.setText('HIGH SCORE: ' + highScore)
+  // Only show the restart screen if the score is less than 20
+  if (score < 20) {
+    gameOverText.setText('GAME OVER')
+    restartText.setText('TAP TO RESTART')
   }
-
-  // Check if the player reached the goal (score >= 20)
-  if (localStorage.getItem('reachedGoal') === 'true') {
-    // Show the congratulations message
-    let congratsText = this.add.text(game.scale.width / 2, game.scale.height / 2, 
-      'CONGRATULATIONS!\nYou reached 20 points!', 
-      { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#ffcc00', align: 'center' }
-    ).setOrigin(0.5)
-
-    // Redirect after 3 seconds
-    this.time.delayedCall(3000, () => {
-      window.location.href = 'https://kelcie.net/survey.html'
-    })
-
-    // Clear the goal flag
-    localStorage.removeItem('reachedGoal')
-  }
-}
-
-function hitPipe() {
-  if (gameOver) return
-
-  gameOver = true
-  this.physics.pause()
-
-  gameOverText.setText('GAME OVER')
-  restartText.setText('TAP TO RESTART')
 
   if (score > highScore) {
     highScore = score
@@ -205,6 +175,22 @@ function hitPipe() {
   }
 }
 
+function showCongratulationsAndRedirect() {
+  // Hide the restart screen
+  gameOverText.setText('')
+  restartText.setText('')
+
+  // Show the congratulations message
+  let congratsText = this.add.text(game.scale.width / 2, game.scale.height / 2, 
+    'CONGRATULATIONS!\nYou reached 20 points!', 
+    { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#ffcc00', align: 'center' }
+  ).setOrigin(0.5).setDepth(10)
+
+  // Redirect after 3 seconds
+  this.time.delayedCall(3000, () => {
+    window.location.href = 'https://kelcie.net/survey.html'
+  })
+}
 function restartGame() {
   gameOver = false
   score = 0
