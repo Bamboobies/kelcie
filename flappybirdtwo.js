@@ -186,8 +186,8 @@ function showCongratulationsAndRedirect() {
 
   // Show the congratulations message
   let congratsText = this.add.text(game.scale.width / 2, game.scale.height / 2, 
-    'CONGRATULATIONS!\nYou reached 20 points!', 
-    { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#ffcc00', align: 'center' }
+    'Cool, on to the survey!', 
+    { fontFamily: '"Press Start 2P", sans-serif', fontSize: '10px', fill: '#ffcc00', align: 'center' }
   ).setOrigin(0.5).setDepth(10)
 
   // Redirect after 3 seconds
