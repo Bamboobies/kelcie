@@ -149,8 +149,8 @@ function checkScore() {
 
       // Check if the score reaches 20
       if (score >= 20) {
-        // Show the congratulations message and redirect
-        showCongratulationsAndRedirect.call(this)
+        // Store that the player has reached the goal
+        localStorage.setItem('reachedGoal', true)
       }
     }
   })
@@ -162,8 +162,12 @@ function hitPipe() {
   gameOver = true
   this.physics.pause()
 
-  // Only show the restart screen if the score is less than 20
-  if (score < 20) {
+  // Check if the player reached the goal (score >= 20)
+  if (localStorage.getItem('reachedGoal') === 'true') {
+    // Show the congratulations message and redirect
+    showCongratulationsAndRedirect.call(this)
+  } else {
+    // Show the restart screen for scores less than 20
     gameOverText.setText('GAME OVER')
     restartText.setText('TAP TO RESTART')
   }
@@ -190,6 +194,9 @@ function showCongratulationsAndRedirect() {
   this.time.delayedCall(3000, () => {
     window.location.href = 'https://kelcie.net/survey.html'
   })
+
+  // Clear the goal flag
+  localStorage.removeItem('reachedGoal')
 }
 function restartGame() {
   gameOver = false
