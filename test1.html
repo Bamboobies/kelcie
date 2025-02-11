@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Square Root Test</title>
+  <style>
+    /* Reset default margin and padding */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .question {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 5px;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      margin-top: 5px;
+    }
+
+    button {
+      background: #2575fc;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #1b5fd9;
+    }
+
+    .result {
+      font-size: 1.1rem;
+      margin-top: 20px;
+      text-align: center;
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.5rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+      }
+
+      label {
+        font-size: 0.9rem;
+      }
+
+      input[type="number"] {
+        font-size: 0.9rem;
+      }
+
+      button {
+        font-size: 0.9rem;
+      }
+
+      .result {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Square Root Test</h1>
+    <p>Find the square root of each number below. Round your answers to two decimal places.</p>
+    <form id="testForm">
+      <div id="questions"></div>
+      <button type="submit">Submit Answers</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    // Function to generate a random number between 1000 and 10000
+    function generateRandomNumber() {
+      return Math.floor(Math.random() * (10000 - 1000 + 1)) + 1000;
+    }
+
+    // Function to generate the test questions
+    function generateTest() {
+      const questionsDiv = document.getElementById('questions');
+      questionsDiv.innerHTML = ''; // Clear previous questions
+      for (let i = 1; i <= 5; i++) {
+        const randomNumber = generateRandomNumber();
+        questionsDiv.innerHTML += `
+          <div class="question">
+            <label for="answer${i}">Question ${i}: What is the square root of ${randomNumber}?</label>
+            <input type="number" step="0.01" id="answer${i}" required>
+            <input type="hidden" id="number${i}" value="${randomNumber}">
+          </div>
+        `;
+      }
+    }
+
+    // Function to check answers
+    function checkAnswers(event) {
+      event.preventDefault(); // Prevent form submission
+      let allCorrect = true;
+      for (let i = 1; i <= 5; i++) {
+        const userAnswer = parseFloat(document.getElementById(`answer${i}`).value);
+        const randomNumber = parseFloat(document.getElementById(`number${i}`).value);
+        const correctAnswer = Math.sqrt(randomNumber).toFixed(2);
+        if (userAnswer.toFixed(2) !== correctAnswer) {
+          allCorrect = false;
+          break;
+        }
+      }
+
+      const resultDiv = document.getElementById('result');
+      if (allCorrect) {
+        resultDiv.innerHTML = `
+          <p>🎉 Congratulations! All answers are correct.</p>
+          <p>There is one last verification measure: You must score at least 15 in Flappy Shrimp.</p>
+          <p>Redirecting to Flappy Shrimp...</p>
+        `;
+        setTimeout(() => {
+          window.location.href = 'https://kelcie.net/flappy.html';
+        }, 4000); // Redirect after 4 seconds
+      } else {
+        resultDiv.innerHTML = '❌ Incorrect answers. Please try again.';
+        generateTest(); // Generate a new test
+      }
+    }
+
+    // Generate the test when the page loads
+    window.onload = generateTest;
+
+    // Attach the form submission handler
+    document.getElementById('testForm').addEventListener('submit', checkAnswers);
+  </script>
+</body>
+</html>
