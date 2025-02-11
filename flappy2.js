@@ -31,7 +31,7 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce')
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.093)
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915)
   bird.body.setCollideWorldBounds(true)
   bird.body.allowGravity = false
 
