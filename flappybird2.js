@@ -140,6 +140,18 @@ function checkScore() {
       scoreZone.passed = true
       score++
       scoreText.setText('SCORE: ' + score)
+
+      // If score reaches 20, show message and redirect
+      if (score >= 20) {
+        let congratsText = this.add.text(game.scale.width / 2, game.scale.height / 2, 
+          'CONGRATULATIONS!\nYou reached 20 points!', 
+          { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#ffcc00', align: 'center' }
+        ).setOrigin(0.5)
+
+        this.time.delayedCall(3000, () => {
+          window.location.href = 'https://kelcie.net/survey.html'
+        })
+      }
     }
   })
 }
