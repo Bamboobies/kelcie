@@ -6,6 +6,7 @@ const PIPE_GAP = 175;
 const PIPE_WIDTH = 80;
 const PIPE_CAP_HEIGHT = 20;
 const PIPE_SPAWN_DELAY = 1550;
+const BACKGROUND_SPEED = -100; // Background moves slower than pipes
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
@@ -35,7 +36,7 @@ function create() {
   background = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'background').setOrigin(0, 0);
   background.setAlpha(0.7); // Set opacity to 70% for a lighter look
 
-  // Scale the background to fill the screen vertically
+  // Scale the background to fit the screen vertically without stretching
   const scale = gameHeight / background.height;
   background.setScale(scale);
 
@@ -80,10 +81,10 @@ function create() {
 }
 
 function update() {
-  if (gameOver) return;
+  if (gameOver || !gameStarted) return; // Stop background movement if game is over or not started
 
-  // Scroll the background at the same speed as the pipes
-  background.tilePositionX += PIPE_SPEED * (1 / 60); // Sync with pipe speed
+  // Scroll the background at a slower speed
+  background.tilePositionX += BACKGROUND_SPEED * (1 / 60); // Sync with frame rate
 
   // Smoother rotation
   bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
