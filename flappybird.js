@@ -36,12 +36,12 @@ function create() {
   const gameWidth = game.scale.width
   const gameHeight = game.scale.height
 
-  // Add the background and manually set its size
+  // Add the tiled background
   background = this.add.tileSprite(0, 0, gameWidth * 1.5, gameHeight, 'background').setOrigin(0, 0)
 
-  // Stretch the background to fit the screen height perfectly
-  background.displayHeight = gameHeight
-  background.displayWidth = gameWidth * 1.5  // Extra width to prevent gaps
+  // Scale the background to fit the screen height
+  const scale = gameHeight / background.height
+  background.setScale(scale)
 
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915)
   bird.body.setCollideWorldBounds(true)
@@ -82,10 +82,10 @@ function create() {
 function update() {
   if (gameOver || !gameStarted) return
 
-  // Scroll the background smoothly
+  // Scroll the background
   background.tilePositionX += BACKGROUND_SPEED * (1 / 60)
 
-  // Smoother bird rotation effect
+  // Smoother rotation effect
   bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20)
 
   if (bird.body.blocked.down) {
@@ -120,20 +120,29 @@ function addPipes() {
   let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1).setDepth(5)
   let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0).setDepth(5)
 
+  let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1).setDepth(5)
+  let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0).setDepth(5)
+
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5)
 
   this.physics.add.existing(pipeTopBody)
   this.physics.add.existing(pipeBottomBody)
+  this.physics.add.existing(pipeTopCap)
+  this.physics.add.existing(pipeBottomCap)
   this.physics.add.existing(scoreZone)
 
   pipeTopBody.body.immovable = true
   pipeBottomBody.body.immovable = true
+  pipeTopCap.body.immovable = true
+  pipeBottomCap.body.immovable = true
 
   pipes.add(pipeTopBody)
   pipes.add(pipeBottomBody)
+  pipes.add(pipeTopCap)
+  pipes.add(pipeBottomCap)
   scoreZones.add(scoreZone)
 
-  let allPipes = [pipeTopBody, pipeBottomBody, scoreZone]
+  let allPipes = [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone]
   allPipes.forEach(pipe => {
     pipe.body.setVelocityX(PIPE_SPEED)
     pipe.body.allowGravity = false
