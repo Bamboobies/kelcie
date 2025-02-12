@@ -16,7 +16,12 @@ let background; // Declare background as a global variable
 window.onload = () => {
   game = new Phaser.Game({
     type: Phaser.AUTO,
-    scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
+    scale: {
+      mode: Phaser.Scale.RESIZE,
+      width: window.innerWidth,
+      height: window.innerHeight,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
     physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
     scene: { preload, create, update }
   });
@@ -36,9 +41,9 @@ function create() {
   background = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'background').setOrigin(0, 0);
   background.setAlpha(0.7); // Set opacity to 70% for a lighter look
 
-  // Resize the background to fit the screen perfectly
-  background.setSize(gameWidth, gameHeight); // Set the size of the background
-  background.setDisplaySize(gameWidth, gameHeight); // Ensure it covers the entire screen
+  // Scale the background to fit the screen height perfectly
+  const scale = gameHeight / background.height;
+  background.setScale(scale);
 
   // Add a semi-transparent white overlay to make the background even lighter
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
