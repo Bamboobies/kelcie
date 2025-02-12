@@ -39,14 +39,20 @@ function create() {
 
   // Add the tiled background
   background = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'background').setOrigin(0, 0);
-  background.setAlpha(0.7); // Set opacity to 70% for a lighter look
 
-  // Scale the background to fit the screen height perfectly
+  // Scale the background to fit the screen height PERFECTLY
   const scale = gameHeight / background.height;
   background.setScale(scale);
 
-  // Add a semi-transparent white overlay to make the background even lighter
-  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
+  // Calculate the scaled width of the background
+  const scaledWidth = background.width * scale;
+
+  // Center the background horizontally (important!)
+  background.x = (gameWidth - scaledWidth) / 2;
+
+
+  // Add a semi-transparent white overlay, MATCHING THE SCALED BACKGROUND SIZE
+  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, scaledWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1); // Ensure the overlay is behind other game elements
 
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
