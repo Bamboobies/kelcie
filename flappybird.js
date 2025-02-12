@@ -32,7 +32,7 @@ function create() {
 
   // Add the background image
   const background = this.add.image(gameWidth / 2, gameHeight / 2, 'background');
-  background.setAlpha(0.5); // Set opacity to 50%
+  background.setAlpha(0.7); // Increase opacity to 70% (lighter background)
 
   // Scale the background image to fit the screen height without stretching
   const scale = gameHeight / background.height;
@@ -40,6 +40,10 @@ function create() {
 
   // Center the background image
   background.setOrigin(0.5, 0.5);
+
+  // Add a semi-transparent white overlay to make the background even lighter
+  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
+  overlay.setDepth(-1); // Ensure the overlay is behind other game elements
 
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.setCollideWorldBounds(true);
