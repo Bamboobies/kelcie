@@ -6,10 +6,12 @@ const PIPE_GAP = 175;
 const PIPE_WIDTH = 80;
 const PIPE_CAP_HEIGHT = 20;
 const PIPE_SPAWN_DELAY = 1550;
+const BACKGROUND_SPEED = -50; // Speed for the background scroll
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
+let background; // Declare background as a global variable
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -30,16 +32,9 @@ function create() {
   const gameWidth = game.scale.width;
   const gameHeight = game.scale.height;
 
-  // Add the background image
-  const background = this.add.image(gameWidth / 2, gameHeight / 2, 'background');
-  background.setAlpha(0.7); // Increase opacity to 70% (lighter background)
-
-  // Scale the background image to fit the screen height without stretching
-  const scale = gameHeight / background.height;
-  background.setScale(scale);
-
-  // Center the background image
-  background.setOrigin(0.5, 0.5);
+  // Add the tiled background
+  background = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'background').setOrigin(0, 0);
+  background.setAlpha(0.7); // Set opacity to 70% for a lighter look
 
   // Add a semi-transparent white overlay to make the background even lighter
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
@@ -83,6 +78,9 @@ function create() {
 
 function update() {
   if (gameOver) return;
+
+  // Scroll the background
+  background.tilePositionX += BACKGROUND_SPEED * (1 / 60); // Adjust scroll speed based on frame rate
 
   // Smoother rotation
   bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
