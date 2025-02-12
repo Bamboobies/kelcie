@@ -6,7 +6,7 @@ const PIPE_GAP = 175;
 const PIPE_WIDTH = 80;
 const PIPE_CAP_HEIGHT = 20;
 const PIPE_SPAWN_DELAY = 1550;
-const BACKGROUND_SPEED = -100; // Background moves slower than pipes
+const BACKGROUND_SPEED = -50; // Reduced background speed
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
