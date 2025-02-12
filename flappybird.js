@@ -5,7 +5,7 @@ const PIPE_SPEED = -200
 const PIPE_GAP = 175
 const PIPE_WIDTH = 80
 const PIPE_CAP_HEIGHT = 20
-const PIPE_SPAWN_DELAY = 1600
+const PIPE_SPAWN_DELAY = 1550
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText
 let titleText, startText, gameOverText, restartText
@@ -31,7 +31,7 @@ function create() {
 
   scene.cameras.main.setBackgroundColor('#70c5ce')
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.09)
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915)
   bird.body.setCollideWorldBounds(true)
   bird.body.allowGravity = false
 
@@ -40,13 +40,20 @@ function create() {
 
   const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' }
 
-  titleText = this.add.text(gameWidth / 2, gameHeight * 0.3, 'FLAPPY SHRIMP', { fontFamily: '"Press Start 2P", sans-serif', fontSize: '32px', fill: '#ffcc00' }).setOrigin(0.5)
-  startText = this.add.text(gameWidth / 2, gameHeight * 0.5, 'TAP TO START', textStyle).setOrigin(0.5)
-  gameOverText = this.add.text(gameWidth / 2, gameHeight * 0.5, '', textStyle).setOrigin(0.5)
-  restartText = this.add.text(gameWidth / 2, gameHeight * 0.6, '', textStyle).setOrigin(0.5)
+  // Dynamically adjust the font size for "Flappy Shrimp" based on screen width
+  const titleFontSize = Math.min(gameWidth * 0.075, 32) // Adjust the multiplier (0.1) as needed
+  titleText = this.add.text(gameWidth / 2, gameHeight * 0.3, 'FLAPPY SHRIMP', { 
+    fontFamily: '"Press Start 2P", sans-serif', 
+    fontSize: `${titleFontSize}px`, 
+    fill: '#ffcc00' 
+  }).setOrigin(0.5)
 
-  scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle)
-  highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle)
+  startText = this.add.text(gameWidth / 2, gameHeight * 0.5, 'TAP TO START', textStyle).setOrigin(0.5).setDepth(10)
+  gameOverText = this.add.text(gameWidth / 2, gameHeight * 0.5, '', textStyle).setOrigin(0.5).setDepth(10)
+  restartText = this.add.text(gameWidth / 2, gameHeight * 0.6, '', textStyle).setOrigin(0.5).setDepth(10)
+
+  scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10)
+  highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10)
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene)
@@ -63,10 +70,9 @@ function create() {
 function update() {
   if (gameOver) return
 
-  // Rotate the bird based on velocity
-  bird.angle = bird.body.velocity.y > 0 ? 20 : -20
+  // Smoother rotation
+  bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20)
 
-  // Check if the bird touches the bottom of the playable area
   if (bird.body.blocked.down) {
     hitPipe.call(this)
   }
@@ -89,16 +95,21 @@ function flap() {
 function addPipes() {
   if (gameOver) return
 
-  const gameHeight = game.scale.height
-  let gapY = Phaser.Math.Between(100, gameHeight - PIPE_GAP - 100)
+  let gameWidth = game.scale.width
+  let gameHeight = game.scale.height
 
-  let pipeTopBody = this.add.rectangle(game.scale.width, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1)
-  let pipeBottomBody = this.add.rectangle(game.scale.width, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0)
+  // Improved pipe gap positioning
+  let minGapY = 120
+  let maxGapY = gameHeight - PIPE_GAP - 120
+  let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY)
 
-  let pipeTopCap = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1)
-  let pipeBottomCap = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0)
+  let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1).setDepth(5)
+  let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0).setDepth(5)
 
-  let scoreZone = this.add.rectangle(game.scale.width + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5)
+  let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1).setDepth(5)
+  let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0).setDepth(5)
+
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5)
 
   this.physics.add.existing(pipeTopBody)
   this.physics.add.existing(pipeBottomBody)
