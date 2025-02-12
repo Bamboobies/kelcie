@@ -6,7 +6,7 @@ const PIPE_GAP = 175;
 const PIPE_WIDTH = 80;
 const PIPE_CAP_HEIGHT = 20;
 const PIPE_SPAWN_DELAY = 1550;
-const BACKGROUND_SPEED = -20; // Even slower background speed
+const BACKGROUND_SPEED = -10; // Even slower background speed
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
@@ -37,8 +37,8 @@ function create() {
   background.setAlpha(0.7); // Set opacity to 70% for a lighter look
 
   // Scale the background to fit the screen height perfectly
-  const scale = gameHeight / background.height;
-  background.setScale(scale);
+  background.displayHeight = gameHeight; // Fit the height of the screen
+  background.scaleX = background.scaleY; // Maintain aspect ratio
 
   // Add a semi-transparent white overlay to make the background even lighter
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
