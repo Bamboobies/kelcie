@@ -36,13 +36,29 @@ function create() {
   background = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'background').setOrigin(0, 0);
   background.setAlpha(0.7); // Set opacity to 70% for a lighter look
 
-  // Calculate the scale factor to fit the background vertically
-  const scaleFactor = gameHeight / background.height;
-  background.setScale(scaleFactor); // Scale the background to fit the screen height
+  // *** KEY CHANGE: Calculate scale based on aspect ratio ***
+  const backgroundAspectRatio = background.width / background.height;  // Original aspect ratio
+  const screenAspectRatio = gameWidth / gameHeight;
+
+  let scaleFactor;
+  if (backgroundAspectRatio > screenAspectRatio) {
+    scaleFactor = gameWidth / background.width; // Fit width
+  } else {
+    scaleFactor = gameHeight / background.height; // Fit height (your original logic)
+  }
+
+  background.setScale(scaleFactor); // Scale the background
+
+  // Recenter the background after scaling, if necessary
+  background.setPosition(gameWidth/2, gameHeight/2);
+  background.tilePositionX = -gameWidth/2;
+  background.tilePositionY = -gameHeight/2;
+
 
   // Add a semi-transparent white overlay to make the background even lighter
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1); // Ensure the overlay is behind other game elements
+
 
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.setCollideWorldBounds(true);
@@ -79,7 +95,6 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 }
-
 function update() {
   if (gameOver || !gameStarted) return; // Stop background movement if game is over or not started
 
