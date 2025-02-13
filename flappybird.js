@@ -11,7 +11,7 @@ const BACKGROUND_SPEED = -10; // Even slower background speed
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
-let background; // Declare background as a global variable
+let background1, background2; // Declare two background sprites
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -33,18 +33,13 @@ function create() {
   const gameHeight = game.scale.height;
 
   // Add the tiled background
-  background = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'background').setOrigin(0, 0);
-  background.setAlpha(0.7); // Set opacity to 70% for a lighter look
+  background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0);
+  background2 = this.add.sprite(gameWidth, 0, 'background').setOrigin(0, 0);
 
-  // Get the actual dimensions of the loaded background image
-  const imageWidth = background.texture.getSourceImage().width;
-  const imageHeight = background.texture.getSourceImage().height;
-
-  // Calculate the scale factor to fit the background vertically
-  const scaleFactor = gameHeight / imageHeight;
-
-  // Use tileScale to fit the background vertically and repeat horizontally
-  background.setTileScale(scaleFactor, scaleFactor);
+  // Scale the backgrounds to fit the screen height
+  const scaleFactor = gameHeight / background1.height;
+  background1.setScale(scaleFactor);
+  background2.setScale(scaleFactor);
 
   // Add a semi-transparent white overlay to make the background even lighter
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
@@ -89,8 +84,17 @@ function create() {
 function update() {
   if (gameOver || !gameStarted) return; // Stop background movement if game is over or not started
 
-  // Scroll the background at a slower speed
-  background.tilePositionX += BACKGROUND_SPEED * (1 / 60); // Sync with frame rate
+  // Move both background sprites
+  background1.x += BACKGROUND_SPEED * (1 / 60); // Sync with frame rate
+  background2.x += BACKGROUND_SPEED * (1 / 60);
+
+  // Check if a background sprite has moved completely off the screen
+  if (background1.x + background1.displayWidth <= 0) {
+    background1.x = background2.x + background2.displayWidth;
+  }
+  if (background2.x + background2.displayWidth <= 0) {
+    background2.x = background1.x + background1.displayWidth;
+  }
 
   // Smoother rotation
   bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
@@ -125,14 +129,38 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1).setDepth(5);
-  let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0).setDepth(5);
+  // Create a graphics object for the pipe texture
+  const pipeTexture = this.make.graphics({ x: 0, y: 0, add: false });
 
-  let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1).setDepth(5);
-  let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0).setDepth(5);
+  // Draw a gradient texture for the pipes
+  pipeTexture.fillGradientStyle(0x006400, 0x008000, 0x228B22, 0x32CD32, 1);
+  pipeTexture.fillRect(0, 0, PIPE_WIDTH, gameHeight); // Fill the entire height for the gradient
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  // Generate a texture from the graphics object
+  pipeTexture.generateTexture('pipeTexture', PIPE_WIDTH, gameHeight);
+  pipeTexture.destroy(); // Clean up the graphics object
 
+  // Create the top pipe body with texture
+  let pipeTopBody = this.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1);
+  pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY); // Scale to fit the gap
+
+  // Create the bottom pipe body with texture
+  let pipeBottomBody = this.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0);
+  pipeBottomBody.setDisplaySize(PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP)); // Scale to fit the gap
+
+  // Create the top pipe cap
+  let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1);
+  pipeTopCap.setDepth(5);
+
+  // Create the bottom pipe cap
+  let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0);
+  pipeBottomCap.setDepth(5);
+
+  // Create the score zone
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5);
+  scoreZone.setDepth(5);
+
+  // Enable physics for all pipe parts
   this.physics.add.existing(pipeTopBody);
   this.physics.add.existing(pipeBottomBody);
   this.physics.add.existing(pipeTopCap);
