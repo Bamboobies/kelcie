@@ -32,22 +32,20 @@ function create() {
   const gameWidth = game.scale.width;
   const gameHeight = game.scale.height;
 
-  // Load the background as a regular sprite (not a tileSprite)
-  background = this.add.sprite(0, 0, 'background').setOrigin(0, 0);
+  // Add the tiled background
+  background = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'background').setOrigin(0, 0);
   background.setAlpha(0.7); // Set opacity to 70% for a lighter look
 
   // Get the actual dimensions of the loaded background image
-  const imageWidth = background.width;
-  const imageHeight = background.height;
+  const imageWidth = background.texture.getSourceImage().width;
+  const imageHeight = background.texture.getSourceImage().height;
 
   // Calculate the scale factor to fit the background vertically
   const scaleFactor = gameHeight / imageHeight;
   background.setScale(scaleFactor); // Scale the background to fit the screen height
 
-  // Center the background horizontally if it's wider than the screen
-  if (background.displayWidth > gameWidth) {
-    background.x = (gameWidth - background.displayWidth) / 2;
-  }
+  // Ensure the tiled background repeats horizontally
+  background.setTileScale(scaleFactor, scaleFactor);
 
   // Add a semi-transparent white overlay to make the background even lighter
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
@@ -93,7 +91,7 @@ function update() {
   if (gameOver || !gameStarted) return; // Stop background movement if game is over or not started
 
   // Scroll the background at a slower speed
-  background.x += BACKGROUND_SPEED * (1 / 60); // Sync with frame rate
+  background.tilePositionX += BACKGROUND_SPEED * (1 / 60); // Sync with frame rate
 
   // Smoother rotation
   bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
