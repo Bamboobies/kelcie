@@ -40,11 +40,6 @@ function create() {
   const scaleFactor = gameHeight / background.height;
   background.setScale(scaleFactor); // Scale the background to fit the screen height
 
-  // Center the background horizontally if it's wider than the screen
-  if (background.displayWidth > gameWidth) {
-    background.x = (gameWidth - background.displayWidth) / 2;
-  }
-
   // Add a semi-transparent white overlay to make the background even lighter
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1); // Ensure the overlay is behind other game elements
