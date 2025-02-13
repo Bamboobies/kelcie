@@ -32,12 +32,19 @@ function create() {
   const gameWidth = game.scale.width;
   const gameHeight = game.scale.height;
 
-  // Add the tiled background
+  // Load the background as a normal sprite
+  const imageWidth = this.textures.get('background').getSourceImage().width;
+  const imageHeight = this.textures.get('background').getSourceImage().height;
+
+  // Calculate the scale factor to fit the background vertically
+  const scaleFactor = gameHeight / imageHeight;
+  const scaledWidth = imageWidth * scaleFactor;
+
+  // Create two background sprites side by side
   background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0);
-  background2 = this.add.sprite(gameWidth, 0, 'background').setOrigin(0, 0);
+  background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0);
 
   // Scale the backgrounds to fit the screen height
-  const scaleFactor = gameHeight / background1.height;
   background1.setScale(scaleFactor);
   background2.setScale(scaleFactor);
 
