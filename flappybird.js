@@ -11,7 +11,7 @@ const BACKGROUND_SPEED = -10; // Even slower background speed
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
-let background; // Declare background as a global variable
+let background1, background2; // Declare two background sprites
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -32,20 +32,21 @@ function create() {
   const gameWidth = game.scale.width;
   const gameHeight = game.scale.height;
 
-  // Add the tiled background
-  background = this.add.tileSprite(0, 0, gameWidth, gameHeight, 'background').setOrigin(0, 0);
-  background.setAlpha(0.7); // Set opacity to 70% for a lighter look
-
-  // Get the actual dimensions of the loaded background image
-  const imageWidth = background.texture.getSourceImage().width;
-  const imageHeight = background.texture.getSourceImage().height;
+  // Load the background as a normal sprite
+  const imageWidth = this.textures.get('background').getSourceImage().width;
+  const imageHeight = this.textures.get('background').getSourceImage().height;
 
   // Calculate the scale factor to fit the background vertically
   const scaleFactor = gameHeight / imageHeight;
-  background.setScale(scaleFactor); // Scale the background to fit the screen height
+  const scaledWidth = imageWidth * scaleFactor;
 
-  // Ensure the tiled background repeats horizontally
-  background.setTileScale(scaleFactor, scaleFactor);
+  // Create two background sprites side by side
+  background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0);
+  background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0);
+
+  // Scale the backgrounds to fit the screen height
+  background1.setScale(scaleFactor);
+  background2.setScale(scaleFactor);
 
   // Add a semi-transparent white overlay to make the background even lighter
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
@@ -90,8 +91,17 @@ function create() {
 function update() {
   if (gameOver || !gameStarted) return; // Stop background movement if game is over or not started
 
-  // Scroll the background at a slower speed
-  background.tilePositionX += BACKGROUND_SPEED * (1 / 60); // Sync with frame rate
+  // Move both background sprites
+  background1.x += BACKGROUND_SPEED * (1 / 60); // Sync with frame rate
+  background2.x += BACKGROUND_SPEED * (1 / 60);
+
+  // Check if a background sprite has moved completely off the screen
+  if (background1.x + background1.displayWidth <= 0) {
+    background1.x = background2.x + background2.displayWidth;
+  }
+  if (background2.x + background2.displayWidth <= 0) {
+    background2.x = background1.x + background1.displayWidth;
+  }
 
   // Smoother rotation
   bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
