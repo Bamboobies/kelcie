@@ -99,6 +99,7 @@ function startGame() {
   bird.body.allowGravity = true
   titleText.setText('')
   startText.setText('')
+  addPipes() // Ensure pipes spawn immediately
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this })
 }
 
@@ -113,16 +114,17 @@ function addPipes() {
   let pipeTop = this.physics.add.sprite(gameWidth, gapY, 'pipe').setOrigin(0, 1).setDepth(5)
   let pipeBottom = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipe').setOrigin(0, 0).setFlipY(true).setDepth(5)
 
-  let topCap = this.add.image(gameWidth, gapY, 'pipeCap').setOrigin(0, 1).setDepth(6)
-  let bottomCap = this.add.image(gameWidth, gapY + PIPE_GAP, 'pipeCap').setOrigin(0, 0).setFlipY(true).setDepth(6)
+  let topCap = this.physics.add.sprite(gameWidth, gapY, 'pipeCap').setOrigin(0, 1).setDepth(6)
+  let bottomCap = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipeCap').setOrigin(0, 0).setFlipY(true).setDepth(6)
 
-  pipes.add(pipeTop)
-  pipes.add(pipeBottom)
+  pipes.addMultiple([pipeTop, pipeBottom, topCap, bottomCap])
 
-  pipeTop.body.setVelocityX(PIPE_SPEED)
-  pipeBottom.body.setVelocityX(PIPE_SPEED)
-  topCap.setVelocityX(PIPE_SPEED)
-  bottomCap.setVelocityX(PIPE_SPEED)
+  let allPipes = [pipeTop, pipeBottom, topCap, bottomCap]
+  allPipes.forEach(pipe => {
+    pipe.body.setVelocityX(PIPE_SPEED)
+    pipe.body.allowGravity = false
+    pipe.body.immovable = true
+  })
 }
 
 function createPipeTextures(scene) {
