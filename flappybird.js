@@ -74,6 +74,8 @@ function create() {
 
   highScore = localStorage.getItem('flappyHighScore') || 0
   highScoreText.setText('HIGH SCORE: ' + highScore)
+
+  createPipeTextures(this) // Create the pipe textures once
 }
 
 function update() {
@@ -106,62 +108,43 @@ function flap() {
 
 function addPipes() {
   let gameWidth = game.scale.width
-  let gameHeight = game.scale.height
+  let gapY = Phaser.Math.Between(120, game.scale.height - PIPE_GAP - 120)
 
-  let minGapY = 120
-  let maxGapY = gameHeight - PIPE_GAP - 120
-  let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY)
+  let pipeTop = this.physics.add.sprite(gameWidth, gapY, 'pipe').setOrigin(0, 1).setDepth(5)
+  let pipeBottom = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipe').setOrigin(0, 0).setFlipY(true).setDepth(5)
 
-  let pipeTop = createPipe(this, gameWidth, gapY, false)
-  let pipeBottom = createPipe(this, gameWidth, gapY + PIPE_GAP, true)
+  let topCap = this.add.image(gameWidth, gapY, 'pipeCap').setOrigin(0, 1).setDepth(6)
+  let bottomCap = this.add.image(gameWidth, gapY + PIPE_GAP, 'pipeCap').setOrigin(0, 0).setFlipY(true).setDepth(6)
 
   pipes.add(pipeTop)
   pipes.add(pipeBottom)
 
   pipeTop.body.setVelocityX(PIPE_SPEED)
   pipeBottom.body.setVelocityX(PIPE_SPEED)
+  topCap.setVelocityX(PIPE_SPEED)
+  bottomCap.setVelocityX(PIPE_SPEED)
 }
 
-function createPipe(scene, x, y, flipped) {
+function createPipeTextures(scene) {
   let graphics = scene.add.graphics()
 
-  // Pipe body shading
   graphics.fillStyle(0x007700, 1)
   graphics.fillRect(0, 0, PIPE_WIDTH, 400)
   graphics.fillStyle(0x005500, 1)
   graphics.fillRect(10, 0, PIPE_WIDTH - 20, 400)
-
-  // Pipe outline
   graphics.lineStyle(3, 0x000000, 1)
   graphics.strokeRect(0, 0, PIPE_WIDTH, 400)
 
-  // Pipe cap
+  graphics.generateTexture('pipe', PIPE_WIDTH, 400)
+  graphics.clear()
+
   graphics.fillStyle(0x004400, 1)
-  graphics.fillRect(0, flipped ? 400 : -PIPE_CAP_HEIGHT, PIPE_WIDTH, PIPE_CAP_HEIGHT)
+  graphics.fillRect(0, 0, PIPE_WIDTH, PIPE_CAP_HEIGHT)
   graphics.lineStyle(2, 0x000000, 1)
-  graphics.strokeRect(0, flipped ? 400 : -PIPE_CAP_HEIGHT, PIPE_WIDTH, PIPE_CAP_HEIGHT)
+  graphics.strokeRect(0, 0, PIPE_WIDTH, PIPE_CAP_HEIGHT)
 
-  let textureKey = flipped ? 'pipeBottom' : 'pipeTop'
-  graphics.generateTexture(textureKey, PIPE_WIDTH, 400 + PIPE_CAP_HEIGHT)
+  graphics.generateTexture('pipeCap', PIPE_WIDTH, PIPE_CAP_HEIGHT)
   graphics.destroy()
-
-  let pipe = scene.physics.add.sprite(x, y, textureKey).setOrigin(0, flipped ? 0 : 1).setDepth(5)
-  pipe.body.immovable = true
-  pipe.body.allowGravity = false
-  pipe.body.checkWorldBounds = true
-  pipe.body.setCollideWorldBounds(true)
-
-  return pipe
-}
-
-function checkScore() {
-  scoreZones.getChildren().forEach(scoreZone => {
-    if (!scoreZone.passed && scoreZone.x < bird.x) {
-      scoreZone.passed = true
-      score++
-      scoreText.setText('SCORE: ' + score)
-    }
-  })
 }
 
 function hitPipe() {
@@ -169,7 +152,6 @@ function hitPipe() {
 
   gameOver = true
   this.physics.pause()
-
   gameOverText.setText('GAME OVER')
   restartText.setText('TAP TO RESTART')
 }
