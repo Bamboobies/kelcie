@@ -120,17 +120,22 @@ function addPipes() {
 
 function createPipe(scene, x, y, flipped) {
   let graphics = scene.add.graphics()
-  graphics.fillStyle(0x007700, 1) // Green base
-  graphics.fillRect(0, 0, PIPE_WIDTH, 400) // Pipe body
 
-  graphics.fillStyle(0x005500, 1) // Darker shade for depth
-  graphics.fillRect(10, 0, PIPE_WIDTH - 20, 400) // Inner shading
+  // Draw pipe body
+  graphics.fillStyle(0x007700, 1)
+  graphics.fillRect(0, 0, PIPE_WIDTH, 400)
 
-  graphics.lineStyle(2, 0x000000, 1) // Black outline
+  // Pipe shading
+  graphics.fillStyle(0x005500, 1)
+  graphics.fillRect(10, 0, PIPE_WIDTH - 20, 400)
+
+  // Outline
+  graphics.lineStyle(2, 0x000000, 1)
   graphics.strokeRect(0, 0, PIPE_WIDTH, 400)
 
-  graphics.fillStyle(0x004400, 1) // Darker green for cap
-  graphics.fillRoundedRect(-5, -PIPE_CAP_HEIGHT, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 5)
+  // Pipe cap
+  graphics.fillStyle(0x004400, 1)
+  graphics.fillRect(-5, -PIPE_CAP_HEIGHT, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT)
 
   let textureKey = flipped ? 'pipeBottom' : 'pipeTop'
   graphics.generateTexture(textureKey, PIPE_WIDTH, 400 + PIPE_CAP_HEIGHT)
@@ -138,6 +143,10 @@ function createPipe(scene, x, y, flipped) {
 
   let pipe = scene.physics.add.sprite(x, y, textureKey).setOrigin(0, flipped ? 0 : 1).setDepth(5)
   pipe.body.immovable = true
+  pipe.body.allowGravity = false
+  pipe.body.checkWorldBounds = true
+  pipe.body.setCollideWorldBounds(true)
+
   return pipe
 }
 
@@ -172,4 +181,4 @@ function restartGame() {
   this.physics.resume()
   gameOverText.setText('')
   restartText.setText('')
-                   }
+}
