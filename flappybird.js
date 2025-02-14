@@ -116,15 +116,17 @@ function addPipes() {
 
   if (!this.textures.exists('pipeTexture')) createPipeTexture(this)
 
-  let pipeTop = this.physics.add.sprite(gameWidth, gapY, 'pipeTexture').setOrigin(0, 1)
-  let pipeBottom = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipeTexture').setOrigin(0, 0).setFlipY(true)
+  let pipeTop = this.physics.add.sprite(gameWidth, gapY, 'pipeTexture').setOrigin(0, 1).setDepth(5)
+  let pipeBottom = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipeTexture').setOrigin(0, 0).setFlipY(true).setDepth(5)
 
   pipeTop.body.immovable = true
   pipeBottom.body.immovable = true
   pipes.add(pipeTop)
   pipes.add(pipeBottom)
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5)
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0)
+    .setOrigin(0.5)
+    .setDepth(5)
   this.physics.add.existing(scoreZone)
   scoreZones.add(scoreZone)
 
@@ -142,9 +144,9 @@ function addPipes() {
 function createPipeTexture(scene) {
   let graphics = scene.add.graphics()
   let width = PIPE_WIDTH
-  let height = 400 
+  let height = 400
 
-  graphics.fillGradientStyle(0x007700, 0x00aa00, 0x00aa00, 0x007700, 1)
+  graphics.fillGradientStyle(0x008000, 0x00aa00, 0x00aa00, 0x008000, 1)
   graphics.fillRect(0, 0, width, height)
 
   graphics.fillStyle(0x006600, 1)
