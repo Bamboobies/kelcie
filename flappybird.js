@@ -112,36 +112,41 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY)
 
-  let pipeTop = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x007700).setOrigin(0, 1).setDepth(5)
-  let pipeBottom = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x007700).setOrigin(0, 0).setDepth(5)
-
-  let pipeTopCap = this.add.rectangle(gameWidth, gapY, PIPE_WIDTH, PIPE_CAP_HEIGHT, 0x004400).setOrigin(0, 1).setDepth(6)
-  let pipeBottomCap = this.add.rectangle(gameWidth, gapY + PIPE_GAP, PIPE_WIDTH, PIPE_CAP_HEIGHT, 0x004400).setOrigin(0, 0).setDepth(6)
-
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5)
-
-  this.physics.add.existing(pipeTop)
-  this.physics.add.existing(pipeBottom)
-  this.physics.add.existing(scoreZone)
-
-  pipeTop.body.immovable = true
-  pipeBottom.body.immovable = true
+  let pipeTop = createPipe(this, gameWidth, gapY - PIPE_CAP_HEIGHT, false)
+  let pipeBottom = createPipe(this, gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, true)
 
   pipes.add(pipeTop)
   pipes.add(pipeBottom)
-  pipes.add(pipeTopCap)
-  pipes.add(pipeBottomCap)
-  scoreZones.add(scoreZone)
 
-  let allPipes = [pipeTop, pipeBottom, scoreZone]
-  allPipes.forEach(pipe => {
-    pipe.body.setVelocityX(PIPE_SPEED)
-    pipe.body.allowGravity = false
-    pipe.body.checkWorldBounds = true
-    pipe.body.outOfBoundsKill = true
-  })
+  pipeTop.body.setVelocityX(PIPE_SPEED)
+  pipeBottom.body.setVelocityX(PIPE_SPEED)
+}
 
-  scoreZone.passed = false
+function createPipe(scene, x, y, flipped) {
+  let graphics = scene.add.graphics()
+
+  // Pipe body shading
+  graphics.fillStyle(0x007700, 1)
+  graphics.fillRect(0, 0, PIPE_WIDTH, 400)
+  graphics.fillStyle(0x005500, 1)
+  graphics.fillRect(10, 0, PIPE_WIDTH - 20, 400)
+
+  // Pipe outline
+  graphics.lineStyle(3, 0x000000, 1)
+  graphics.strokeRect(0, 0, PIPE_WIDTH, 400)
+
+  // Pipe cap
+  graphics.fillStyle(0x004400, 1)
+  graphics.fillRect(-5, flipped ? 400 : -PIPE_CAP_HEIGHT, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT)
+
+  let textureKey = flipped ? 'pipeBottom' : 'pipeTop'
+  graphics.generateTexture(textureKey, PIPE_WIDTH, 400 + PIPE_CAP_HEIGHT)
+  graphics.destroy()
+
+  let pipe = scene.physics.add.sprite(x, y, textureKey).setOrigin(0, flipped ? 0 : 1).setDepth(5)
+  pipe.body.immovable = true
+  pipe.body.allowGravity = false
+  return pipe
 }
 
 function checkScore() {
