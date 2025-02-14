@@ -127,15 +127,19 @@ function createPipeTexture(scene) {
   let width = PIPE_WIDTH
   let height = 400 
 
-  // Draw pipe body with a gradient
-  graphics.fillStyle(0x007700, 1)
+  // Draw pipe body with a gradient effect
+  let gradient = graphics.createLinearGradient(0, 0, 0, height)
+  gradient.addColorStop(0, '#006600') // Dark green top
+  gradient.addColorStop(1, '#00cc00') // Lighter green bottom
+
+  graphics.fillStyle(0x008000, 1)
   graphics.fillRect(0, 0, width, height)
 
-  // Outline
-  graphics.lineStyle(4, 0x005500, 1)
+  // Outline for better visibility
+  graphics.lineStyle(3, 0x005500, 1)
   graphics.strokeRect(0, 0, width, height)
 
-  // Pipe cap
+  // Pipe cap with rounded corners
   graphics.fillStyle(0x004400, 1)
   graphics.fillRoundedRect(-5, -PIPE_CAP_HEIGHT, width + 10, PIPE_CAP_HEIGHT, 5)
 
