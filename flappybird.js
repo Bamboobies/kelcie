@@ -105,16 +105,12 @@ function flap() {
 }
 
 function addPipes() {
-  if (!this.textures.exists('pipeTexture')) createPipeTexture(this)
-
   let gameWidth = game.scale.width
   let gapY = Phaser.Math.Between(120, game.scale.height - PIPE_GAP - 120)
 
-  let pipeTop = this.physics.add.sprite(gameWidth, gapY, 'pipeTexture').setOrigin(0, 1).setDepth(5)
-  let pipeBottom = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipeTexture').setOrigin(0, 0).setFlipY(true).setDepth(5)
+  let pipeTop = createPipe(this, gameWidth, gapY, false)
+  let pipeBottom = createPipe(this, gameWidth, gapY + PIPE_GAP, true)
 
-  pipeTop.body.immovable = true
-  pipeBottom.body.immovable = true
   pipes.add(pipeTop)
   pipes.add(pipeBottom)
 
@@ -122,29 +118,27 @@ function addPipes() {
   pipeBottom.body.setVelocityX(PIPE_SPEED)
 }
 
-function createPipeTexture(scene) {
+function createPipe(scene, x, y, flipped) {
   let graphics = scene.add.graphics()
-  let width = PIPE_WIDTH
-  let height = 400 
+  graphics.fillStyle(0x007700, 1) // Green base
+  graphics.fillRect(0, 0, PIPE_WIDTH, 400) // Pipe body
 
-  // Draw pipe body with a gradient effect
-  let gradient = graphics.createLinearGradient(0, 0, 0, height)
-  gradient.addColorStop(0, '#006600') // Dark green top
-  gradient.addColorStop(1, '#00cc00') // Lighter green bottom
+  graphics.fillStyle(0x005500, 1) // Darker shade for depth
+  graphics.fillRect(10, 0, PIPE_WIDTH - 20, 400) // Inner shading
 
-  graphics.fillStyle(0x008000, 1)
-  graphics.fillRect(0, 0, width, height)
+  graphics.lineStyle(2, 0x000000, 1) // Black outline
+  graphics.strokeRect(0, 0, PIPE_WIDTH, 400)
 
-  // Outline for better visibility
-  graphics.lineStyle(3, 0x005500, 1)
-  graphics.strokeRect(0, 0, width, height)
+  graphics.fillStyle(0x004400, 1) // Darker green for cap
+  graphics.fillRoundedRect(-5, -PIPE_CAP_HEIGHT, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 5)
 
-  // Pipe cap with rounded corners
-  graphics.fillStyle(0x004400, 1)
-  graphics.fillRoundedRect(-5, -PIPE_CAP_HEIGHT, width + 10, PIPE_CAP_HEIGHT, 5)
-
-  graphics.generateTexture('pipeTexture', width, height)
+  let textureKey = flipped ? 'pipeBottom' : 'pipeTop'
+  graphics.generateTexture(textureKey, PIPE_WIDTH, 400 + PIPE_CAP_HEIGHT)
   graphics.destroy()
+
+  let pipe = scene.physics.add.sprite(x, y, textureKey).setOrigin(0, flipped ? 0 : 1).setDepth(5)
+  pipe.body.immovable = true
+  return pipe
 }
 
 function checkScore() {
@@ -178,4 +172,4 @@ function restartGame() {
   this.physics.resume()
   gameOverText.setText('')
   restartText.setText('')
-}
+                   }
