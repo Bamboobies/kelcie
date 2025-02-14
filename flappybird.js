@@ -135,9 +135,11 @@ function createPipe(scene, x, y, flipped) {
   graphics.lineStyle(3, 0x000000, 1)
   graphics.strokeRect(0, 0, PIPE_WIDTH, 400)
 
-  // Pipe cap
+  // Pipe cap with shading
   graphics.fillStyle(0x004400, 1)
-  graphics.fillRect(-5, flipped ? 400 : -PIPE_CAP_HEIGHT, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT)
+  graphics.fillRect(0, flipped ? 400 : -PIPE_CAP_HEIGHT, PIPE_WIDTH, PIPE_CAP_HEIGHT)
+  graphics.lineStyle(2, 0x000000, 1)
+  graphics.strokeRect(0, flipped ? 400 : -PIPE_CAP_HEIGHT, PIPE_WIDTH, PIPE_CAP_HEIGHT)
 
   let textureKey = flipped ? 'pipeBottom' : 'pipeTop'
   graphics.generateTexture(textureKey, PIPE_WIDTH, 400 + PIPE_CAP_HEIGHT)
@@ -146,6 +148,9 @@ function createPipe(scene, x, y, flipped) {
   let pipe = scene.physics.add.sprite(x, y, textureKey).setOrigin(0, flipped ? 0 : 1).setDepth(5)
   pipe.body.immovable = true
   pipe.body.allowGravity = false
+  pipe.body.checkWorldBounds = true
+  pipe.body.setCollideWorldBounds(true)
+
   return pipe
 }
 
