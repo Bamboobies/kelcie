@@ -38,8 +38,8 @@ function create() {
   const scaleFactor = gameHeight / imageHeight
   const scaledWidth = imageWidth * scaleFactor
 
-  background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0)
-  background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0)
+  background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0).setDepth(-1)
+  background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0).setDepth(-1)
   background1.setScale(scaleFactor)
   background2.setScale(scaleFactor)
 
@@ -105,16 +105,10 @@ function flap() {
 }
 
 function addPipes() {
-  if (gameOver) return
+  if (!this.textures.exists('pipeTexture')) createPipeTexture(this)
 
   let gameWidth = game.scale.width
-  let gameHeight = game.scale.height
-
-  let minGapY = 120
-  let maxGapY = gameHeight - PIPE_GAP - 120
-  let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY)
-
-  if (!this.textures.exists('pipeTexture')) createPipeTexture(this)
+  let gapY = Phaser.Math.Between(120, game.scale.height - PIPE_GAP - 120)
 
   let pipeTop = this.physics.add.sprite(gameWidth, gapY, 'pipeTexture').setOrigin(0, 1).setDepth(5)
   let pipeBottom = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipeTexture').setOrigin(0, 0).setFlipY(true).setDepth(5)
@@ -124,36 +118,25 @@ function addPipes() {
   pipes.add(pipeTop)
   pipes.add(pipeBottom)
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0)
-    .setOrigin(0.5)
-    .setDepth(5)
-  this.physics.add.existing(scoreZone)
-  scoreZones.add(scoreZone)
-
-  let allPipes = [pipeTop, pipeBottom, scoreZone]
-  allPipes.forEach(pipe => {
-    pipe.body.setVelocityX(PIPE_SPEED)
-    pipe.body.allowGravity = false
-    pipe.body.checkWorldBounds = true
-    pipe.body.outOfBoundsKill = true
-  })
-
-  scoreZone.passed = false
+  pipeTop.body.setVelocityX(PIPE_SPEED)
+  pipeBottom.body.setVelocityX(PIPE_SPEED)
 }
 
 function createPipeTexture(scene) {
   let graphics = scene.add.graphics()
   let width = PIPE_WIDTH
-  let height = 400
+  let height = 400 
 
-  graphics.fillGradientStyle(0x008000, 0x00aa00, 0x00aa00, 0x008000, 1)
+  graphics.fillStyle(0x008000, 1)
   graphics.fillRect(0, 0, width, height)
 
   graphics.fillStyle(0x006600, 1)
   graphics.fillRoundedRect(-5, -PIPE_CAP_HEIGHT, width + 10, PIPE_CAP_HEIGHT, 5)
 
-  graphics.generateTexture('pipeTexture', width, height + PIPE_CAP_HEIGHT)
+  graphics.generateTexture('pipeTexture', width, height)
   graphics.destroy()
+
+  console.log("Pipe texture generated") // Debugging log
 }
 
 function checkScore() {
@@ -174,12 +157,6 @@ function hitPipe() {
 
   gameOverText.setText('GAME OVER')
   restartText.setText('TAP TO RESTART')
-
-  if (score > highScore) {
-    highScore = score
-    localStorage.setItem('flappyHighScore', highScore)
-    highScoreText.setText('HIGH SCORE: ' + highScore)
-  }
 }
 
 function restartGame() {
