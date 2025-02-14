@@ -32,14 +32,14 @@ function create() {
   const gameWidth = game.scale.width
   const gameHeight = game.scale.height
 
-  // Background scrolling
+  // Background setup
   const imageWidth = this.textures.get('background').getSourceImage().width
   const imageHeight = this.textures.get('background').getSourceImage().height
   const scaleFactor = gameHeight / imageHeight
   const scaledWidth = imageWidth * scaleFactor
 
-  background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0).setDepth(-1)
-  background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0).setDepth(-1)
+  background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0)
+  background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0)
   background1.setScale(scaleFactor)
   background2.setScale(scaleFactor)
 
@@ -127,16 +127,20 @@ function createPipeTexture(scene) {
   let width = PIPE_WIDTH
   let height = 400 
 
-  graphics.fillStyle(0x008000, 1)
+  // Draw pipe body with a gradient
+  graphics.fillStyle(0x007700, 1)
   graphics.fillRect(0, 0, width, height)
 
-  graphics.fillStyle(0x006600, 1)
+  // Outline
+  graphics.lineStyle(4, 0x005500, 1)
+  graphics.strokeRect(0, 0, width, height)
+
+  // Pipe cap
+  graphics.fillStyle(0x004400, 1)
   graphics.fillRoundedRect(-5, -PIPE_CAP_HEIGHT, width + 10, PIPE_CAP_HEIGHT, 5)
 
   graphics.generateTexture('pipeTexture', width, height)
   graphics.destroy()
-
-  console.log("Pipe texture generated") // Debugging log
 }
 
 function checkScore() {
