@@ -136,43 +136,23 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Create a graphics object for the pipe texture
-  const pipeTexture = this.make.graphics({ x: 0, y: 0, add: false });
+  // Create the top pipe body with a gradient fill
+  let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1);
+  pipeTopBody.setFillStyle(0x008000); // Solid color for now
+  pipeTopBody.setDepth(5);
 
-  // Draw a gradient texture for the pipes
-  pipeTexture.fillGradientStyle(0x006400, 0x008000, 0x228B22, 0x32CD32, 1);
-  pipeTexture.fillRect(0, 0, PIPE_WIDTH, gameHeight); // Fill the entire height for the gradient
+  // Create the bottom pipe body with a gradient fill
+  let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0);
+  pipeBottomBody.setFillStyle(0x008000); // Solid color for now
+  pipeBottomBody.setDepth(5);
 
-  // Generate a texture from the graphics object
-  pipeTexture.generateTexture('pipeTexture', PIPE_WIDTH, gameHeight);
-  pipeTexture.destroy(); // Clean up the graphics object
+  // Create the top pipe cap
+  let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1);
+  pipeTopCap.setDepth(5);
 
-  // Create the top pipe body with texture
-  let pipeTopBody = this.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1);
-  pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY); // Scale to fit the gap
-
-  // Create the bottom pipe body with texture
-  let pipeBottomBody = this.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0);
-  pipeBottomBody.setDisplaySize(PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP)); // Scale to fit the gap
-
-  // Create a graphics object for the pipe cap texture
-  const pipeCapTexture = this.make.graphics({ x: 0, y: 0, add: false });
-
-  // Draw a gradient texture for the pipe caps
-  pipeCapTexture.fillGradientStyle(0x004400, 0x006600, 0x005500, 0x007700, 1);
-  pipeCapTexture.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT); // Fill the cap area
-
-  // Generate a texture from the graphics object
-  pipeCapTexture.generateTexture('pipeCapTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeCapTexture.destroy(); // Clean up the graphics object
-
-  // Create the top pipe cap with texture
-  let pipeTopCap = this.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'pipeCapTexture').setOrigin(0.5, 1);
-  pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT); // Scale to fit the cap
-
-  // Create the bottom pipe cap with texture
-  let pipeBottomCap = this.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'pipeCapTexture').setOrigin(0.5, 0);
-  pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT); // Scale to fit the cap
+  // Create the bottom pipe cap
+  let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0);
+  pipeBottomCap.setDepth(5);
 
   // Create the score zone
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5);
