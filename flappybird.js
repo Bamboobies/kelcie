@@ -112,8 +112,8 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY)
 
-  let pipeTop = createPipe(this, gameWidth, gapY - PIPE_CAP_HEIGHT, false)
-  let pipeBottom = createPipe(this, gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, true)
+  let pipeTop = createPipe(this, gameWidth, gapY, false)
+  let pipeBottom = createPipe(this, gameWidth, gapY + PIPE_GAP, true)
 
   pipes.add(pipeTop)
   pipes.add(pipeBottom)
@@ -135,7 +135,7 @@ function createPipe(scene, x, y, flipped) {
   graphics.lineStyle(3, 0x000000, 1)
   graphics.strokeRect(0, 0, PIPE_WIDTH, 400)
 
-  // Pipe cap with shading
+  // Pipe cap
   graphics.fillStyle(0x004400, 1)
   graphics.fillRect(0, flipped ? 400 : -PIPE_CAP_HEIGHT, PIPE_WIDTH, PIPE_CAP_HEIGHT)
   graphics.lineStyle(2, 0x000000, 1)
