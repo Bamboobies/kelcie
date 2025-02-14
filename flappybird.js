@@ -65,6 +65,7 @@ function create() {
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10)
 
   this.input.on('pointerdown', () => {
+    console.log("Tap detected") // Debugging
     if (!gameStarted) startGame.call(scene)
     else if (gameOver) restartGame.call(scene)
     else flap()
@@ -95,10 +96,12 @@ function update() {
 }
 
 function startGame() {
+  console.log("Game Started") // Debugging
   gameStarted = true
   bird.body.allowGravity = true
   titleText.setText('')
   startText.setText('')
+  
   addPipes() // Ensure pipes spawn immediately
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this })
 }
@@ -114,12 +117,9 @@ function addPipes() {
   let pipeTop = this.physics.add.sprite(gameWidth, gapY, 'pipe').setOrigin(0, 1).setDepth(5)
   let pipeBottom = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipe').setOrigin(0, 0).setFlipY(true).setDepth(5)
 
-  let topCap = this.physics.add.sprite(gameWidth, gapY, 'pipeCap').setOrigin(0, 1).setDepth(6)
-  let bottomCap = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP, 'pipeCap').setOrigin(0, 0).setFlipY(true).setDepth(6)
+  pipes.addMultiple([pipeTop, pipeBottom])
 
-  pipes.addMultiple([pipeTop, pipeBottom, topCap, bottomCap])
-
-  let allPipes = [pipeTop, pipeBottom, topCap, bottomCap]
+  let allPipes = [pipeTop, pipeBottom]
   allPipes.forEach(pipe => {
     pipe.body.setVelocityX(PIPE_SPEED)
     pipe.body.allowGravity = false
@@ -139,13 +139,6 @@ function createPipeTextures(scene) {
 
   graphics.generateTexture('pipe', PIPE_WIDTH, 400)
   graphics.clear()
-
-  graphics.fillStyle(0x004400, 1)
-  graphics.fillRect(0, 0, PIPE_WIDTH, PIPE_CAP_HEIGHT)
-  graphics.lineStyle(2, 0x000000, 1)
-  graphics.strokeRect(0, 0, PIPE_WIDTH, PIPE_CAP_HEIGHT)
-
-  graphics.generateTexture('pipeCap', PIPE_WIDTH, PIPE_CAP_HEIGHT)
   graphics.destroy()
 }
 
