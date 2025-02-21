@@ -78,16 +78,19 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (detailed gradient shading)
+  // Pre-generate pipe texture (smoother vertical gradient shading)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Classic Mario pipe green base
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Detailed vertical gradient with multiple steps
-  const pipeColors = [0x00FF00, 0x00E600, 0x00CC00, 0x00B300, 0x009900, 0x008000, 0x006600];
+  // Smoother vertical gradient with 10 steps
+  const pipeColors = [
+    0x00FF00, 0x00E600, 0x00D900, 0x00CC00, 0x00BF00,
+    0x00B300, 0x00A300, 0x009900, 0x008000, 0x006600
+  ];
   const stepWidth = PIPE_WIDTH / pipeColors.length;
   for (let i = 0; i < pipeColors.length; i++) {
     pipeGraphics.fillStyle(pipeColors[i], 1);
-    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512);
+    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth + 1, 512); // Slight overlap for smoothness
   }
   // Thin dark outline on sides only
   pipeGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
@@ -97,16 +100,19 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (same detailed gradient shading)
+  // Pre-generate endcap texture (same smoother vertical gradient shading)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Darker green base
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Detailed vertical gradient with multiple steps (same as pipes)
-  const capColors = [0x00FF00, 0x00E600, 0x00CC00, 0x00B300, 0x009900, 0x008000, 0x006600];
-  const stepHeight = PIPE_CAP_HEIGHT / capColors.length;
+  // Smoother vertical gradient with 10 steps (matching pipes)
+  const capColors = [
+    0x00FF00, 0x00E600, 0x00D900, 0x00CC00, 0x00BF00,
+    0x00B300, 0x00A300, 0x009900, 0x008000, 0x006600
+  ];
+  const stepWidthCap = (PIPE_WIDTH + 10) / capColors.length;
   for (let i = 0; i < capColors.length; i++) {
     capGraphics.fillStyle(capColors[i], 1);
-    capGraphics.fillRect(0, i * stepHeight, PIPE_WIDTH + 10, stepHeight);
+    capGraphics.fillRect(i * stepWidthCap, 0, stepWidthCap + 1, PIPE_CAP_HEIGHT); // Slight overlap for smoothness
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
