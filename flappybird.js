@@ -78,19 +78,32 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (smoother vertical gradient shading)
+  // Helper function to interpolate between two colors
+  function interpolateColor(color1, color2, factor) {
+    const r1 = (color1 >> 16) & 0xFF;
+    const g1 = (color1 >> 8) & 0xFF;
+    const b1 = color1 & 0xFF;
+    const r2 = (color2 >> 16) & 0xFF;
+    const g2 = (color2 >> 8) & 0xFF;
+    const b2 = color2 & 0xFF;
+    const r = Math.round(r1 + (r2 - r1) * factor);
+    const g = Math.round(g1 + (g2 - g1) * factor);
+    const b = Math.round(b1 + (b2 - b1) * factor);
+    return (r << 16) + (g << 8) + b;
+  }
+
+  // Pre-generate pipe texture (ultra-smooth vertical gradient)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Classic Mario pipe green base
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Smoother vertical gradient with 10 steps
-  const pipeColors = [
-    0x00FF00, 0x00E600, 0x00D900, 0x00CC00, 0x00BF00,
-    0x00B300, 0x00A300, 0x009900, 0x008000, 0x006600
-  ];
-  const stepWidth = PIPE_WIDTH / pipeColors.length;
-  for (let i = 0; i < pipeColors.length; i++) {
-    pipeGraphics.fillStyle(pipeColors[i], 1);
-    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth + 1, 512); // Slight overlap for smoothness
+  // Ultra-smooth vertical gradient with 80 steps
+  const startColor = 0x00FF00; // Bright green
+  const endColor = 0x006600;   // Dark green
+  for (let i = 0; i < PIPE_WIDTH; i++) {
+    const factor = i / (PIPE_WIDTH - 1);
+    const color = interpolateColor(startColor, endColor, factor);
+    pipeGraphics.fillStyle(color, 1);
+    pipeGraphics.fillRect(i, 0, 1, 512); // 1px wide strips
   }
   // Thin dark outline on sides only
   pipeGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
@@ -100,19 +113,16 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (same smoother vertical gradient shading)
+  // Pre-generate endcap texture (ultra-smooth vertical gradient)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Darker green base
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Smoother vertical gradient with 10 steps (matching pipes)
-  const capColors = [
-    0x00FF00, 0x00E600, 0x00D900, 0x00CC00, 0x00BF00,
-    0x00B300, 0x00A300, 0x009900, 0x008000, 0x006600
-  ];
-  const stepWidthCap = (PIPE_WIDTH + 10) / capColors.length;
-  for (let i = 0; i < capColors.length; i++) {
-    capGraphics.fillStyle(capColors[i], 1);
-    capGraphics.fillRect(i * stepWidthCap, 0, stepWidthCap + 1, PIPE_CAP_HEIGHT); // Slight overlap for smoothness
+  // Smooth vertical gradient with 20 steps (matching pipe direction)
+  for (let i = 0; i < PIPE_WIDTH + 10; i++) {
+    const factor = i / (PIPE_WIDTH + 9);
+    const color = interpolateColor(startColor, endColor, factor);
+    capGraphics.fillStyle(color, 1);
+    capGraphics.fillRect(i, 0, 1, PIPE_CAP_HEIGHT); // 1px wide strips
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
