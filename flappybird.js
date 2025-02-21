@@ -92,18 +92,20 @@ function create() {
     return (r << 16) + (g << 8) + b;
   }
 
-  // Pre-generate pipe texture (ultra-smooth, less extreme gradient)
+  // Pre-generate pipe texture (pixel-art Mario pipe with 20 steps)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Base green (unused, overwritten by gradient)
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Ultra-smooth vertical gradient with 80 steps (less extreme)
-  const startColor = 0xA0D22A; // Medium yellow-green, less bright
-  const endColor = 0x3C5A23;   // Medium dark green, less extreme
-  for (let i = 0; i < PIPE_WIDTH; i++) {
-    const factor = i / (PIPE_WIDTH - 1);
+  // Pixel-art gradient with 20 steps
+  const startColor = 0xA0D22A; // Medium yellow-green
+  const endColor = 0x3C5A23;   // Medium dark green
+  const steps = 20;
+  const stepWidth = PIPE_WIDTH / steps;
+  for (let i = 0; i < steps; i++) {
+    const factor = i / (steps - 1);
     const color = interpolateColor(startColor, endColor, factor);
     pipeGraphics.fillStyle(color, 1);
-    pipeGraphics.fillRect(i, 0, 1, 512); // 1px wide strips
+    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512); // No overlap for pixel-art look
   }
   // Thin dark outline on sides only
   pipeGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
@@ -113,16 +115,18 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (ultra-smooth, less extreme gradient, vertical)
+  // Pre-generate endcap texture (pixel-art Mario rim with 28 steps, vertical)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Smooth vertical gradient with 90 steps (matching pipes, less extreme)
-  for (let i = 0; i < PIPE_WIDTH + 10; i++) {
-    const factor = i / (PIPE_WIDTH + 9);
+  // Pixel-art gradient with 28 steps (vertical)
+  const capSteps = 28;
+  const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
+  for (let i = 0; i < capSteps; i++) {
+    const factor = i / (capSteps - 1);
     const color = interpolateColor(startColor, endColor, factor);
     capGraphics.fillStyle(color, 1);
-    capGraphics.fillRect(i, 0, 1, PIPE_CAP_HEIGHT); // 1px wide strips
+    capGraphics.fillRect(i * stepWidthCap, 0, stepWidthCap, PIPE_CAP_HEIGHT); // No overlap for pixel-art look
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
