@@ -78,31 +78,30 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (Mario-inspired)
+  // Pre-generate pipe texture (realistic Mario pipe)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Classic Mario pipe green
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Vertical gradient for shading
-  pipeGraphics.fillGradientStyle(0x00CC00, 0x00CC00, 0x008000, 0x008000, 0.5); // Light to dark green
-  pipeGraphics.fillRect(0, 0, PIPE_WIDTH / 2, 512); // Left half lighter
-  // White highlight line
-  pipeGraphics.lineStyle(3, 0xFFFFFF, 0.8);
-  pipeGraphics.lineBetween(10, 0, 10, 512); // Slight offset from edge
+  // Smooth vertical gradient for realistic shading
+  pipeGraphics.fillGradientStyle(0x00CC00, 0x00CC00, 0x006600, 0x006600, 0.7); // Light to dark green
+  pipeGraphics.fillRect(PIPE_WIDTH / 4, 0, PIPE_WIDTH / 2, 512); // Center shading
+  // Thin dark outline
+  pipeGraphics.lineStyle(2, 0x003300, 1); // Dark green outline
+  pipeGraphics.strokeRect(1, 1, PIPE_WIDTH - 2, 510);
   pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (Mario rim-inspired)
+  // Pre-generate endcap texture (realistic Mario rim)
   const capGraphics = this.add.graphics();
-  capGraphics.fillStyle(0x006600, 1); // Darker green for rim
+  capGraphics.fillStyle(0x006600, 1); // Darker green base
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   // Horizontal gradient for depth
-  capGraphics.fillGradientStyle(0x00A300, 0x00A300, 0x004d00, 0x004d00, 0.6); // Light to dark green
-  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2); // Top half lighter
-  // White outline for rim
-  capGraphics.lineStyle(2, 0xFFFFFF, 0.9);
-  capGraphics.lineBetween(0, 2, PIPE_WIDTH + 10, 2); // Top edge highlight
-  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT - 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT - 2); // Bottom edge highlight
+  capGraphics.fillGradientStyle(0x00A300, 0x00A300, 0x004d00, 0x004d00, 0.7); // Light to dark green
+  capGraphics.fillRect(0, PIPE_CAP_HEIGHT / 4, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2); // Center shading
+  // Thin dark outline
+  capGraphics.lineStyle(2, 0x003300, 1); // Dark green outline
+  capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
   capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   capGraphics.destroy();
   console.log('Cap texture exists:', this.textures.exists('capTexture'));
