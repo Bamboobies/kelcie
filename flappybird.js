@@ -78,13 +78,11 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (coral-like with gradient and wavy lines)
+  // Pre-generate pipe texture (coral-like with solid base and wavy lines)
   const pipeGraphics = this.add.graphics();
-  // Gradient base: dark coral to lighter coral
-  pipeGraphics.fillGradientStyle(0xFF5733, 0xFF5733, 0xFF8C66, 0xFF8C66, 1); // Top dark, bottom light
+  pipeGraphics.fillStyle(0xFF5733, 1); // Solid dark coral base
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Add wavy white lines for coral texture
-  pipeGraphics.lineStyle(2, 0xFFFFFF, 0.7);
+  pipeGraphics.lineStyle(2, 0xFFFFFF, 0.7); // White wavy lines
   for (let y = 0; y < 512; y += 20) {
     pipeGraphics.beginPath();
     pipeGraphics.moveTo(0, y);
@@ -99,11 +97,9 @@ function create() {
 
   // Pre-generate endcap texture (seashell-like with gradient and ridges)
   const capGraphics = this.add.graphics();
-  // Gradient base: dark gray to light gray
-  capGraphics.fillGradientStyle(0x808080, 0x808080, 0xD3D3D3, 0xD3D3D3, 1); // Top dark, bottom light
+  capGraphics.fillGradientStyle(0x808080, 0x808080, 0xD3D3D3, 0xD3D3D3, 1); // Dark to light gray
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Add ridges for seashell effect
-  capGraphics.lineStyle(2, 0xFFFFFF, 0.8);
+  capGraphics.lineStyle(2, 0xFFFFFF, 0.8); // White ridges
   capGraphics.lineBetween(0, PIPE_CAP_HEIGHT * 0.25, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT * 0.25);
   capGraphics.lineBetween(0, PIPE_CAP_HEIGHT * 0.75, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT * 0.75);
   capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
