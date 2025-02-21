@@ -123,45 +123,43 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Top pipe body with simple vertical line texture
+  // Generate pipe body texture (dark green with light green vertical stripes)
+  const pipeGraphics = this.add.graphics();
+  pipeGraphics.fillStyle(0x008000, 1); // Dark green base
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, gameHeight); // Use max height to cover both pipes
+  pipeGraphics.lineStyle(4, 0x00CC00, 1); // Light green vertical lines
+  for (let x = 0; x < PIPE_WIDTH; x += 20) {
+    pipeGraphics.lineBetween(x, 0, x, gameHeight);
+  }
+  const pipeTextureKey = `pipeTexture${Date.now()}`; // Unique key per pipe spawn
+  pipeGraphics.generateTexture(pipeTextureKey, PIPE_WIDTH, gameHeight);
+  pipeGraphics.destroy(); // Clean up graphics object
+
+  // Generate endcap texture (darker green with a light green horizontal stripe)
+  const capGraphics = this.add.graphics();
+  capGraphics.fillStyle(0x006600, 1); // Darker green base
+  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  capGraphics.lineStyle(4, 0x00A300, 1); // Light green horizontal line
+  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
+  const capTextureKey = `capTexture${Date.now()}`; // Unique key per cap spawn
+  capGraphics.generateTexture(capTextureKey, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  capGraphics.destroy();
+
+  // Top pipe body with texture
   let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1).setDepth(5);
-  const topGraphics = this.add.graphics().setDepth(6);
-  pipeTopBody.postUpdate = function() {
-    topGraphics.clear();
-    topGraphics.lineStyle(2, 0x00CC00, 1); // Light green vertical lines
-    for (let x = this.x; x < this.x + PIPE_WIDTH; x += 20) {
-      topGraphics.lineBetween(x, this.y - this.height, x, this.y);
-    }
-  };
+  pipeTopBody.setTexture(pipeTextureKey); // Apply generated texture
 
-  // Bottom pipe body with simple vertical line texture
+  // Bottom pipe body with texture
   let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0).setDepth(5);
-  const bottomGraphics = this.add.graphics().setDepth(6);
-  pipeBottomBody.postUpdate = function() {
-    bottomGraphics.clear();
-    bottomGraphics.lineStyle(2, 0x00CC00, 1);
-    for (let x = this.x; x < this.x + PIPE_WIDTH; x += 20) {
-      bottomGraphics.lineBetween(x, this.y, x, this.y + this.height);
-    }
-  };
+  pipeBottomBody.setTexture(pipeTextureKey);
 
-  // Top pipe endcap with simple horizontal line texture
+  // Top pipe endcap with texture
   let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1).setDepth(5);
-  const topCapGraphics = this.add.graphics().setDepth(6);
-  pipeTopCap.postUpdate = function() {
-    topCapGraphics.clear();
-    topCapGraphics.lineStyle(2, 0x00A300, 1); // Slightly lighter green horizontal line
-    topCapGraphics.lineBetween(this.x - (PIPE_WIDTH + 10) / 2, this.y - PIPE_CAP_HEIGHT / 2, this.x + (PIPE_WIDTH + 10) / 2, this.y - PIPE_CAP_HEIGHT / 2);
-  };
+  pipeTopCap.setTexture(capTextureKey);
 
-  // Bottom pipe endcap with simple horizontal line texture
+  // Bottom pipe endcap with texture
   let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0).setDepth(5);
-  const bottomCapGraphics = this.add.graphics().setDepth(6);
-  pipeBottomCap.postUpdate = function() {
-    bottomCapGraphics.clear();
-    bottomCapGraphics.lineStyle(2, 0x00A300, 1);
-    bottomCapGraphics.lineBetween(this.x - (PIPE_WIDTH + 10) / 2, this.y + PIPE_CAP_HEIGHT / 2, this.x + (PIPE_WIDTH + 10) / 2, this.y + PIPE_CAP_HEIGHT / 2);
-  };
+  pipeBottomCap.setTexture(capTextureKey);
 
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
 
