@@ -78,16 +78,17 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture
+  // Pre-generate pipe texture (smaller size)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x008000, 1); // Dark green base
-  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, gameHeight); // Large enough for any pipe
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512); // Fixed height to reduce load
   pipeGraphics.lineStyle(4, 0x00CC00, 1); // Light green vertical lines
   for (let x = 0; x < PIPE_WIDTH; x += 20) {
-    pipeGraphics.lineBetween(x, 0, x, gameHeight);
+    pipeGraphics.lineBetween(x, 0, x, 512);
   }
-  pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, gameHeight);
+  pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
   pipeGraphics.destroy();
+  console.log('Pipe texture exists:', this.textures.exists('pipeTexture')); // Debug log
 
   // Pre-generate endcap texture
   const capGraphics = this.add.graphics();
@@ -97,6 +98,7 @@ function create() {
   capGraphics.lineBetween(0, PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
   capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   capGraphics.destroy();
+  console.log('Cap texture exists:', this.textures.exists('capTexture')); // Debug log
 }
 
 function update() {
@@ -143,34 +145,33 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Top pipe body with pre-generated texture
-  let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1).setDepth(5);
-  pipeTopBody.setTexture('pipeTexture');
+  // Top pipe body (sprite instead of rectangle)
+  let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
+  pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY); // Scale to match original height
+  pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
+  pipeTopBody.body.immovable = true;
 
-  // Bottom pipe body with pre-generated texture
-  let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0).setDepth(5);
-  pipeBottomBody.setTexture('pipeTexture');
+  // Bottom pipe body (sprite instead of rectangle)
+  let bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
+  let pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
+  pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
+  pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
+  pipeBottomBody.body.immovable = true;
 
-  // Top pipe endcap with pre-generated texture
-  let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1).setDepth(5);
-  pipeTopCap.setTexture('capTexture');
+  // Top pipe endcap (sprite instead of rectangle)
+  let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
+  pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeTopCap.body.immovable = true;
 
-  // Bottom pipe endcap with pre-generated texture
-  let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0).setDepth(5);
-  pipeBottomCap.setTexture('capTexture');
+  // Bottom pipe endcap (sprite instead of rectangle)
+  let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
+  pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeBottomCap.body.immovable = true;
 
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
-
-  this.physics.add.existing(pipeTopBody);
-  this.physics.add.existing(pipeBottomBody);
-  this.physics.add.existing(pipeTopCap);
-  this.physics.add.existing(pipeBottomCap);
   this.physics.add.existing(scoreZone);
-
-  pipeTopBody.body.immovable = true;
-  pipeBottomBody.body.immovable = true;
-  pipeTopCap.body.immovable = true;
-  pipeBottomCap.body.immovable = true;
 
   pipes.add(pipeTopBody);
   pipes.add(pipeBottomBody);
