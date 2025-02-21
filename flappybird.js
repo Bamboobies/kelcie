@@ -92,14 +92,16 @@ function create() {
     return (r << 16) + (g << 8) + b;
   }
 
-  // Pre-generate pipe texture (pixel-art Mario pipe with greener gradient)
+  // Pre-generate pipe texture (smoother, greener Mario pipe)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Base green (unused, overwritten by gradient)
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Pixel-art gradient with 8 steps
+  // Smoother gradient with 16 steps for pixel-art but less blocky
   const pipeColors = [
-    0x00FF00, 0x00E600, 0x00CC00, 0x00B300,
-    0x009900, 0x008000, 0x006600, 0x004d00
+    0x9CD62A, 0x8CCB2A, 0x7CC02A, 0x6CB52A,
+    0x5CAA2A, 0x4C9F2A, 0x3C942A, 0x2C892A,
+    0x1C7E2A, 0x0C732A, 0x00682A, 0x005D23,
+    0x005223, 0x004723, 0x003C23, 0x003123
   ];
   const stepWidth = PIPE_WIDTH / pipeColors.length;
   for (let i = 0; i < pipeColors.length; i++) {
@@ -114,19 +116,21 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (pixel-art Mario rim with same gradient)
+  // Pre-generate endcap texture (smoother, greener Mario rim)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Pixel-art gradient with 8 steps (vertical, matching pipes)
+  // Smoother gradient with 16 steps (vertical, matching pipes)
   const capColors = [
-    0x00FF00, 0x00E600, 0x00CC00, 0x00B300,
-    0x009900, 0x008000, 0x006600, 0x004d00
+    0x9CD62A, 0x8CCB2A, 0x7CC02A, 0x6CB52A,
+    0x5CAA2A, 0x4C9F2A, 0x3C942A, 0x2C892A,
+    0x1C7E2A, 0x0C732A, 0x00682A, 0x005D23,
+    0x005223, 0x004723, 0x003C23, 0x003123
   ];
-  const stepHeight = PIPE_CAP_HEIGHT / capColors.length;
+  const stepWidthCap = (PIPE_WIDTH + 10) / capColors.length;
   for (let i = 0; i < capColors.length; i++) {
     capGraphics.fillStyle(capColors[i], 1);
-    capGraphics.fillRect(0, i * stepHeight, PIPE_WIDTH + 10, stepHeight); // No overlap for pixel-art look
+    capGraphics.fillRect(i * stepWidthCap, 0, stepWidthCap, PIPE_CAP_HEIGHT); // No overlap for pixel-art look
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
