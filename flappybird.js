@@ -92,13 +92,13 @@ function create() {
     return (r << 16) + (g << 8) + b;
   }
 
-  // Pre-generate pipe texture (ultra-smooth vertical gradient)
+  // Pre-generate pipe texture (ultra-smooth gradient matching Mario pipe)
   const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0x00A300, 1); // Classic Mario pipe green base
+  pipeGraphics.fillStyle(0x00A300, 1); // Base green (unused, overwritten by gradient)
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Ultra-smooth vertical gradient with 80 steps
-  const startColor = 0x00FF00; // Bright green
-  const endColor = 0x006600;   // Dark green
+  // Ultra-smooth vertical gradient with 80 steps (matching image)
+  const startColor = 0xA5E32E; // Bright lime green from image
+  const endColor = 0x4A7023;   // Deep green from image
   for (let i = 0; i < PIPE_WIDTH; i++) {
     const factor = i / (PIPE_WIDTH - 1);
     const color = interpolateColor(startColor, endColor, factor);
@@ -113,11 +113,11 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (ultra-smooth vertical gradient)
+  // Pre-generate endcap texture (ultra-smooth vertical gradient matching pipes)
   const capGraphics = this.add.graphics();
-  capGraphics.fillStyle(0x006600, 1); // Darker green base
+  capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Smooth vertical gradient with 20 steps (matching pipe direction)
+  // Smooth vertical gradient with 90 steps (matching pipes)
   for (let i = 0; i < PIPE_WIDTH + 10; i++) {
     const factor = i / (PIPE_WIDTH + 9);
     const color = interpolateColor(startColor, endColor, factor);
