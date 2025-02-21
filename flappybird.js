@@ -78,30 +78,33 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (realistic Mario pipe with fixed gradient)
+  // Pre-generate pipe texture (realistic Mario pipe with block shading)
   const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0x00A300, 1); // Classic Mario pipe green
+  pipeGraphics.fillStyle(0x00A300, 1); // Classic Mario pipe green base
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Full-width vertical gradient for clear shading
-  pipeGraphics.fillGradientStyle(0x00FF00, 0x00CC00, 0x006600, 0x004d00, 1); // Left bright, right dark
-  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512); // Full coverage
+  // Left third lighter shading
+  pipeGraphics.fillStyle(0x00CC00, 1); // Lighter green
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH / 3, 512);
+  // Right third darker shading
+  pipeGraphics.fillStyle(0x006600, 1); // Darker green
+  pipeGraphics.fillRect(PIPE_WIDTH * 2 / 3, 0, PIPE_WIDTH / 3, 512);
   // Thin dark outline on sides only
-  pipeGraphics.lineStyle(1, 0x003300, 1); // Thinner dark green outline
+  pipeGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
   pipeGraphics.lineBetween(1, 0, 1, 512); // Left side
   pipeGraphics.lineBetween(PIPE_WIDTH - 1, 0, PIPE_WIDTH - 1, 512); // Right side
   pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (realistic Mario rim with fixed gradient)
+  // Pre-generate endcap texture (realistic Mario rim with block shading)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Darker green base
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Full-height horizontal gradient for depth
-  capGraphics.fillGradientStyle(0x00CC00, 0x00CC00, 0x004d00, 0x004d00, 1); // Top bright, bottom dark
-  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT); // Full coverage
+  // Top half lighter shading
+  capGraphics.fillStyle(0x00A300, 1); // Lighter green
+  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
   // Thin dark outline
-  capGraphics.lineStyle(1, 0x003300, 1); // Thinner dark green outline
+  capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
   capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
   capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   capGraphics.destroy();
