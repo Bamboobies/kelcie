@@ -92,21 +92,21 @@ function create() {
     return (r << 16) + (g << 8) + b;
   }
 
-  // Pre-generate pipe texture (pixel-art Mario pipe with center-light, sides-dark)
+  // Pre-generate pipe texture (pixel-art Mario pipe with wider light center, narrower dark edges)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Base green (unused, overwritten by gradient)
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Pixel-art gradient with 16 steps, center-light, sides-dark
+  // Pixel-art gradient with 16 steps, wider light center, narrower dark edges
   const startColor = 0x3C5A23; // Medium dark green (sides)
   const endColor = 0xA0D22A;   // Medium yellow-green (center)
   const pipeSteps = 16;
   const stepWidth = PIPE_WIDTH / pipeSteps;
   for (let i = 0; i < pipeSteps; i++) {
-    // Use a bell curve for center-light, sides-dark effect
+    // Use an even flatter bell curve for an even wider light center, narrower dark edges
     const center = (pipeSteps - 1) / 2;
     const distance = Math.abs(i - center) / center; // 0 at center, 1 at edges
-    const factor = Math.sin(distance * Math.PI / 2); // Bell curve (0 at center, 1 at edges)
-    const color = interpolateColor(endColor, startColor, factor); // Light in center, dark on sides
+    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5); // Flatter curve (0 at center, 1 at edges, slower transition)
+    const color = interpolateColor(endColor, startColor, factor); // Light in wider center, dark on narrower sides
     pipeGraphics.fillStyle(color, 1);
     pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512); // No overlap for pixel-art look
   }
@@ -118,19 +118,19 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (pixel-art Mario rim with center-light, sides-dark)
+  // Pre-generate endcap texture (pixel-art Mario rim with wider light center, narrower dark edges)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Pixel-art gradient with 20 steps, center-light, sides-dark (vertical)
+  // Pixel-art gradient with 20 steps, wider light center, narrower dark edges (vertical)
   const capSteps = 20;
   const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
   for (let i = 0; i < capSteps; i++) {
-    // Use a bell curve for center-light, sides-dark effect
+    // Use an even flatter bell curve for an even wider light center, narrower dark edges
     const center = (capSteps - 1) / 2;
     const distance = Math.abs(i - center) / center; // 0 at center, 1 at edges
-    const factor = Math.sin(distance * Math.PI / 2); // Bell curve (0 at center, 1 at edges)
-    const color = interpolateColor(endColor, startColor, factor); // Light in center, dark on sides
+    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5); // Flatter curve (0 at center, 1 at edges, slower transition)
+    const color = interpolateColor(endColor, startColor, factor); // Light in wider center, dark on narrower sides
     capGraphics.fillStyle(color, 1);
     capGraphics.fillRect(i * stepWidthCap, 0, stepWidthCap, PIPE_CAP_HEIGHT); // No overlap for pixel-art look
   }
