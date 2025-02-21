@@ -65,7 +65,7 @@ function create() {
   restartText = this.add.text(gameWidth / 2, gameHeight * 0.6, '', textStyle).setOrigin(0.5).setDepth(10);
 
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
-  highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10);
+  highScoreText = this.add.text(20, 50, 'HIGH SCORE: ' + highScore, textStyle).setDepth(10);
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
@@ -78,27 +78,37 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (smaller size)
+  // Pre-generate pipe texture (coral-like with gradient and wavy lines)
   const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0x008000, 1); // Dark green base
-  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512); // Fixed height to reduce load
-  pipeGraphics.lineStyle(4, 0x00CC00, 1); // Light green vertical lines
-  for (let x = 0; x < PIPE_WIDTH; x += 20) {
-    pipeGraphics.lineBetween(x, 0, x, 512);
+  // Gradient base: dark coral to lighter coral
+  pipeGraphics.fillGradientStyle(0xFF5733, 0xFF5733, 0xFF8C66, 0xFF8C66, 1); // Top dark, bottom light
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
+  // Add wavy white lines for coral texture
+  pipeGraphics.lineStyle(2, 0xFFFFFF, 0.7);
+  for (let y = 0; y < 512; y += 20) {
+    pipeGraphics.beginPath();
+    pipeGraphics.moveTo(0, y);
+    for (let x = 0; x <= PIPE_WIDTH; x += 5) {
+      pipeGraphics.lineTo(x, y + Math.sin(x / 10) * 5);
+    }
+    pipeGraphics.strokePath();
   }
   pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
   pipeGraphics.destroy();
-  console.log('Pipe texture exists:', this.textures.exists('pipeTexture')); // Debug log
+  console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture
+  // Pre-generate endcap texture (seashell-like with gradient and ridges)
   const capGraphics = this.add.graphics();
-  capGraphics.fillStyle(0x006600, 1); // Darker green base
+  // Gradient base: dark gray to light gray
+  capGraphics.fillGradientStyle(0x808080, 0x808080, 0xD3D3D3, 0xD3D3D3, 1); // Top dark, bottom light
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  capGraphics.lineStyle(4, 0x00A300, 1); // Light green horizontal line
-  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
+  // Add ridges for seashell effect
+  capGraphics.lineStyle(2, 0xFFFFFF, 0.8);
+  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT * 0.25, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT * 0.25);
+  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT * 0.75, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT * 0.75);
   capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   capGraphics.destroy();
-  console.log('Cap texture exists:', this.textures.exists('capTexture')); // Debug log
+  console.log('Cap texture exists:', this.textures.exists('capTexture'));
 }
 
 function update() {
@@ -145,26 +155,26 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Top pipe body (sprite instead of rectangle)
+  // Top pipe body
   let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
-  pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY); // Scale to match original height
+  pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
   pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
   pipeTopBody.body.immovable = true;
 
-  // Bottom pipe body (sprite instead of rectangle)
+  // Bottom pipe body
   let bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
   let pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
   pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.immovable = true;
 
-  // Top pipe endcap (sprite instead of rectangle)
+  // Top pipe endcap
   let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
   pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.immovable = true;
 
-  // Bottom pipe endcap (sprite instead of rectangle)
+  // Bottom pipe endcap
   let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
   pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
