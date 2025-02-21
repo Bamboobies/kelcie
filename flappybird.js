@@ -78,13 +78,13 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (realistic Mario pipe with visible gradient)
+  // Pre-generate pipe texture (realistic Mario pipe with fixed gradient)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Classic Mario pipe green
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Stronger vertical gradient for noticeable shading
-  pipeGraphics.fillGradientStyle(0x00FF00, 0x00FF00, 0x006600, 0x006600, 1); // Bright to dark green
-  pipeGraphics.fillRect(PIPE_WIDTH / 4, 0, PIPE_WIDTH / 2, 512); // Center shading
+  // Full-width vertical gradient for clear shading
+  pipeGraphics.fillGradientStyle(0x00FF00, 0x00CC00, 0x006600, 0x004d00, 1); // Left bright, right dark
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512); // Full coverage
   // Thin dark outline on sides only
   pipeGraphics.lineStyle(1, 0x003300, 1); // Thinner dark green outline
   pipeGraphics.lineBetween(1, 0, 1, 512); // Left side
@@ -93,13 +93,13 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (realistic Mario rim with gradient)
+  // Pre-generate endcap texture (realistic Mario rim with fixed gradient)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Darker green base
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Stronger horizontal gradient for depth
-  capGraphics.fillGradientStyle(0x00CC00, 0x00CC00, 0x004d00, 0x004d00, 1); // Bright to dark green
-  capGraphics.fillRect(0, PIPE_CAP_HEIGHT / 4, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2); // Center shading
+  // Full-height horizontal gradient for depth
+  capGraphics.fillGradientStyle(0x00CC00, 0x00CC00, 0x004d00, 0x004d00, 1); // Top bright, bottom dark
+  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT); // Full coverage
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thinner dark green outline
   capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
