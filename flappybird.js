@@ -116,21 +116,19 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (smoother, greener Mario rim)
+  // Pre-generate endcap texture (diagonal, smoother Mario rim)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Smoother gradient with 16 steps (vertical, matching pipes)
-  const capColors = [
-    0x9CD62A, 0x8CCB2A, 0x7CC02A, 0x6CB52A,
-    0x5CAA2A, 0x4C9F2A, 0x3C942A, 0x2C892A,
-    0x1C7E2A, 0x0C732A, 0x00682A, 0x005D23,
-    0x005223, 0x004723, 0x003C23, 0x003123
-  ];
-  const stepWidthCap = (PIPE_WIDTH + 10) / capColors.length;
-  for (let i = 0; i < capColors.length; i++) {
-    capGraphics.fillStyle(capColors[i], 1);
-    capGraphics.fillRect(i * stepWidthCap, 0, stepWidthCap, PIPE_CAP_HEIGHT); // No overlap for pixel-art look
+  // Smoother diagonal gradient with 20 steps (top-left to bottom-right)
+  const capStartColor = 0xA0D22A; // Medium yellow-green
+  const capEndColor = 0x3C5A23;   // Medium dark green
+  for (let i = 0; i < 20; i++) {
+    const factor = i / 19; // Use 20 steps, so factor goes 0 to 1
+    const color = interpolateColor(capStartColor, capEndColor, factor);
+    capGraphics.fillStyle(color, 1);
+    // Diagonal fill: top-left to bottom-right
+    capGraphics.fillRect(0, i * (PIPE_CAP_HEIGHT / 20), (i + 1) * ((PIPE_WIDTH + 10) / 20), PIPE_CAP_HEIGHT / 20);
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
