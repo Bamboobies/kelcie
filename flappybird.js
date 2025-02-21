@@ -123,64 +123,52 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Graphics object for drawing textures
+  // Use Graphics for two-tone textures
   const graphics = this.add.graphics();
 
-  // Top pipe body with coral-like texture
+  // Top pipe body with two-tone texture (vertical split)
   let topHeight = gapY - PIPE_CAP_HEIGHT;
-  let pipeTopBody = this.physics.add.sprite(gameWidth, 0, null).setOrigin(0, 0).setDepth(5); // Invisible sprite for physics
+  let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, null).setOrigin(0, 1).setDepth(5);
   pipeTopBody.body.setSize(PIPE_WIDTH, topHeight);
   pipeTopBody.body.immovable = true;
-  graphics.fillStyle(0xFF5733, 1); // Coral base color
-  graphics.fillRect(gameWidth, 0, PIPE_WIDTH, topHeight);
-  // Add wavy texture
-  graphics.lineStyle(2, 0xFFFFFF, 0.5); // White wavy lines
-  for (let y = 0; y < topHeight; y += 20) {
-    graphics.beginPath();
-    graphics.moveTo(gameWidth, y);
-    graphics.lineTo(gameWidth + PIPE_WIDTH, y + Math.sin(y / 10) * 10);
-    graphics.strokePath();
-  }
-  pipeTopBody.graphics = graphics; // Store graphics for movement
+  graphics.fillStyle(0x00CC00, 1); // Light green left half
+  graphics.fillRect(gameWidth, 0, PIPE_WIDTH / 2, topHeight);
+  graphics.fillStyle(0x008000, 1); // Dark green right half
+  graphics.fillRect(gameWidth + PIPE_WIDTH / 2, 0, PIPE_WIDTH / 2, topHeight);
+  pipeTopBody.graphics = graphics;
 
-  // Bottom pipe body with coral-like texture
+  // Bottom pipe body with two-tone texture (vertical split)
   let bottomY = gapY + PIPE_GAP + PIPE_CAP_HEIGHT;
   let bottomHeight = gameHeight - bottomY;
   let pipeBottomBody = this.physics.add.sprite(gameWidth, bottomY, null).setOrigin(0, 0).setDepth(5);
   pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.immovable = true;
   const bottomGraphics = this.add.graphics();
-  bottomGraphics.fillStyle(0xFF5733, 1);
-  bottomGraphics.fillRect(gameWidth, bottomY, PIPE_WIDTH, bottomHeight);
-  // Add wavy texture
-  bottomGraphics.lineStyle(2, 0xFFFFFF, 0.5);
-  for (let y = bottomY; y < bottomY + bottomHeight; y += 20) {
-    bottomGraphics.beginPath();
-    bottomGraphics.moveTo(gameWidth, y);
-    bottomGraphics.lineTo(gameWidth + PIPE_WIDTH, y + Math.sin(y / 10) * 10);
-    bottomGraphics.strokePath();
-  }
+  bottomGraphics.fillStyle(0x00CC00, 1); // Light green left half
+  bottomGraphics.fillRect(gameWidth, bottomY, PIPE_WIDTH / 2, bottomHeight);
+  bottomGraphics.fillStyle(0x008000, 1); // Dark green right half
+  bottomGraphics.fillRect(gameWidth + PIPE_WIDTH / 2, bottomY, PIPE_WIDTH / 2, bottomHeight);
   pipeBottomBody.graphics = bottomGraphics;
 
-  // Top pipe endcap with gradient texture
+  // Top pipe endcap with two-tone texture (horizontal split)
   let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, null).setOrigin(0.5, 1).setDepth(5);
   pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.immovable = true;
   const topCapGraphics = this.add.graphics();
-  topCapGraphics.fillStyle(0xFFFFFF, 1); // White base for seashell
-  topCapGraphics.fillRect(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  topCapGraphics.fillStyle(0xD3D3D3, 0.7); // Light gray gradient
+  topCapGraphics.fillStyle(0xD3D3D3, 1); // Light gray top half
   topCapGraphics.fillRect(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
+  topCapGraphics.fillStyle(0x808080, 1); // Dark gray bottom half
+  topCapGraphics.fillRect(gameWidth, gapY - PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
   pipeTopCap.graphics = topCapGraphics;
 
-  // Bottom pipe endcap with gradient texture
+  // Bottom pipe endcap with two-tone texture (horizontal split)
   let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, null).setOrigin(0.5, 0).setDepth(5);
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
   const bottomCapGraphics = this.add.graphics();
-  bottomCapGraphics.fillStyle(0xFFFFFF, 1);
-  bottomCapGraphics.fillRect(gameWidth, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  bottomCapGraphics.fillStyle(0xD3D3D3, 0.7);
+  bottomCapGraphics.fillStyle(0xD3D3D3, 1); // Light gray bottom half
+  bottomCapGraphics.fillRect(gameWidth, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
+  bottomCapGraphics.fillStyle(0x808080, 1); // Dark gray top half
   bottomCapGraphics.fillRect(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
   pipeBottomCap.graphics = bottomCapGraphics;
 
@@ -202,10 +190,10 @@ function addPipes() {
     pipe.body.allowGravity = false;
     pipe.body.checkWorldBounds = true;
     pipe.body.outOfBoundsKill = true;
-    // Update graphics position in update loop
+    // Update graphics position
     pipe.updateGraphics = () => {
       if (pipe.graphics) {
-        pipe.graphics.x = pipe.body.x - gameWidth; // Adjust for initial offset
+        pipe.graphics.x = pipe.body.x - gameWidth;
       }
     };
   });
@@ -281,7 +269,7 @@ function hitPipe() {
 function restartGame() {
   gameOver = false;
   score = 0;
-  scoreText.setText('SCORE: ' + score);
+  scoreText.setText('SCORE: 0');
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   pipes.clear(true, true);
