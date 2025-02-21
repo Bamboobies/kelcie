@@ -78,16 +78,17 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (realistic Mario pipe with block shading)
+  // Pre-generate pipe texture (detailed gradient shading)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Classic Mario pipe green base
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Left third lighter shading
-  pipeGraphics.fillStyle(0x00CC00, 1); // Lighter green
-  pipeGraphics.fillRect(0, 0, PIPE_WIDTH / 3, 512);
-  // Right third darker shading
-  pipeGraphics.fillStyle(0x006600, 1); // Darker green
-  pipeGraphics.fillRect(PIPE_WIDTH * 2 / 3, 0, PIPE_WIDTH / 3, 512);
+  // Detailed vertical gradient with multiple steps
+  const pipeColors = [0x00FF00, 0x00E600, 0x00CC00, 0x00B300, 0x009900, 0x008000, 0x006600];
+  const stepWidth = PIPE_WIDTH / pipeColors.length;
+  for (let i = 0; i < pipeColors.length; i++) {
+    pipeGraphics.fillStyle(pipeColors[i], 1);
+    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512);
+  }
   // Thin dark outline on sides only
   pipeGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
   pipeGraphics.lineBetween(1, 0, 1, 512); // Left side
@@ -96,13 +97,17 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (realistic Mario rim with block shading)
+  // Pre-generate endcap texture (same detailed gradient shading)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Darker green base
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Top half lighter shading
-  capGraphics.fillStyle(0x00A300, 1); // Lighter green
-  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
+  // Detailed vertical gradient with multiple steps (same as pipes)
+  const capColors = [0x00FF00, 0x00E600, 0x00CC00, 0x00B300, 0x009900, 0x008000, 0x006600];
+  const stepHeight = PIPE_CAP_HEIGHT / capColors.length;
+  for (let i = 0; i < capColors.length; i++) {
+    capGraphics.fillStyle(capColors[i], 1);
+    capGraphics.fillRect(0, i * stepHeight, PIPE_WIDTH + 10, stepHeight);
+  }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
   capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
