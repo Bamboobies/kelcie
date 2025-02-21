@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flappy Shrimp</title>
+    <style>
+        /* Ensure the game fits the entire screen and is mobile-friendly */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            background-color: #70c5ce; /* Ocean-like background */
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            touch-action: none; /* Prevents default touch behaviors */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        // Get canvas and context
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size to full viewport
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Game variables
+        const gravity = 0.3;
+        const lift = -8;
+        const pipeSpeed = 2;
+        const pipeGap = 150;
+        let shrimpY = canvas.height / 2;
+        let shrimpVelocity = 0;
+        let score = 0;
+        let gameOver = false;
+        let pipes = [];
+
+        // Shrimp properties (simple rectangle for now, replace with image if desired)
+        const shrimpWidth = 40;
+        const shrimpHeight = 30;
+
+        // Pipe properties
+        const pipeWidth = 50;
+
+        // Add initial pipe
+        function spawnPipe() {
+            const pipeHeight = Math.floor(Math.random() * (canvas.height - pipeGap - 100)) + 50;
+            pipes.push({
+                x: canvas.width,
+                topHeight: pipeHeight,
+                passed: false
+            });
+        }
+
+        // Handle input (tap/click to flap)
+        function flap() {
+            if (!gameOver) {
+                shrimpVelocity = lift;
+            } else {
+                resetGame();
+            }
+        }
+        canvas.addEventListener('touchstart', flap); // Mobile
+        canvas.addEventListener('click', flap);     // Desktop
+
+        // Reset game
+        function resetGame() {
+            shrimpY = canvas.height / 2;
+            shrimpVelocity = 0;
+            pipes = [];
+            score = 0;
+            gameOver = false;
+            spawnPipe();
+        }
+
+        // Game loop
+        let lastPipeSpawn = 0;
+        function gameLoop() {
+            if (gameOver) {
+                drawGameOver();
+                return;
+            }
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update shrimp position
+            shrimpVelocity += gravity;
+            shrimpY += shrimpVelocity;
+
+            // Check boundaries
+            if (shrimpY + shrimpHeight > canvas.height || shrimpY < 0) {
+                gameOver = true;
+            }
+
+            // Spawn pipes every 2 seconds (adjust based on frame rate)
+            if (Date.now() - lastPipeSpawn > 2000) {
+                spawnPipe();
+                lastPipeSpawn = Date.now();
+            }
+
+            // Update and draw pipes
+            for (let i = pipes.length - 1; i >= 0; i--) {
+                pipes[i].x -= pipeSpeed;
+
+                // Draw top pipe
+                ctx.fillStyle = '#0f0';
+                ctx.fillRect(pipes[i].x, 0, pipeWidth, pipes[i].topHeight);
+
+                // Draw bottom pipe
+                const bottomY = pipes[i].topHeight + pipeGap;
+                ctx.fillRect(pipes[i].x, bottomY, pipeWidth, canvas.height - bottomY);
+
+                // Collision detection
+                if (
+                    (pipes[i].x < shrimpWidth && pipes[i].x + pipeWidth > 0) &&
+                    (shrimpY < pipes[i].topHeight || shrimpY + shrimpHeight > bottomY)
+                ) {
+                    gameOver = true;
+                }
+
+                // Score when shrimp passes pipe
+                if (!pipes[i].passed && pipes[i].x + pipeWidth < 0) {
+                    pipes[i].passed = true;
+                    score++;
+                }
+
+                // Remove off-screen pipes
+                if (pipes[i].x + pipeWidth < 0) {
+                    pipes.splice(i, 1);
+                }
+            }
+
+            // Draw shrimp (simple pink rectangle, replace with shrimp image if desired)
+            ctx.fillStyle = '#ff69b4'; // Pink shrimp
+            ctx.fillRect(50, shrimpY, shrimpWidth, shrimpHeight);
+
+            // Draw score
+            ctx.fillStyle = '#fff';
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, 10, 30);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Draw game over screen
+        function drawGameOver() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = '40px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Game Over', canvas.width / 2, canvas.height / 2 - 20);
+            ctx.font = '20px Arial';
+            ctx.fillText(`Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+            ctx.fillText('Tap to Restart', canvas.width / 2, canvas.height / 2 + 60);
+        }
+
+        // Start the game
+        resetGame();
+        gameLoop();
+    </script>
+</body>
+</html>
