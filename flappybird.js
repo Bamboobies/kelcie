@@ -123,60 +123,50 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Use Graphics for two-tone textures
-  const graphics = this.add.graphics();
+  // Top pipe body
+  let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1).setDepth(5);
+  const topGraphics = this.add.graphics().setDepth(6); // Slightly above pipe
+  topGraphics.lineStyle(2, 0x00CC00, 1); // Light green lines
+  for (let y = 0; y < gapY - PIPE_CAP_HEIGHT; y += 20) {
+    topGraphics.lineBetween(gameWidth, y, gameWidth + PIPE_WIDTH, y);
+  }
+  pipeTopBody.graphics = topGraphics;
 
-  // Top pipe body with two-tone texture (vertical split)
-  let topHeight = gapY - PIPE_CAP_HEIGHT;
-  let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, null).setOrigin(0, 1).setDepth(5);
-  pipeTopBody.body.setSize(PIPE_WIDTH, topHeight);
-  pipeTopBody.body.immovable = true;
-  graphics.fillStyle(0x00CC00, 1); // Light green left half
-  graphics.fillRect(gameWidth, 0, PIPE_WIDTH / 2, topHeight);
-  graphics.fillStyle(0x008000, 1); // Dark green right half
-  graphics.fillRect(gameWidth + PIPE_WIDTH / 2, 0, PIPE_WIDTH / 2, topHeight);
-  pipeTopBody.graphics = graphics;
-
-  // Bottom pipe body with two-tone texture (vertical split)
-  let bottomY = gapY + PIPE_GAP + PIPE_CAP_HEIGHT;
-  let bottomHeight = gameHeight - bottomY;
-  let pipeBottomBody = this.physics.add.sprite(gameWidth, bottomY, null).setOrigin(0, 0).setDepth(5);
-  pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
-  pipeBottomBody.body.immovable = true;
-  const bottomGraphics = this.add.graphics();
-  bottomGraphics.fillStyle(0x00CC00, 1); // Light green left half
-  bottomGraphics.fillRect(gameWidth, bottomY, PIPE_WIDTH / 2, bottomHeight);
-  bottomGraphics.fillStyle(0x008000, 1); // Dark green right half
-  bottomGraphics.fillRect(gameWidth + PIPE_WIDTH / 2, bottomY, PIPE_WIDTH / 2, bottomHeight);
+  // Bottom pipe body
+  let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0).setDepth(5);
+  const bottomGraphics = this.add.graphics().setDepth(6);
+  bottomGraphics.lineStyle(2, 0x00CC00, 1);
+  for (let y = gapY + PIPE_GAP + PIPE_CAP_HEIGHT; y < gameHeight; y += 20) {
+    bottomGraphics.lineBetween(gameWidth, y, gameWidth + PIPE_WIDTH, y);
+  }
   pipeBottomBody.graphics = bottomGraphics;
 
-  // Top pipe endcap with two-tone texture (horizontal split)
-  let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, null).setOrigin(0.5, 1).setDepth(5);
-  pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeTopCap.body.immovable = true;
-  const topCapGraphics = this.add.graphics();
-  topCapGraphics.fillStyle(0xD3D3D3, 1); // Light gray top half
-  topCapGraphics.fillRect(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
-  topCapGraphics.fillStyle(0x808080, 1); // Dark gray bottom half
-  topCapGraphics.fillRect(gameWidth, gapY - PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
+  // Top pipe endcap
+  let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1).setDepth(5);
+  const topCapGraphics = this.add.graphics().setDepth(6);
+  topCapGraphics.lineStyle(2, 0x00A300, 1); // Slightly lighter green diagonal
+  topCapGraphics.lineBetween(gameWidth, gapY - PIPE_CAP_HEIGHT, gameWidth + PIPE_WIDTH + 10, gapY);
   pipeTopCap.graphics = topCapGraphics;
 
-  // Bottom pipe endcap with two-tone texture (horizontal split)
-  let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, null).setOrigin(0.5, 0).setDepth(5);
-  pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeBottomCap.body.immovable = true;
-  const bottomCapGraphics = this.add.graphics();
-  bottomCapGraphics.fillStyle(0xD3D3D3, 1); // Light gray bottom half
-  bottomCapGraphics.fillRect(gameWidth, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
-  bottomCapGraphics.fillStyle(0x808080, 1); // Dark gray top half
-  bottomCapGraphics.fillRect(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
+  // Bottom pipe endcap
+  let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0).setDepth(5);
+  const bottomCapGraphics = this.add.graphics().setDepth(6);
+  bottomCapGraphics.lineStyle(2, 0x00A300, 1);
+  bottomCapGraphics.lineBetween(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, gameWidth + PIPE_WIDTH + 10, gapY + PIPE_GAP);
   pipeBottomCap.graphics = bottomCapGraphics;
 
-  // Score zone (unchanged)
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0)
-    .setOrigin(0.5)
-    .setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+
+  this.physics.add.existing(pipeTopBody);
+  this.physics.add.existing(pipeBottomBody);
+  this.physics.add.existing(pipeTopCap);
+  this.physics.add.existing(pipeBottomCap);
   this.physics.add.existing(scoreZone);
+
+  pipeTopBody.body.immovable = true;
+  pipeBottomBody.body.immovable = true;
+  pipeTopCap.body.immovable = true;
+  pipeBottomCap.body.immovable = true;
 
   pipes.add(pipeTopBody);
   pipes.add(pipeBottomBody);
@@ -190,54 +180,15 @@ function addPipes() {
     pipe.body.allowGravity = false;
     pipe.body.checkWorldBounds = true;
     pipe.body.outOfBoundsKill = true;
-    // Update graphics position
-    pipe.updateGraphics = () => {
-      if (pipe.graphics) {
-        pipe.graphics.x = pipe.body.x - gameWidth;
-      }
-    };
+    // Sync graphics with pipe position
+    if (pipe.graphics) {
+      pipe.update = function() {
+        this.graphics.x = this.body.x - gameWidth;
+      };
+    }
   });
 
   scoreZone.passed = false;
-}
-
-function update() {
-  if (gameOver || !gameStarted) return;
-
-  background1.x += BACKGROUND_SPEED * (1 / 60);
-  background2.x += BACKGROUND_SPEED * (1 / 60);
-
-  if (background1.x + background1.displayWidth <= 0) {
-    background1.x = background2.x + background2.displayWidth;
-  }
-  if (background2.x + background2.displayWidth <= 0) {
-    background2.x = background1.x + background1.displayWidth;
-  }
-
-  bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
-
-  if (bird.body.blocked.down) {
-    hitPipe.call(this);
-  }
-
-  // Update graphics positions for all pipes
-  pipes.getChildren().forEach(pipe => {
-    if (pipe.updateGraphics) pipe.updateGraphics();
-  });
-
-  checkScore();
-}
-
-function startGame() {
-  gameStarted = true;
-  bird.body.allowGravity = true;
-  titleText.setText('');
-  startText.setText('');
-  this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
-}
-
-function flap() {
-  bird.body.setVelocityY(FLAP_STRENGTH);
 }
 
 function checkScore() {
@@ -269,7 +220,7 @@ function hitPipe() {
 function restartGame() {
   gameOver = false;
   score = 0;
-  scoreText.setText('SCORE: 0');
+  scoreText.setText('SCORE: ' + score);
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   pipes.clear(true, true);
