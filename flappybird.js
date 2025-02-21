@@ -92,18 +92,19 @@ function create() {
     return (r << 16) + (g << 8) + b;
   }
 
-  // Pre-generate pipe texture (ultra-smooth gradient matching Mario pipe)
+  // Pre-generate pipe texture (pixel-art Mario pipe with greener gradient)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Base green (unused, overwritten by gradient)
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Ultra-smooth vertical gradient with 80 steps (matching image)
-  const startColor = 0xA5E32E; // Bright lime green from image
-  const endColor = 0x4A7023;   // Deep green from image
-  for (let i = 0; i < PIPE_WIDTH; i++) {
-    const factor = i / (PIPE_WIDTH - 1);
-    const color = interpolateColor(startColor, endColor, factor);
-    pipeGraphics.fillStyle(color, 1);
-    pipeGraphics.fillRect(i, 0, 1, 512); // 1px wide strips
+  // Pixel-art gradient with 8 steps
+  const pipeColors = [
+    0x00FF00, 0x00E600, 0x00CC00, 0x00B300,
+    0x009900, 0x008000, 0x006600, 0x004d00
+  ];
+  const stepWidth = PIPE_WIDTH / pipeColors.length;
+  for (let i = 0; i < pipeColors.length; i++) {
+    pipeGraphics.fillStyle(pipeColors[i], 1);
+    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512); // No overlap for pixel-art look
   }
   // Thin dark outline on sides only
   pipeGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
@@ -113,16 +114,19 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (ultra-smooth vertical gradient matching pipes)
+  // Pre-generate endcap texture (pixel-art Mario rim with same gradient)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Smooth vertical gradient with 90 steps (matching pipes)
-  for (let i = 0; i < PIPE_WIDTH + 10; i++) {
-    const factor = i / (PIPE_WIDTH + 9);
-    const color = interpolateColor(startColor, endColor, factor);
-    capGraphics.fillStyle(color, 1);
-    capGraphics.fillRect(i, 0, 1, PIPE_CAP_HEIGHT); // 1px wide strips
+  // Pixel-art gradient with 8 steps (vertical, matching pipes)
+  const capColors = [
+    0x00FF00, 0x00E600, 0x00CC00, 0x00B300,
+    0x009900, 0x008000, 0x006600, 0x004d00
+  ];
+  const stepHeight = PIPE_CAP_HEIGHT / capColors.length;
+  for (let i = 0; i < capColors.length; i++) {
+    capGraphics.fillStyle(capColors[i], 1);
+    capGraphics.fillRect(0, i * stepHeight, PIPE_WIDTH + 10, stepHeight); // No overlap for pixel-art look
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
