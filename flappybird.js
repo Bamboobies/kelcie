@@ -65,7 +65,7 @@ function create() {
   restartText = this.add.text(gameWidth / 2, gameHeight * 0.6, '', textStyle).setOrigin(0.5).setDepth(10);
 
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
-  highScoreText = this.add.text(20, 50, 'HIGH SCORE: ' + highScore, textStyle).setDepth(10);
+  highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10);
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
@@ -78,36 +78,22 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (enhanced green with ridges)
+  // Pre-generate pipe texture (green with vertical shading)
   const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0x008000, 1); // Solid dark green base
+  pipeGraphics.fillStyle(0x008000, 1); // Dark green base
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Subtle gradient overlay for depth
-  pipeGraphics.fillStyle(0x00CC00, 0.3); // Light green, 30% opacity
+  pipeGraphics.fillGradientStyle(0x00CC00, 0x00CC00, 0x008000, 0x008000, 0.5); // Light to dark green, 50% opacity
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH / 2, 512); // Left half lighter
-  // Curved ridges for texture
-  pipeGraphics.lineStyle(3, 0xFFFFFF, 0.8); // White ridges
-  for (let y = 0; y < 512; y += 30) {
-    pipeGraphics.beginPath();
-    pipeGraphics.moveTo(0, y);
-    pipeGraphics.quadraticCurveTo(PIPE_WIDTH / 2, y - 15, PIPE_WIDTH, y);
-    pipeGraphics.strokePath();
-  }
   pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (enhanced green with ridges)
+  // Pre-generate endcap texture (green with horizontal shading)
   const capGraphics = this.add.graphics();
-  capGraphics.fillStyle(0x006600, 1); // Solid darker green base
+  capGraphics.fillStyle(0x006600, 1); // Darker green base
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Gradient overlay
-  capGraphics.fillStyle(0x00A300, 0.5); // Lighter green, 50% opacity
-  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2); // Top half lighter
-  // Ridges for detail
-  capGraphics.lineStyle(2, 0xFFFFFF, 0.8); // White ridges
-  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT * 0.25, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT * 0.25);
-  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT * 0.75, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT * 0.75);
+  pipeGraphics.fillGradientStyle(0x00A300, 0x00A300, 0x006600, 0x006600, 0.5); // Light to dark green, 50% opacity
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2); // Top half lighter
   capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   capGraphics.destroy();
   console.log('Cap texture exists:', this.textures.exists('capTexture'));
