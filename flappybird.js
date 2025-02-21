@@ -92,21 +92,18 @@ function create() {
     return (r << 16) + (g << 8) + b;
   }
 
-  // Pre-generate pipe texture (smoother, greener Mario pipe)
+  // Pre-generate pipe texture (ultra-smooth, less extreme gradient)
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1); // Base green (unused, overwritten by gradient)
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Smoother gradient with 16 steps for pixel-art but less blocky
-  const pipeColors = [
-    0x9CD62A, 0x8CCB2A, 0x7CC02A, 0x6CB52A,
-    0x5CAA2A, 0x4C9F2A, 0x3C942A, 0x2C892A,
-    0x1C7E2A, 0x0C732A, 0x00682A, 0x005D23,
-    0x005223, 0x004723, 0x003C23, 0x003123
-  ];
-  const stepWidth = PIPE_WIDTH / pipeColors.length;
-  for (let i = 0; i < pipeColors.length; i++) {
-    pipeGraphics.fillStyle(pipeColors[i], 1);
-    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512); // No overlap for pixel-art look
+  // Ultra-smooth vertical gradient with 80 steps (less extreme)
+  const startColor = 0xA0D22A; // Medium yellow-green, less bright
+  const endColor = 0x3C5A23;   // Medium dark green, less extreme
+  for (let i = 0; i < PIPE_WIDTH; i++) {
+    const factor = i / (PIPE_WIDTH - 1);
+    const color = interpolateColor(startColor, endColor, factor);
+    pipeGraphics.fillStyle(color, 1);
+    pipeGraphics.fillRect(i, 0, 1, 512); // 1px wide strips
   }
   // Thin dark outline on sides only
   pipeGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
@@ -116,19 +113,16 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (diagonal, smoother Mario rim)
+  // Pre-generate endcap texture (ultra-smooth, less extreme gradient, vertical)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Smoother diagonal gradient with 20 steps (top-left to bottom-right)
-  const capStartColor = 0xA0D22A; // Medium yellow-green
-  const capEndColor = 0x3C5A23;   // Medium dark green
-  for (let i = 0; i < 20; i++) {
-    const factor = i / 19; // Use 20 steps, so factor goes 0 to 1
-    const color = interpolateColor(capStartColor, capEndColor, factor);
+  // Smooth vertical gradient with 90 steps (matching pipes, less extreme)
+  for (let i = 0; i < PIPE_WIDTH + 10; i++) {
+    const factor = i / (PIPE_WIDTH + 9);
+    const color = interpolateColor(startColor, endColor, factor);
     capGraphics.fillStyle(color, 1);
-    // Diagonal fill: top-left to bottom-right
-    capGraphics.fillRect(0, i * (PIPE_CAP_HEIGHT / 20), (i + 1) * ((PIPE_WIDTH + 10) / 20), PIPE_CAP_HEIGHT / 20);
+    capGraphics.fillRect(i, 0, 1, PIPE_CAP_HEIGHT); // 1px wide strips
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
