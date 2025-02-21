@@ -77,6 +77,26 @@ function create() {
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
+
+  // Pre-generate pipe texture
+  const pipeGraphics = this.add.graphics();
+  pipeGraphics.fillStyle(0x008000, 1); // Dark green base
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, gameHeight); // Large enough for any pipe
+  pipeGraphics.lineStyle(4, 0x00CC00, 1); // Light green vertical lines
+  for (let x = 0; x < PIPE_WIDTH; x += 20) {
+    pipeGraphics.lineBetween(x, 0, x, gameHeight);
+  }
+  pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, gameHeight);
+  pipeGraphics.destroy();
+
+  // Pre-generate endcap texture
+  const capGraphics = this.add.graphics();
+  capGraphics.fillStyle(0x006600, 1); // Darker green base
+  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  capGraphics.lineStyle(4, 0x00A300, 1); // Light green horizontal line
+  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
+  capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  capGraphics.destroy();
 }
 
 function update() {
@@ -123,43 +143,21 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Generate pipe body texture (dark green with light green vertical stripes)
-  const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0x008000, 1); // Dark green base
-  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, gameHeight); // Use max height to cover both pipes
-  pipeGraphics.lineStyle(4, 0x00CC00, 1); // Light green vertical lines
-  for (let x = 0; x < PIPE_WIDTH; x += 20) {
-    pipeGraphics.lineBetween(x, 0, x, gameHeight);
-  }
-  const pipeTextureKey = `pipeTexture${Date.now()}`; // Unique key per pipe spawn
-  pipeGraphics.generateTexture(pipeTextureKey, PIPE_WIDTH, gameHeight);
-  pipeGraphics.destroy(); // Clean up graphics object
-
-  // Generate endcap texture (darker green with a light green horizontal stripe)
-  const capGraphics = this.add.graphics();
-  capGraphics.fillStyle(0x006600, 1); // Darker green base
-  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  capGraphics.lineStyle(4, 0x00A300, 1); // Light green horizontal line
-  capGraphics.lineBetween(0, PIPE_CAP_HEIGHT / 2, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2);
-  const capTextureKey = `capTexture${Date.now()}`; // Unique key per cap spawn
-  capGraphics.generateTexture(capTextureKey, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  capGraphics.destroy();
-
-  // Top pipe body with texture
+  // Top pipe body with pre-generated texture
   let pipeTopBody = this.add.rectangle(gameWidth, gapY - PIPE_CAP_HEIGHT, PIPE_WIDTH, gapY, 0x008000).setOrigin(0, 1).setDepth(5);
-  pipeTopBody.setTexture(pipeTextureKey); // Apply generated texture
+  pipeTopBody.setTexture('pipeTexture');
 
-  // Bottom pipe body with texture
+  // Bottom pipe body with pre-generated texture
   let pipeBottomBody = this.add.rectangle(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, PIPE_WIDTH, gameHeight - (gapY + PIPE_GAP), 0x008000).setOrigin(0, 0).setDepth(5);
-  pipeBottomBody.setTexture(pipeTextureKey);
+  pipeBottomBody.setTexture('pipeTexture');
 
-  // Top pipe endcap with texture
+  // Top pipe endcap with pre-generated texture
   let pipeTopCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 1).setDepth(5);
-  pipeTopCap.setTexture(capTextureKey);
+  pipeTopCap.setTexture('capTexture');
 
-  // Bottom pipe endcap with texture
+  // Bottom pipe endcap with pre-generated texture
   let pipeBottomCap = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT, 0x006600).setOrigin(0.5, 0).setDepth(5);
-  pipeBottomCap.setTexture(capTextureKey);
+  pipeBottomCap.setTexture('capTexture');
 
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
 
