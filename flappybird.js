@@ -78,27 +78,33 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Pre-generate pipe texture (coral-like with solid base and wavy lines)
+  // Pre-generate pipe texture (enhanced green with ridges)
   const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0xFF5733, 1); // Solid dark coral base
+  pipeGraphics.fillStyle(0x008000, 1); // Solid dark green base
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  pipeGraphics.lineStyle(2, 0xFFFFFF, 0.7); // White wavy lines
-  for (let y = 0; y < 512; y += 20) {
+  // Subtle gradient overlay for depth
+  pipeGraphics.fillStyle(0x00CC00, 0.3); // Light green, 30% opacity
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH / 2, 512); // Left half lighter
+  // Curved ridges for texture
+  pipeGraphics.lineStyle(3, 0xFFFFFF, 0.8); // White ridges
+  for (let y = 0; y < 512; y += 30) {
     pipeGraphics.beginPath();
     pipeGraphics.moveTo(0, y);
-    for (let x = 0; x <= PIPE_WIDTH; x += 5) {
-      pipeGraphics.lineTo(x, y + Math.sin(x / 10) * 5);
-    }
+    pipeGraphics.quadraticCurveTo(PIPE_WIDTH / 2, y - 15, PIPE_WIDTH, y);
     pipeGraphics.strokePath();
   }
   pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (seashell-like with gradient and ridges)
+  // Pre-generate endcap texture (enhanced green with ridges)
   const capGraphics = this.add.graphics();
-  capGraphics.fillGradientStyle(0x808080, 0x808080, 0xD3D3D3, 0xD3D3D3, 1); // Dark to light gray
+  capGraphics.fillStyle(0x006600, 1); // Solid darker green base
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  // Gradient overlay
+  capGraphics.fillStyle(0x00A300, 0.5); // Lighter green, 50% opacity
+  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT / 2); // Top half lighter
+  // Ridges for detail
   capGraphics.lineStyle(2, 0xFFFFFF, 0.8); // White ridges
   capGraphics.lineBetween(0, PIPE_CAP_HEIGHT * 0.25, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT * 0.25);
   capGraphics.lineBetween(0, PIPE_CAP_HEIGHT * 0.75, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT * 0.75);
