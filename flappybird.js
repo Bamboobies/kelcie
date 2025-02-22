@@ -17,7 +17,14 @@ window.onload = () => {
   game = new Phaser.Game({
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
-    physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
+    physics: { 
+      default: 'matter', 
+      matter: { 
+        gravity: { y: GRAVITY },
+        debug: false,
+        enableSleeping: false
+      }
+    },
     scene: { preload, create, update }
   });
 };
@@ -45,12 +52,17 @@ function create() {
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1);
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
-  bird.body.setCollideWorldBounds(true);
-  bird.body.allowGravity = false;
+  // Initialize Matter physics for bird
+  bird = this.matter.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird');
+  bird.setScale(0.0915);
+  bird.setOrigin(0.5);
+  bird.setBounce(0); // No bounce
+  bird.setFriction(0); // No friction
+  bird.setMass(1); // Lightweight bird
+  bird.body.allowGravity = false; // Disable gravity initially
 
-  pipes = this.physics.add.group();
-  scoreZones = this.physics.add.group();
+  pipes = this.matter.world.create();
+  scoreZones = this.matter.world.create();
 
   const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' };
   const titleFontSize = Math.min(gameWidth * 0.075, 32);
@@ -73,24 +85,18 @@ function create() {
     else flap();
   });
 
-  this.physics.add.collider(bird, pipes, hitPipe, null, this);
+  // Matter collision detection for bird and pipes
+  this.matter.world.on('collisionstart', (event) => {
+    event.pairs.forEach(pair => {
+      if ((pair.bodyA.gameObject === bird || pair.bodyB.gameObject === bird) && 
+          (pipes.bodies.includes(pair.bodyA) || pipes.bodies.includes(pair.bodyB))) {
+        hitPipe.call(scene);
+      }
+    });
+  });
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
-
-  // Helper function to interpolate between two colors
-  function interpolateColor(color1, color2, factor) {
-    const r1 = (color1 >> 16) & 0xFF;
-    const g1 = (color1 >> 8) & 0xFF;
-    const b1 = color1 & 0xFF;
-    const r2 = (color2 >> 16) & 0xFF;
-    const g2 = (color2 >> 8) & 0xFF;
-    const b2 = color2 & 0xFF;
-    const r = Math.round(r1 + (r2 - r1) * factor);
-    const g = Math.round(g1 + (g2 - g1) * factor);
-    const b = Math.round(b1 + (b2 - b1) * factor);
-    return (r << 16) + (g << 8) + b;
-  }
 
   // Pre-generate pipe texture (pixel-art Mario pipe with wider light center, narrower dark edges, subtler gradient)
   const pipeGraphics = this.add.graphics();
@@ -135,7 +141,9 @@ function create() {
     // Ensure precise pixel alignment to avoid vertical lines
     const x = Math.floor(i * stepWidthCap); // Floor to avoid floating-point precision issues
     const width = Math.ceil((i + 1) * stepWidthCap) - x; // Calculate exact width, avoiding overlap
-    capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT); // Use precise pixel positions
+    if (width > 0) { // Only draw if width is positive
+      capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT); // Use precise pixel positions
+    }
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
@@ -158,10 +166,14 @@ function update() {
     background2.x = background1.x + background1.displayWidth;
   }
 
-  bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
+  if (gameStarted && !gameOver) {
+    // Update bird rotation (simulating Arcade behavior)
+    bird.rotation = Phaser.Math.Clamp(bird.rotation + (bird.body.velocity.y > 0 ? 0.03 : -0.06), -0.35, 0.35); // Convert to radians
 
-  if (bird.body.blocked.down) {
-    hitPipe.call(this);
+    // Check for ground collision (simulating blocked.down)
+    if (bird.y >= gameHeight - bird.displayHeight / 2) {
+      hitPipe.call(this);
+    }
   }
 
   checkScore();
@@ -176,7 +188,9 @@ function startGame() {
 }
 
 function flap() {
-  bird.body.setVelocityY(FLAP_STRENGTH);
+  if (gameStarted && !gameOver) {
+    bird.setVelocityY(FLAP_STRENGTH);
+  }
 }
 
 function addPipes() {
@@ -189,33 +203,53 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Top pipe body (sprite instead of rectangle)
-  let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
+  // Top pipe body
+  let pipeTopBody = this.matter.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture');
   pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
-  pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
-  pipeTopBody.body.immovable = true;
+  pipeTopBody.setStatic(true); // Static to prevent movement by Matter
+  pipeTopBody.body.friction = 0;
+  pipeTopBody.body.frictionStatic = 0;
+  pipeTopBody.body.restitution = 0; // No bounce
+  pipeTopBody.setDepth(5);
 
-  // Bottom pipe body (sprite instead of rectangle)
+  // Bottom pipe body
   let bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
-  let pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
+  let pipeBottomBody = this.matter.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture');
   pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
-  pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
-  pipeBottomBody.body.immovable = true;
+  pipeBottomBody.setStatic(true);
+  pipeBottomBody.body.friction = 0;
+  pipeBottomBody.body.frictionStatic = 0;
+  pipeBottomBody.body.restitution = 0;
+  pipeBottomBody.setDepth(5);
 
-  // Top pipe endcap (sprite instead of rectangle)
-  let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
+  // Top pipe endcap
+  let pipeTopCap = this.matter.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture');
   pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeTopCap.body.immovable = true;
+  pipeTopCap.setStatic(true);
+  pipeTopCap.body.friction = 0;
+  pipeTopCap.body.frictionStatic = 0;
+  pipeTopCap.body.restitution = 0;
+  pipeTopCap.setDepth(5);
 
-  // Bottom pipe endcap (sprite instead of rectangle)
-  let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
+  // Bottom pipe endcap
+  let pipeBottomCap = this.matter.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture');
   pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeBottomCap.body.immovable = true;
+  pipeBottomCap.setStatic(true);
+  pipeBottomCap.body.friction = 0;
+  pipeBottomCap.body.frictionStatic = 0;
+  pipeBottomCap.body.restitution = 0;
+  pipeBottomCap.setDepth(5);
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
-  this.physics.add.existing(scoreZone);
+  // Score zone (using Matter body for collision detection)
+  let scoreZone = this.matter.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, {
+    isStatic: true,
+    friction: 0,
+    frictionStatic: 0,
+    restitution: 0,
+    isSensor: true // Sensor for score detection, no physical collision
+  });
+  scoreZone.gameObject = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setDepth(5);
+  scoreZone.passed = false;
 
   pipes.add(pipeTopBody);
   pipes.add(pipeBottomBody);
@@ -223,20 +257,16 @@ function addPipes() {
   pipes.add(pipeBottomCap);
   scoreZones.add(scoreZone);
 
-  let allPipes = [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone];
-  allPipes.forEach(pipe => {
-    pipe.body.setVelocityX(PIPE_SPEED);
-    pipe.body.allowGravity = false;
-    pipe.body.checkWorldBounds = true;
-    pipe.body.outOfBoundsKill = true;
+  // Apply velocity for pipe movement (Matter uses velocity instead of Arcade setVelocityX)
+  [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone].forEach(obj => {
+    obj.setVelocityX(PIPE_SPEED);
+    obj.setIgnoreGravity(true); // Ignore gravity for static pipes
   });
-
-  scoreZone.passed = false;
 }
 
 function checkScore() {
   scoreZones.getChildren().forEach(scoreZone => {
-    if (!scoreZone.passed && scoreZone.x < bird.x) {
+    if (!scoreZone.passed && scoreZone.position.x < bird.x) {
       scoreZone.passed = true;
       score++;
       scoreText.setText('SCORE: ' + score);
@@ -248,7 +278,7 @@ function hitPipe() {
   if (gameOver) return;
 
   gameOver = true;
-  this.physics.pause();
+  this.matter.pause(); // Pause Matter physics
 
   gameOverText.setText('GAME OVER');
   restartText.setText('TAP TO RESTART');
@@ -265,10 +295,14 @@ function restartGame() {
   score = 0;
   scoreText.setText('SCORE: ' + score);
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
-  bird.body.setVelocity(0, 0);
+  bird.setVelocity(0, 0);
+  bird.body.allowGravity = false; // Disable gravity temporarily
   pipes.clear(true, true);
   scoreZones.clear(true, true);
-  this.physics.resume();
+  this.matter.resume(); // Resume Matter physics
+  gameStarted = false; // Reset game state to require tap to start
+  bird.body.allowGravity = false; // Ensure gravity is off until start
+  startText.setText('TAP TO START');
   gameOverText.setText('');
   restartText.setText('');
 }
