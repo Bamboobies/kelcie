@@ -118,11 +118,11 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (pixel-art Mario rim with wider light center, narrower dark edges, subtler gradient)
+  // Pre-generate endcap texture (pixel-art Mario rim with wider light center, narrower dark edges, subtler gradient, fixed)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Pixel-art gradient with 20 steps, wider light center, narrower dark edges, subtler colors (vertical)
+  // Pixel-art gradient with 20 steps, wider light center, narrower dark edges, subtler colors (vertical, fixed)
   const capSteps = 20;
   const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
   for (let i = 0; i < capSteps; i++) {
@@ -132,7 +132,10 @@ function create() {
     const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5); // Flatter curve (0 at center, 1 at edges, slower transition)
     const color = interpolateColor(endColor, startColor, factor); // Light in wider center, less dark on narrower sides
     capGraphics.fillStyle(color, 1);
-    capGraphics.fillRect(i * stepWidthCap, 0, stepWidthCap, PIPE_CAP_HEIGHT); // No overlap for pixel-art look
+    // Ensure precise pixel alignment to avoid vertical lines
+    const x = Math.floor(i * stepWidthCap); // Floor to avoid floating-point precision issues
+    const width = Math.ceil((i + 1) * stepWidthCap) - x; // Calculate exact width, avoiding overlap
+    capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT); // Use precise pixel positions
   }
   // Thin dark outline
   capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
