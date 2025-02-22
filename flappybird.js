@@ -9,10 +9,9 @@ const PIPE_SPAWN_DELAY = 1550;
 const BACKGROUND_SPEED = -10;
 
 let game, bird, pipes, scoreZones, scoreText, highScoreText;
-let titleText, startText, gameOverText, restartText, shrimpButton;
+let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
-let selectedShrimp = 'bird'; // Track selected shrimp type
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -26,38 +25,6 @@ window.onload = () => {
 function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
   this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
-  // Preload new shrimp variations
-  this.load.image('bronzeShrimp', generateShrimpTexture(this, 'bronze'));
-  this.load.image('silverShrimp', generateShrimpTexture(this, 'silver'));
-  this.load.image('goldShrimp', generateShrimpTexture(this, 'gold'));
-}
-
-// Helper function to generate shrimp texture with overlays
-function generateShrimpTexture(scene, type) {
-  const graphics = scene.add.graphics();
-  const baseTexture = scene.textures.get('bird').getSourceImage();
-  graphics.fillStyle(0x000000, 0); // Transparent background
-  graphics.fillRect(0, 0, baseTexture.width, baseTexture.height);
-  
-  // Apply overlay based on type
-  let overlayColor;
-  switch (type) {
-    case 'bronze':
-      overlayColor = 0xCD7F32; // Bronze color (e.g., #CD7F32)
-      break;
-    case 'silver':
-      overlayColor = 0xC0C0C0; // Silver color (e.g., #C0C0C0)
-      break;
-    case 'gold':
-      overlayColor = 0xFFD700; // Gold color (e.g., #FFD700)
-      break;
-  }
-  
-  graphics.fillStyle(overlayColor, 0.5); // Semi-transparent overlay
-  graphics.fillRect(0, 0, baseTexture.width, baseTexture.height);
-  graphics.generateTexture(`${type}Shrimp`, baseTexture.width, baseTexture.height);
-  graphics.destroy();
-  return `${type}Shrimp`;
 }
 
 function create() {
@@ -78,8 +45,7 @@ function create() {
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1);
 
-  // Initialize bird with the selected shrimp type
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, selectedShrimp).setOrigin(0.5).setScale(0.0915);
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
 
@@ -101,26 +67,10 @@ function create() {
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10);
 
-  // Shrimp button (only visible in start/restart menus, initially visible)
-  shrimpButton = this.add.text(gameWidth - 80, gameHeight - 30, 'Shrimp', {
-    fontFamily: '"Press Start 2P", sans-serif',
-    fontSize: '16px',
-    fill: '#fff',
-    backgroundColor: '#000000',
-    padding: { x: 10, y: 5 }
-  }).setOrigin(0.5).setInteractive().setDepth(10).setVisible(true);
-
-  shrimpButton.on('pointerdown', () => showShrimpMenu.call(scene));
-
-  this.input.on('pointerdown', (pointer) => {
-    const isShrimpButtonClicked = shrimpButton.visible && Phaser.Geom.Rectangle.Contains(shrimpButton.getBounds(), pointer.x, pointer.y);
-    if (!gameStarted) {
-      if (!isShrimpButtonClicked) startGame.call(scene);
-    } else if (gameOver) {
-      if (!isShrimpButtonClicked) restartGame.call(scene);
-    } else {
-      flap();
-    }
+  this.input.on('pointerdown', () => {
+    if (!gameStarted) startGame.call(scene);
+    else if (gameOver) restartGame.call(scene);
+    else flap();
   });
 
   this.physics.add.collider(bird, pipes, hitPipe, null, this);
@@ -203,11 +153,6 @@ function update() {
   }
 
   checkScore();
-
-  // Hide shrimp button during gameplay
-  if (gameStarted && !gameOver) {
-    shrimpButton.setVisible(false);
-  }
 }
 
 function startGame() {
@@ -215,7 +160,6 @@ function startGame() {
   bird.body.allowGravity = true;
   titleText.setText('');
   startText.setText('');
-  shrimpButton.setVisible(false); // Hide button during gameplay
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
 }
 
@@ -296,7 +240,6 @@ function hitPipe() {
 
   gameOverText.setText('GAME OVER');
   restartText.setText('TAP TO RESTART');
-  shrimpButton.setVisible(true); // Show button on game over
 
   if (score > highScore) {
     highScore = score;
@@ -309,78 +252,11 @@ function restartGame() {
   gameOver = false;
   score = 0;
   scoreText.setText('SCORE: ' + score);
-  bird.destroy();
-  bird = this.physics.add.sprite(game.scale.width * 0.2, game.scale.height / 2, selectedShrimp).setOrigin(0.5).setScale(0.0915);
-  bird.body.setCollideWorldBounds(true);
-  bird.body.allowGravity = false;
+  bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   pipes.clear(true, true);
   scoreZones.clear(true, true);
   this.physics.resume();
   gameOverText.setText('');
   restartText.setText('');
-  shrimpButton.setVisible(true); // Show button on restart
-}
-
-// Function to show shrimp selection menu
-function showShrimpMenu() {
-  if (gameStarted || shrimpMenu) return; // Prevent menu during gameplay or if already open
-
-  const scene = this;
-  const gameWidth = game.scale.width;
-  const gameHeight = game.scale.height;
-
-  // Create a semi-transparent background for the menu
-  const menuBg = this.add.rectangle(gameWidth / 2, gameHeight / 2, 300, 400, 0x000000, 0.7).setOrigin(0.5).setDepth(20);
-  const shrimpMenu = this.add.group();
-
-  // Add title
-  const menuTitle = this.add.text(gameWidth / 2, gameHeight / 2 - 150, 'Choose Your Shrimp', {
-    fontFamily: '"Press Start 2P", sans-serif',
-    fontSize: '20px',
-    fill: '#fff'
-  }).setOrigin(0.5).setDepth(21);
-  shrimpMenu.add(menuTitle);
-
-  // Shrimp options (original, bronze, silver, gold)
-  const shrimpTypes = ['bird', 'bronzeShrimp', 'silverShrimp', 'goldShrimp'];
-  const shrimpYPositions = [-50, 0, 50, 100];
-  shrimpTypes.forEach((type, index) => {
-    const shrimp = this.add.image(gameWidth / 2 - 50, gameHeight / 2 + shrimpYPositions[index], type)
-      .setScale(0.0915).setOrigin(0.5).setInteractive().setDepth(21);
-    shrimpMenu.add(shrimp);
-
-    // Highlight selected shrimp
-    if (type === selectedShrimp) {
-      const highlight = this.add.rectangle(shrimp.x, shrimp.y, shrimp.displayWidth + 10, shrimp.displayHeight + 10, 0x00FF00, 0.5)
-        .setOrigin(0.5).setDepth(20);
-      shrimpMenu.add(highlight);
-    }
-
-    // Handle shrimp selection
-    shrimp.on('pointerdown', () => {
-      selectedShrimp = type;
-      shrimpMenu.getChildren().forEach(child => {
-        if (child.type === 'Rectangle' && child.isTintable) {
-          child.destroy(); // Remove old highlights
-        }
-      });
-      const newHighlight = this.add.rectangle(shrimp.x, shrimp.y, shrimp.displayWidth + 10, shrimp.displayHeight + 10, 0x00FF00, 0.5)
-        .setOrigin(0.5).setDepth(20);
-      shrimpMenu.add(newHighlight);
-    });
-  });
-
-  // Close button
-  const closeButton = this.add.text(gameWidth / 2, gameHeight / 2 + 150, 'Close', {
-    fontFamily: '"Press Start 2P", sans-serif',
-    fontSize: '16px',
-    fill: '#fff',
-    backgroundColor: '#000000',
-    padding: { x: 10, y: 5 }
-  }).setOrigin(0.5).setInteractive().setDepth(21);
-  closeButton.on('pointerdown', () => {
-    shrimpMenu.clear(true, true);
-  });
-  shrimpMenu.add(closeButton);
 }
