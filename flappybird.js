@@ -12,19 +12,13 @@ let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
+let shrimpButton, shrimpMenu, selectedShrimp = 'bird'; // Track selected shrimp type
 
 window.onload = () => {
   game = new Phaser.Game({
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
-    physics: { 
-      default: 'matter', 
-      matter: { 
-        gravity: { y: GRAVITY },
-        debug: false,
-        enableSleeping: false
-      }
-    },
+    physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
     scene: { preload, create, update }
   });
 };
@@ -32,6 +26,38 @@ window.onload = () => {
 function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
   this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
+  // Preload new shrimp variations
+  this.load.image('bronzeShrimp', generateShrimpTexture(this, 'bronze'));
+  this.load.image('silverShrimp', generateShrimpTexture(this, 'silver'));
+  this.load.image('goldShrimp', generateShrimpTexture(this, 'gold'));
+}
+
+// Helper function to generate shrimp texture with overlays
+function generateShrimpTexture(scene, type) {
+  const graphics = scene.add.graphics();
+  const baseTexture = scene.textures.get('bird').getSourceImage();
+  graphics.fillStyle(0x000000, 0); // Transparent background
+  graphics.fillRect(0, 0, baseTexture.width, baseTexture.height);
+  
+  // Apply overlay based on type
+  let overlayColor;
+  switch (type) {
+    case 'bronze':
+      overlayColor = 0xCD7F32; // Bronze color (e.g., #CD7F32)
+      break;
+    case 'silver':
+      overlayColor = 0xC0C0C0; // Silver color (e.g., #C0C0C0)
+      break;
+    case 'gold':
+      overlayColor = 0xFFD700; // Gold color (e.g., #FFD700)
+      break;
+  }
+  
+  graphics.fillStyle(overlayColor, 0.5); // Semi-transparent overlay
+  graphics.fillRect(0, 0, baseTexture.width, baseTexture.height);
+  graphics.generateTexture(`${type}Shrimp`, baseTexture.width, baseTexture.height);
+  graphics.destroy();
+  return `${type}Shrimp`;
 }
 
 function create() {
@@ -52,17 +78,13 @@ function create() {
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1);
 
-  // Initialize Matter physics for bird
-  bird = this.matter.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird');
-  bird.setScale(0.0915);
-  bird.setOrigin(0.5);
-  bird.setBounce(0); // No bounce
-  bird.setFriction(0); // No friction
-  bird.setMass(1); // Lightweight bird
-  bird.body.allowGravity = false; // Disable gravity initially
+  // Initialize bird with the selected shrimp type
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, selectedShrimp).setOrigin(0.5).setScale(0.0915);
+  bird.body.setCollideWorldBounds(true);
+  bird.body.allowGravity = false;
 
-  pipes = this.matter.world.create();
-  scoreZones = this.matter.world.create();
+  pipes = this.physics.add.group();
+  scoreZones = this.physics.add.group();
 
   const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' };
   const titleFontSize = Math.min(gameWidth * 0.075, 32);
@@ -79,21 +101,23 @@ function create() {
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10);
 
+  // Shrimp button in bottom-right corner
+  shrimpButton = this.add.text(gameWidth - 80, gameHeight - 30, 'Shrimp', {
+    fontFamily: '"Press Start 2P", sans-serif',
+    fontSize: '16px',
+    fill: '#fff',
+    backgroundColor: '#000000',
+    padding: { x: 10, y: 5 }
+  }).setOrigin(0.5).setInteractive().setDepth(10);
+  shrimpButton.on('pointerdown', () => showShrimpMenu.call(scene));
+
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
     else if (gameOver) restartGame.call(scene);
     else flap();
   });
 
-  // Matter collision detection for bird and pipes
-  this.matter.world.on('collisionstart', (event) => {
-    event.pairs.forEach(pair => {
-      if ((pair.bodyA.gameObject === bird || pair.bodyB.gameObject === bird) && 
-          (pipes.bodies.includes(pair.bodyA) || pipes.bodies.includes(pair.bodyB))) {
-        hitPipe.call(scene);
-      }
-    });
-  });
+  this.physics.add.collider(bird, pipes, hitPipe, null, this);
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
@@ -124,11 +148,11 @@ function create() {
   pipeGraphics.destroy();
   console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (pixel-art Mario rim with wider light center, narrower dark edges, subtler gradient, fixed)
+  // Pre-generate endcap texture (pixel-art Mario rim with wider light center, narrower dark edges, subtler gradient)
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Pixel-art gradient with 20 steps, wider light center, narrower dark edges, subtler colors (vertical, fixed)
+  // Pixel-art gradient with 20 steps, wider light center, narrower dark edges, subtler colors (vertical)
   const capSteps = 20;
   const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
   for (let i = 0; i < capSteps; i++) {
@@ -166,14 +190,10 @@ function update() {
     background2.x = background1.x + background1.displayWidth;
   }
 
-  if (gameStarted && !gameOver) {
-    // Update bird rotation (simulating Arcade behavior)
-    bird.rotation = Phaser.Math.Clamp(bird.rotation + (bird.body.velocity.y > 0 ? 0.03 : -0.06), -0.35, 0.35); // Convert to radians
+  bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
 
-    // Check for ground collision (simulating blocked.down)
-    if (bird.y >= gameHeight - bird.displayHeight / 2) {
-      hitPipe.call(this);
-    }
+  if (bird.body.blocked.down) {
+    hitPipe.call(this);
   }
 
   checkScore();
@@ -188,9 +208,7 @@ function startGame() {
 }
 
 function flap() {
-  if (gameStarted && !gameOver) {
-    bird.setVelocityY(FLAP_STRENGTH);
-  }
+  bird.body.setVelocityY(FLAP_STRENGTH);
 }
 
 function addPipes() {
@@ -204,52 +222,32 @@ function addPipes() {
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
   // Top pipe body
-  let pipeTopBody = this.matter.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture');
+  let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
   pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
-  pipeTopBody.setStatic(true); // Static to prevent movement by Matter
-  pipeTopBody.body.friction = 0;
-  pipeTopBody.body.frictionStatic = 0;
-  pipeTopBody.body.restitution = 0; // No bounce
-  pipeTopBody.setDepth(5);
+  pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
+  pipeTopBody.body.immovable = true;
 
   // Bottom pipe body
   let bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
-  let pipeBottomBody = this.matter.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture');
+  let pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
   pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
-  pipeBottomBody.setStatic(true);
-  pipeBottomBody.body.friction = 0;
-  pipeBottomBody.body.frictionStatic = 0;
-  pipeBottomBody.body.restitution = 0;
-  pipeBottomBody.setDepth(5);
+  pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
+  pipeBottomBody.body.immovable = true;
 
   // Top pipe endcap
-  let pipeTopCap = this.matter.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture');
+  let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
   pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeTopCap.setStatic(true);
-  pipeTopCap.body.friction = 0;
-  pipeTopCap.body.frictionStatic = 0;
-  pipeTopCap.body.restitution = 0;
-  pipeTopCap.setDepth(5);
+  pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeTopCap.body.immovable = true;
 
   // Bottom pipe endcap
-  let pipeBottomCap = this.matter.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture');
+  let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
   pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeBottomCap.setStatic(true);
-  pipeBottomCap.body.friction = 0;
-  pipeBottomCap.body.frictionStatic = 0;
-  pipeBottomCap.body.restitution = 0;
-  pipeBottomCap.setDepth(5);
+  pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeBottomCap.body.immovable = true;
 
-  // Score zone (using Matter body for collision detection)
-  let scoreZone = this.matter.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, {
-    isStatic: true,
-    friction: 0,
-    frictionStatic: 0,
-    restitution: 0,
-    isSensor: true // Sensor for score detection, no physical collision
-  });
-  scoreZone.gameObject = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setDepth(5);
-  scoreZone.passed = false;
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  this.physics.add.existing(scoreZone);
 
   pipes.add(pipeTopBody);
   pipes.add(pipeBottomBody);
@@ -257,16 +255,20 @@ function addPipes() {
   pipes.add(pipeBottomCap);
   scoreZones.add(scoreZone);
 
-  // Apply velocity for pipe movement (Matter uses velocity instead of Arcade setVelocityX)
-  [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone].forEach(obj => {
-    obj.setVelocityX(PIPE_SPEED);
-    obj.setIgnoreGravity(true); // Ignore gravity for static pipes
+  let allPipes = [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone];
+  allPipes.forEach(pipe => {
+    pipe.body.setVelocityX(PIPE_SPEED);
+    pipe.body.allowGravity = false;
+    pipe.body.checkWorldBounds = true;
+    pipe.body.outOfBoundsKill = true;
   });
+
+  scoreZone.passed = false;
 }
 
 function checkScore() {
   scoreZones.getChildren().forEach(scoreZone => {
-    if (!scoreZone.passed && scoreZone.position.x < bird.x) {
+    if (!scoreZone.passed && scoreZone.x < bird.x) {
       scoreZone.passed = true;
       score++;
       scoreText.setText('SCORE: ' + score);
@@ -278,7 +280,7 @@ function hitPipe() {
   if (gameOver) return;
 
   gameOver = true;
-  this.matter.pause(); // Pause Matter physics
+  this.physics.pause();
 
   gameOverText.setText('GAME OVER');
   restartText.setText('TAP TO RESTART');
@@ -295,14 +297,83 @@ function restartGame() {
   score = 0;
   scoreText.setText('SCORE: ' + score);
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
-  bird.setVelocity(0, 0);
-  bird.body.allowGravity = false; // Disable gravity temporarily
+  bird.body.setVelocity(0, 0);
   pipes.clear(true, true);
   scoreZones.clear(true, true);
-  this.matter.resume(); // Resume Matter physics
-  gameStarted = false; // Reset game state to require tap to start
-  bird.body.allowGravity = false; // Ensure gravity is off until start
-  startText.setText('TAP TO START');
+  this.physics.resume();
   gameOverText.setText('');
   restartText.setText('');
+}
+
+// Function to show shrimp selection menu
+function showShrimpMenu() {
+  if (shrimpMenu) return; // Prevent multiple menus
+
+  const scene = this;
+  const gameWidth = game.scale.width;
+  const gameHeight = game.scale.height;
+
+  // Create a semi-transparent background for the menu
+  const menuBg = this.add.rectangle(gameWidth / 2, gameHeight / 2, 300, 400, 0x000000, 0.7).setOrigin(0.5).setDepth(20);
+  shrimpMenu = this.add.group();
+
+  // Add title
+  const menuTitle = this.add.text(gameWidth / 2, gameHeight / 2 - 150, 'Choose Your Shrimp', {
+    fontFamily: '"Press Start 2P", sans-serif',
+    fontSize: '20px',
+    fill: '#fff'
+  }).setOrigin(0.5).setDepth(21);
+  shrimpMenu.add(menuTitle);
+
+  // Shrimp options (original, bronze, silver, gold)
+  const shrimpTypes = ['bird', 'bronzeShrimp', 'silverShrimp', 'goldShrimp'];
+  const shrimpYPositions = [-50, 0, 50, 100];
+  shrimpTypes.forEach((type, index) => {
+    const shrimp = this.add.image(gameWidth / 2 - 50, gameHeight / 2 + shrimpYPositions[index], type)
+      .setScale(0.0915).setOrigin(0.5).setInteractive().setDepth(21);
+    shrimpMenu.add(shrimp);
+
+    // Highlight selected shrimp
+    if (type === selectedShrimp) {
+      const highlight = this.add.rectangle(shrimp.x, shrimp.y, shrimp.displayWidth + 10, shrimp.displayHeight + 10, 0x00FF00, 0.5)
+        .setOrigin(0.5).setDepth(20);
+      shrimpMenu.add(highlight);
+    }
+
+    // Handle shrimp selection
+    shrimp.on('pointerdown', () => {
+      selectedShrimp = type;
+      shrimpMenu.getChildren().forEach(child => {
+        if (child.type === 'Rectangle' && child.isTintable) {
+          child.destroy(); // Remove old highlights
+        }
+      });
+      const newHighlight = this.add.rectangle(shrimp.x, shrimp.y, shrimp.displayWidth + 10, shrimp.displayHeight + 10, 0x00FF00, 0.5)
+        .setOrigin(0.5).setDepth(20);
+      shrimpMenu.add(newHighlight);
+
+      // Update bird sprite if game isn't active
+      if (!gameStarted && !gameOver) {
+        bird.destroy();
+        bird = scene.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, selectedShrimp).setOrigin(0.5).setScale(0.0915);
+        bird.body.setCollideWorldBounds(true);
+        bird.body.allowGravity = false;
+        scene.physics.add.collider(bird, pipes, hitPipe, null, scene);
+      }
+    });
+  });
+
+  // Close button
+  const closeButton = this.add.text(gameWidth / 2, gameHeight / 2 + 150, 'Close', {
+    fontFamily: '"Press Start 2P", sans-serif',
+    fontSize: '16px',
+    fill: '#fff',
+    backgroundColor: '#000000',
+    padding: { x: 10, y: 5 }
+  }).setOrigin(0.5).setInteractive().setDepth(21);
+  closeButton.on('pointerdown', () => {
+    shrimpMenu.clear(true, true);
+    shrimpMenu = null;
+  });
+  shrimpMenu.add(closeButton);
 }
