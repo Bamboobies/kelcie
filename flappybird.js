@@ -9,7 +9,7 @@ const PIPE_SPAWN_DELAY = 1550;
 const BACKGROUND_SPEED = -10;
 
 let game, bird, ghostBird, pipes, scoreZones, scoreText, highScoreText;
-let titleText, startText, gameOverText, restartText, shrimpSelectButton, shrimpSelectText;
+let titleждиText, startText, gameOverText, restartText, shrimpSelectButton, shrimpSelectText;
 let shrimpMenu, shrimpMenuOptions = [];
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
@@ -18,10 +18,10 @@ let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 // Shrimp selection variables
 let shrimpVariants = [
-  { name: 'Normal', key: 'bird' },        // Original sprite
-  { name: 'Bronze', key: 'birdBronze' },  // Bronze variant
-  { name: 'Silver', key: 'birdSilver' },  // Silver variant
-  { name: 'Gold', key: 'birdGold' }       // Gold variant
+  { name: 'Normal', tint: null },       // No tint for default
+  { name: 'Bronze', tint: 0x8C5523 },   // Deep bronze
+  { name: 'Silver', tint: 0xCCCCCC },   // Bright silver
+  { name: 'Gold', tint: 0xFFD700 }      // Vivid gold
 ];
 let selectedShrimpIndex = 0; // Default to Normal
 let menuVisible = false;
@@ -42,53 +42,6 @@ function preload() {
   this.load.audio('score', 'score.wav');
   this.load.audio('death', 'death.wav');
   this.load.audio('flap', 'flap.wav');
-
-  // Generate grayscale base and tinted variants
-  const texture = this.textures.get('bird').getSourceImage();
-  const canvas = document.createElement('canvas');
-  canvas.width = texture.width;
-  canvas.height = texture.height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(texture, 0, 0);
-
-  // Grayscale base
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    const r = imageData.data[i];
-    const g = imageData.data[i + 1];
-    const b = imageData.data[i + 2];
-    const gray = 0.3 * r + 0.59 * g + 0.11 * b; // Luminosity method
-    imageData.data[i] = imageData.data[i + 1] = imageData.data[i + 2] = gray;
-  }
-  ctx.putImageData(imageData, 0, 0);
-  this.textures.addImage('birdGray', canvas);
-
-  // Bronze variant
-  let bronzeCanvas = canvas.cloneNode();
-  let bronzeCtx = bronzeCanvas.getContext('2d');
-  bronzeCtx.drawImage(canvas, 0, 0);
-  bronzeCtx.globalCompositeOperation = 'source-atop';
-  bronzeCtx.fillStyle = '#8C5523'; // Deep bronze
-  bronzeCtx.fillRect(0, 0, canvas.width, canvas.height);
-  this.textures.addImage('birdBronze', bronzeCanvas);
-
-  // Silver variant
-  let silverCanvas = canvas.cloneNode();
-  let silverCtx = silverCanvas.getContext('2d');
-  silverCtx.drawImage(canvas, 0, 0);
-  silverCtx.globalCompositeOperation = 'source-atop';
-  silverCtx.fillStyle = '#CCCCCC'; // Bright silver
-  silverCtx.fillRect(0, 0, canvas.width, canvas.height);
-  this.textures.addImage('birdSilver', silverCanvas);
-
-  // Gold variant
-  let goldCanvas = canvas.cloneNode();
-  let goldCtx = goldCanvas.getContext('2d');
-  goldCtx.drawImage(canvas, 0, 0);
-  goldCtx.globalCompositeOperation = 'source-atop';
-  goldCtx.fillStyle = '#FFD700'; // Vivid gold
-  goldCtx.fillRect(0, 0, canvas.width, canvas.height);
-  this.textures.addImage('birdGold', goldCanvas);
 }
 
 function create() {
@@ -109,13 +62,13 @@ function create() {
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1);
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, shrimpVariants[selectedShrimpIndex].key).setOrigin(0.5).setScale(0.0915);
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.allowGravity = false;
   bird.setDepth(10);
   birdLastX = bird.x;
   birdLastY = bird.y;
 
-  ghostBird = this.add.sprite(bird.x, bird.y, shrimpVariants[selectedShrimpIndex].key).setOrigin(0.5).setScale(0.0915);
+  ghostBird = this.add.sprite(bird.x, bird.y, 'ghostBird').setOrigin(0.5).setScale(0.0915);
   ghostBird.setAlpha(0.3);
   ghostBird.setDepth(11);
   ghostBird.visible = false;
@@ -165,7 +118,11 @@ function create() {
 
   shrimpVariants.forEach((variant, index) => {
     const yPos = gameHeight / 2 - 60 + index * 50;
-    const sprite = this.add.sprite(gameWidth / 2, yPos - 10, variant.key).setOrigin(0.5).setScale(0.0915).setDepth(13);
+    const sprite = this.add.sprite(gameWidth / 2, yPos - 10, 'bird').setOrigin(0.5).setScale(0.0915).setDepth(13);
+    if (variant.tint) {
+      sprite.setTintFill(0x808080); // Grayscale base
+      sprite.setTint(variant.tint);  // Metallic tint
+    }
     sprite.visible = false;
 
     const text = this.add.text(gameWidth / 2, yPos + 10, variant.name, {
@@ -179,8 +136,15 @@ function create() {
     option.setInteractive();
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
-      bird.setTexture(variant.key);
-      ghostBird.setTexture(variant.key);
+      if (variant.tint) {
+        bird.setTintFill(0x808080);
+        bird.setTint(variant.tint);
+        ghostBird.setTintFill(0x808080);
+        ghostBird.setTint(variant.tint);
+      } else {
+        bird.clearTint();
+        ghostBird.clearTint();
+      }
       toggleShrimpMenu.call(this);
     });
     option.visible = false;
@@ -206,6 +170,60 @@ function create() {
   scoreSound = this.sound.add('score');
   deathSound = this.sound.add('death');
   flapSound = this.sound.add('flap');
+
+  function interpolateColor(color1, color2, factor) {
+    const r1 = (color1 >> 16) & 0xFF;
+    const g1 = (color1 >> 8) & 0xFF;
+    const b1 = color1 & 0xFF;
+    const r2 = (color2 >> 16) & 0xFF;
+    const g2 = (color2 >> 8) & 0xFF;
+    const b2 = color2 & 0xFF;
+    const r = Math.round(r1 + (r2 - r1) * factor);
+    const g = Math.round(g1 + (g2 - g1) * factor);
+    const b = Math.round(b1 + (b2 - b1) * factor);
+    return (r << 16) + (g << 8) + b;
+  }
+
+  const pipeGraphics = this.add.graphics();
+  pipeGraphics.fillStyle(0x00A300, 1);
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
+  const startColor = 0x5C7A43;
+  const endColor = 0xA0D22A;
+  const pipeSteps = 16;
+  const stepWidth = PIPE_WIDTH / pipeSteps;
+  for (let i = 0; i < pipeSteps; i++) {
+    const center = (pipeSteps - 1) / 2;
+    const distance = Math.abs(i - center) / center;
+    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
+    const color = interpolateColor(endColor, startColor, factor);
+    pipeGraphics.fillStyle(color, 1);
+    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512);
+  }
+  pipeGraphics.lineStyle(1, 0x003300, 1);
+  pipeGraphics.lineBetween(1, 0, 1, 512);
+  pipeGraphics.lineBetween(PIPE_WIDTH - 1, 0, PIPE_WIDTH - 1, 512);
+  pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
+  pipeGraphics.destroy();
+
+  const capGraphics = this.add.graphics();
+  capGraphics.fillStyle(0x006600, 1);
+  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  const capSteps = 20;
+  const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
+  for (let i = 0; i < capSteps; i++) {
+    const center = (capSteps - 1) / 2;
+    const distance = Math.abs(i - center) / center;
+    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
+    const color = interpolateColor(endColor, startColor, factor);
+    capGraphics.fillStyle(color, 1);
+    const x = Math.floor(i * stepWidthCap);
+    const width = Math.ceil((i + 1) * stepWidthCap) - x;
+    capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT);
+  }
+  capGraphics.lineStyle(1, 0x003300, 1);
+  capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
+  capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  capGraphics.destroy();
 }
 
 function update() {
@@ -239,7 +257,6 @@ function update() {
     }
   }
 
-  // Show restart screen when shrimp falls off
   if (gameOver && bird.y > game.scale.height + bird.displayHeight) {
     showRestartScreen.call(this);
   }
@@ -351,10 +368,17 @@ function restartGame() {
   score = 0;
   scoreText.setText('SCORE: ' + score);
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
-  bird.setTexture(shrimpVariants[selectedShrimpIndex].key);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  ghostBird.setTexture(shrimpVariants[selectedShrimpIndex].key);
+  if (shrimpVariants[selectedShrimpIndex].tint) {
+    bird.setTintFill(0x808080);
+    bird.setTint(shrimpVariants[selectedShrimpIndex].tint);
+    ghostBird.setTintFill(0x808080);
+    ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
+  } else {
+    bird.clearTint();
+    ghostBird.clearTint();
+  }
   ghostBird.visible = false;
   pipes.clear(true, true);
   scoreZones.clear(true, true);
@@ -518,4 +542,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-    }
+}
