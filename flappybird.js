@@ -292,14 +292,15 @@ function createCollisionMask(sprite) {
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Refined pixel-perfect collision
+// Ultra-accurate pixel-perfect collision with rotation
 function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
   const maskWidth = birdCollisionMask.width;
   const maskHeight = birdCollisionMask.height;
+  const angle = Phaser.Math.DegToRad(birdSprite.angle); // Convert angle to radians
 
-  // Use exact physics body bounds
+  // Physics body bounds
   const currentBounds = new Phaser.Geom.Rectangle(
     birdSprite.body.x,
     birdSprite.body.y,
@@ -319,18 +320,19 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     pipeSprite.body.height
   );
 
-  // Swept bounds with minimal buffer
+  // Swept bounds with no inflation
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
-  Phaser.Geom.Rectangle.Inflate(sweptBounds, 1, 1); // Small buffer
 
   const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
 
-  // Current position check
-  const birdX = birdSprite.body.x;
-  const birdY = birdSprite.body.y;
-  const x1 = (intersection.x - birdX) / scaleX;
-  const y1 = (intersection.y - birdY) / scaleY;
+  // Center of the bird for rotation
+  const birdCenterX = birdSprite.body.x + birdSprite.body.width * 0.5;
+  const birdCenterY = birdSprite.body.y + birdSprite.body.height * 0.5;
+
+  // Check intersection with rotation
+  const x1 = (intersection.x - birdSprite.body.x) / scaleX;
+  const y1 = (intersection.y - birdSprite.body.y) / scaleY;
   const width = intersection.width / scaleX;
   const height = intersection.height / scaleY;
 
@@ -339,21 +341,35 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const endX = Math.min(maskWidth, Math.ceil(x1 + width));
   const endY = Math.min(maskHeight, Math.ceil(y1 + height));
 
+  const cosAngle = Math.cos(-angle); // Negative to match Phaser’s rotation direction
+  const sinAngle = Math.sin(-angle);
+
   for (let y = startY; y < endY; y++) {
     for (let x = startX; x < endX; x++) {
-      const index = y * maskWidth + x;
-      if (birdCollisionMask.mask[index] === 1) {
-        return true;
+      // Transform coordinates to account for rotation
+      const relX = x - maskWidth * 0.5;
+      const relY = y - maskHeight * 0.5;
+      const rotatedX = relX * cosAngle - relY * sinAngle + maskWidth * 0.5;
+      const rotatedY = relX * sinAngle + relY * cosAngle + maskHeight * 0.5;
+
+      // Check if rotated point is within mask bounds
+      const rx = Math.floor(rotatedX);
+      const ry = Math.floor(rotatedY);
+      if (rx >= 0 && rx < maskWidth && ry >= 0 && ry < maskHeight) {
+        const index = ry * maskWidth + rx;
+        if (birdCollisionMask.mask[index] === 1) {
+          return true;
+        }
       }
     }
   }
 
-  // Precise path sampling
+  // High-resolution path sampling
   const dx = birdSprite.x - birdLastX;
   const dy = birdSprite.y - birdLastY;
   if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const steps = Math.max(1, Math.ceil(distance / 2)); // 1 step per 2 pixels
+    const steps = Math.max(1, Math.ceil(distance * 2)); // 2 steps per pixel for max accuracy
     const stepX = dx / steps;
     const stepY = dy / steps;
 
@@ -380,9 +396,18 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
 
         for (let y = startY; y < endY; y++) {
           for (let x = startX; x < endX; x++) {
-            const index = y * maskWidth + x;
-            if (birdCollisionMask.mask[index] === 1) {
-              return true;
+            const relX = x - maskWidth * 0.5;
+            const relY = y - maskHeight * 0.5;
+            const rotatedX = relX * cosAngle - relY * sinAngle + maskWidth * 0.5;
+            const rotatedY = relX * sinAngle + relY * cosAngle + maskHeight * 0.5;
+
+            const rx = Math.floor(rotatedX);
+            const ry = Math.floor(rotatedY);
+            if (rx >= 0 && rx < maskWidth && ry >= 0 && ry < maskHeight) {
+              const index = ry * maskWidth + rx;
+              if (birdCollisionMask.mask[index] === 1) {
+                return true;
+              }
             }
           }
         }
