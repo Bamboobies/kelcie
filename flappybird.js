@@ -47,7 +47,7 @@ function create() {
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1);
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915); // Adjust scale here as needed
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
   birdLastX = bird.x;
@@ -292,7 +292,7 @@ function createCollisionMask(sprite) {
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Perfect pixel-perfect collision without phasing
+// Perfect pixel-perfect collision with no phasing
 function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
@@ -320,12 +320,11 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     pipeSprite.body.height
   );
 
-  // Swept bounds with velocity, biased downward
-  const vx = birdSprite.body.velocity.x * (1 / 60);
-  const vy = birdSprite.body.velocity.y * (1 / 60);
+  // Swept bounds with enhanced velocity buffer
+  const vx = birdSprite.body.velocity.x * (1 / 60) * 2; // Doubled for full frame coverage
+  const vy = birdSprite.body.velocity.y * (1 / 60) * 2;
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
-  const vyAdjust = vy > 0 ? Math.abs(vy) * 1.5 : 0; // Stronger downward bias
-  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx) * 0.5, vyAdjust);
+  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx), Math.abs(vy));
 
   const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
@@ -336,11 +335,11 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const birdCenterX = birdSprite.body.x + birdSprite.body.width * 0.5;
   const birdCenterY = birdSprite.body.y + birdSprite.body.height * 0.5;
 
-  // Check current position with bottom bias
+  // Check current position
   const x1 = Math.floor((intersection.x - birdSprite.body.x) / scaleX);
   const y1 = Math.floor((intersection.y - birdSprite.body.y) / scaleY);
   const width = Math.ceil(intersection.width / scaleX);
-  const height = Math.ceil(intersection.height / scaleY + (vy > 0 ? vyAdjust / scaleY : 0)); // Extend height downward
+  const height = Math.ceil(intersection.height / scaleY);
 
   const startX = Math.max(0, x1);
   const startY = Math.max(0, y1);
@@ -365,12 +364,12 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     }
   }
 
-  // Path sampling with higher density
+  // Path sampling with maximum density
   const dx = birdSprite.x - birdLastX + vx;
   const dy = birdSprite.y - birdLastY + vy;
   if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const steps = Math.max(1, Math.ceil(distance * 2)); // 2 steps per pixel
+    const steps = Math.max(1, Math.ceil(distance * 3)); // 3 steps per pixel
     const stepX = dx / steps;
     const stepY = dy / steps;
 
@@ -381,14 +380,14 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
         interpX - (birdSprite.body.width * 0.5),
         interpY - (birdSprite.body.height * 0.5),
         birdSprite.body.width,
-        birdSprite.body.height + (vy > 0 ? vyAdjust : 0) // Extend downward
+        birdSprite.body.height
       );
 
       if (Phaser.Geom.Rectangle.Overlaps(interpBounds, pipeBounds)) {
         const x1 = Math.floor((pipeBounds.x - interpX + (birdSprite.body.width * 0.5)) / scaleX);
         const y1 = Math.floor((pipeBounds.y - interpY + (birdSprite.body.height * 0.5)) / scaleY);
         const width = Math.ceil(pipeBounds.width / scaleX);
-        const height = Math.ceil((pipeBounds.height + (vy > 0 ? vyAdjust : 0)) / scaleY);
+        const height = Math.ceil(pipeBounds.height / scaleY);
 
         const startX = Math.max(0, x1);
         const startY = Math.max(0, y1);
@@ -417,4 +416,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+                                }
