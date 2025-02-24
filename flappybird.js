@@ -18,10 +18,10 @@ let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 // Shrimp selection variables
 let shrimpVariants = [
-  { name: 'Normal', tint: null },       // No tint for default
-  { name: 'Bronze', tint: 0xCD7F32 },   // Strong, rich bronze
-  { name: 'Silver', tint: 0xD9D9D9 },   // Bright, true silver
-  { name: 'Gold', tint: 0xFFD700 }      // Bold, radiant gold
+  { name: 'Normal', key: 'bird', tint: null },         // Original sprite
+  { name: 'Bronze', key: 'birdGray', tint: 0xCD7F32 }, // Rich bronze
+  { name: 'Silver', key: 'birdGray', tint: 0xD9D9D9 }, // Bright silver
+  { name: 'Gold', key: 'birdGray', tint: 0xFFD700 }    // Vivid gold
 ];
 let selectedShrimpIndex = 0;
 let menuVisible = false;
@@ -37,6 +37,7 @@ window.onload = () => {
 
 function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
+  this.load.image('birdGray', 'https://i.ibb.co/STtKYCh/greyshrimp.png'); // Your grayscale sprite
   this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
   this.load.audio('score', 'score.wav');
   this.load.audio('death', 'death.wav');
@@ -58,14 +59,14 @@ function create() {
 
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5).setDepth(-1);
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, shrimpVariants[selectedShrimpIndex].key).setOrigin(0.5).setScale(0.0915);
   bird.body.allowGravity = false;
   bird.setDepth(10);
   if (shrimpVariants[selectedShrimpIndex].tint) bird.setTint(shrimpVariants[selectedShrimpIndex].tint);
   birdLastX = bird.x;
   birdLastY = bird.y;
 
-  ghostBird = this.add.sprite(bird.x, bird.y, 'bird').setOrigin(0.5).setScale(0.0915);
+  ghostBird = this.add.sprite(bird.x, bird.y, shrimpVariants[selectedShrimpIndex].key).setOrigin(0.5).setScale(0.0915);
   ghostBird.setAlpha(0.3);
   ghostBird.setDepth(11);
   if (shrimpVariants[selectedShrimpIndex].tint) ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
@@ -116,7 +117,7 @@ function create() {
 
   shrimpVariants.forEach((variant, index) => {
     const yPos = gameHeight / 2 - 60 + index * 50;
-    const sprite = this.add.sprite(gameWidth / 2, yPos - 10, 'bird').setOrigin(0.5).setScale(0.0915).setDepth(13);
+    const sprite = this.add.sprite(gameWidth / 2, yPos - 10, variant.key).setOrigin(0.5).setScale(0.0915).setDepth(13);
     if (variant.tint) sprite.setTint(variant.tint);
     sprite.visible = false;
 
@@ -131,13 +132,12 @@ function create() {
     option.setInteractive();
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
-      if (variant.tint) {
-        bird.setTint(variant.tint);
-        ghostBird.setTint(variant.tint);
-      } else {
-        bird.clearTint();
-        ghostBird.clearTint();
-      }
+      bird.setTexture(variant.key);
+      if (variant.tint) bird.setTint(variant.tint);
+      else bird.clearTint();
+      ghostBird.setTexture(variant.key);
+      if (variant.tint) ghostBird.setTint(variant.tint);
+      else ghostBird.clearTint();
       toggleShrimpMenu.call(this);
     });
     option.visible = false;
@@ -158,9 +158,9 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  scoreSound = this.sound.add('score');
+  scoreSound = this.sound.add('score', { volume: 1.5 });
   deathSound = this.sound.add('death');
-  flapSound = this.sound.add('flap');
+  flapSound = this.sound.add('flap', { volume: 0.7 });
 }
 
 function update() {
@@ -170,12 +170,8 @@ function update() {
     background1.x += BACKGROUND_SPEED * (1 / 60);
     background2.x += BACKGROUND_SPEED * (1 / 60);
 
-    if (background1.x + background1.displayWidth <= 0) {
-      background1.x = background2.x + background2.displayWidth;
-    }
-    if (background2.x + background2.displayWidth <= 0) {
-      background2.x = background1.x + background1.displayWidth;
-    }
+    if (background1.x + background1.displayWidth <= 0) background1.x = background2.x + background2.displayWidth;
+    if (background2.x + background2.displayWidth <= 0) background2.x = background1.x + background1.displayWidth;
 
     bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
     birdLastX = bird.x;
@@ -186,7 +182,7 @@ function update() {
   }
 
   if (gameOver && ghostBird.visible) {
-    ghostBird.y -= 4; // Simplified ghost movement
+    ghostBird.y -= 4;
     if (ghostBird.y < -ghostBird.displayHeight) ghostBird.visible = false;
   }
 
@@ -206,7 +202,7 @@ function startGame() {
 
 function flap() {
   bird.body.setVelocityY(FLAP_STRENGTH);
-  flapSound.play({ volume: 0.7 });
+  flapSound.play();
 }
 
 function addPipes() {
@@ -260,7 +256,7 @@ function checkScore() {
       scoreZone.passed = true;
       score++;
       scoreText.setText('SCORE: ' + score);
-      scoreSound.play({ volume: 1.5 });
+      scoreSound.play();
     }
   });
 }
@@ -295,9 +291,10 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
+  bird.setTexture(shrimpVariants[selectedShrimpIndex].key);
   if (shrimpVariants[selectedShrimpIndex].tint) bird.setTint(shrimpVariants[selectedShrimpIndex].tint);
   else bird.clearTint();
-  ghostBird.setTexture('bird');
+  ghostBird.setTexture(shrimpVariants[selectedShrimpIndex].key);
   if (shrimpVariants[selectedShrimpIndex].tint) ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
   else ghostBird.clearTint();
   ghostBird.visible = false;
