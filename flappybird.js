@@ -49,8 +49,7 @@ function create() {
   overlay.setDepth(-1);
 
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
-  bird.body.setCollideWorldBounds(true);
-  bird.body.allowGravity = false;
+  bird.body.allowGravity = false; // No world bounds collision
   bird.setDepth(10);
   birdLastX = bird.x;
   birdLastY = bird.y;
@@ -80,7 +79,7 @@ function create() {
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
-    else if (gameOver && bird.body.blocked.down) restartGame.call(scene);
+    else if (gameOver && bird.y > game.scale.height + bird.displayHeight) restartGame.call(scene); // Restart after falling off
     else if (!gameOver) flap();
   });
 
@@ -170,15 +169,16 @@ function update() {
     checkScore();
   }
 
-  // Ghost floats upward faster when dead
+  // Ghost floats upward when dead
   if (gameOver && ghostBird.visible) {
-    ghostBird.y -= 4; // Increased from 2 to 4
+    ghostBird.y -= 4;
     if (ghostBird.y < -ghostBird.displayHeight) {
       ghostBird.visible = false;
     }
   }
 
-  if (gameOver && bird.body.blocked.down) {
+  // Show restart screen when bird falls off bottom
+  if (gameOver && bird.y > game.scale.height + bird.displayHeight) {
     showRestartScreen();
   }
 }
@@ -428,4 +428,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+    }
