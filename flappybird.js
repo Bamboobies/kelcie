@@ -10,6 +10,7 @@ const BACKGROUND_SPEED = -10;
 
 let game, bird, ghostBird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText, shrimpSelectButton, shrimpSelectText;
+let shrimpMenu, shrimpMenuOptions = [];
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
 let birdCollisionMask;
@@ -17,11 +18,13 @@ let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 // Shrimp selection variables
 let shrimpVariants = [
+  { name: 'Normal', tint: null },    // No tint for default
   { name: 'Bronze', tint: 0xCD7F32 }, // Bronze color
   { name: 'Silver', tint: 0xC0C0C0 }, // Silver color
-  { name: 'Gold', tint: 0xFFD700 }   // Gold color
+  { name: 'Gold', tint: 0xFFD700 }    // Gold color
 ];
-let selectedShrimpIndex = 0; // Default to Bronze
+let selectedShrimpIndex = 0; // Default to Normal
+let menuVisible = false;
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -62,14 +65,14 @@ function create() {
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.allowGravity = false;
   bird.setDepth(10);
-  bird.setTint(shrimpVariants[selectedShrimpIndex].tint); // Apply initial tint
+  // No tint applied by default (Normal)
   birdLastX = bird.x;
   birdLastY = bird.y;
 
   ghostBird = this.add.sprite(bird.x, bird.y, 'ghostBird').setOrigin(0.5).setScale(0.0915);
   ghostBird.setAlpha(0.3);
   ghostBird.setDepth(11);
-  ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint); // Match ghost to selected shrimp
+  // No tint applied to ghost by default
   ghostBird.visible = false;
 
   pipes = this.physics.add.group();
@@ -90,22 +93,39 @@ function create() {
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10);
 
-  // Shrimp selection button
-  shrimpSelectButton = this.add.rectangle(gameWidth / 2, gameHeight * 0.7, 150, 40, 0x00ff00).setOrigin(0.5).setDepth(10);
-  shrimpSelectText = this.add.text(gameWidth / 2, gameHeight * 0.7, shrimpVariants[selectedShrimpIndex].name, {
+  // Shrimp selection button (bottom-right, darker green)
+  shrimpSelectButton = this.add.rectangle(gameWidth - 80, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10);
+  shrimpSelectText = this.add.text(gameWidth - 80, gameHeight - 30, 'Shrimp', {
     fontFamily: '"Press Start 2P", sans-serif',
     fontSize: '16px',
-    fill: '#000'
+    fill: '#fff'
   }).setOrigin(0.5).setDepth(11);
   shrimpSelectButton.setInteractive();
-  shrimpSelectButton.on('pointerdown', () => {
-    selectedShrimpIndex = (selectedShrimpIndex + 1) % shrimpVariants.length; // Cycle through variants
-    shrimpSelectText.setText(shrimpVariants[selectedShrimpIndex].name);
-    bird.setTint(shrimpVariants[selectedShrimpIndex].tint); // Update bird tint
-    ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint); // Update ghost tint
-  });
-  shrimpSelectButton.visible = !gameStarted; // Visible on main menu
+  shrimpSelectButton.on('pointerdown', toggleShrimpMenu, this);
+  shrimpSelectButton.visible = !gameStarted;
   shrimpSelectText.visible = !gameStarted;
+
+  // Shrimp selection menu (hidden by default)
+  shrimpMenu = this.add.rectangle(gameWidth / 2, gameHeight / 2, 200, 200, 0x333333).setOrigin(0.5).setDepth(12);
+  shrimpMenu.visible = false;
+
+  shrimpVariants.forEach((variant, index) => {
+    const yPos = gameHeight / 2 - 60 + index * 40;
+    const option = this.add.text(gameWidth / 2, yPos, variant.name, {
+      fontFamily: '"Press Start 2P", sans-serif',
+      fontSize: '16px',
+      fill: '#fff'
+    }).setOrigin(0.5).setDepth(13);
+    option.setInteractive();
+    option.on('pointerdown', () => {
+      selectedShrimpIndex = index;
+      bird.setTint(variant.tint || 0xffffff); // Clear tint for Normal
+      ghostBird.setTint(variant.tint || 0xffffff);
+      toggleShrimpMenu.call(this); // Hide menu after selection
+    });
+    option.visible = false;
+    shrimpMenuOptions.push(option);
+  });
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
@@ -216,12 +236,16 @@ function update() {
 
   if (gameOver && bird.y > game.scale.height + bird.displayHeight) {
     showRestartScreen();
-    shrimpSelectButton.visible = true; // Show button on restart screen
+    shrimpSelectButton.visible = true;
     shrimpSelectText.visible = true;
-  } else {
-    shrimpSelectButton.visible = false; // Hide during gameplay
+  } else if (gameStarted) {
+    shrimpSelectButton.visible = false;
     shrimpSelectText.visible = false;
   }
+
+  // Update menu visibility
+  shrimpMenu.visible = menuVisible;
+  shrimpMenuOptions.forEach(option => option.visible = menuVisible);
 }
 
 function startGame() {
@@ -229,8 +253,9 @@ function startGame() {
   bird.body.allowGravity = true;
   titleText.setText('');
   startText.setText('');
-  shrimpSelectButton.visible = false; // Hide button when game starts
+  shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
+  toggleShrimpMenu.call(this, false); // Ensure menu is hidden
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
 }
 
@@ -326,15 +351,27 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  bird.setTint(shrimpVariants[selectedShrimpIndex].tint);
-  ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
+  bird.setTint(shrimpVariants[selectedShrimpIndex].tint || 0xffffff);
+  ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint || 0xffffff);
   ghostBird.visible = false;
   pipes.clear(true, true);
   scoreZones.clear(true, true);
   gameOverText.setText('');
   restartText.setText('');
+  toggleShrimpMenu.call(this, false); // Ensure menu is hidden
   birdLastX = bird.x;
   birdLastY = bird.y;
+}
+
+// Toggle shrimp selection menu
+function toggleShrimpMenu(forceHide = null) {
+  if (forceHide !== null) {
+    menuVisible = forceHide;
+  } else {
+    menuVisible = !menuVisible;
+  }
+  shrimpMenu.visible = menuVisible;
+  shrimpMenuOptions.forEach(option => option.visible = menuVisible);
 }
 
 // Precompute collision mask with validation
