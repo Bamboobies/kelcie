@@ -292,14 +292,14 @@ function createCollisionMask(sprite) {
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Enhanced pixel-perfect collision with maximum accuracy
+// Refined pixel-perfect collision
 function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
   const maskWidth = birdCollisionMask.width;
   const maskHeight = birdCollisionMask.height;
 
-  // Use physics body bounds for precision
+  // Use exact physics body bounds
   const currentBounds = new Phaser.Geom.Rectangle(
     birdSprite.body.x,
     birdSprite.body.y,
@@ -319,14 +319,14 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     pipeSprite.body.height
   );
 
-  // Swept bounds with increased buffer
+  // Swept bounds with minimal buffer
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
-  Phaser.Geom.Rectangle.Inflate(sweptBounds, 4, 4); // Larger buffer for safety
+  Phaser.Geom.Rectangle.Inflate(sweptBounds, 1, 1); // Small buffer
 
   const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
 
-  // Check current position with sub-pixel precision
+  // Current position check
   const birdX = birdSprite.body.x;
   const birdY = birdSprite.body.y;
   const x1 = (intersection.x - birdX) / scaleX;
@@ -348,12 +348,12 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     }
   }
 
-  // High-resolution path sampling for continuous detection
+  // Precise path sampling
   const dx = birdSprite.x - birdLastX;
   const dy = birdSprite.y - birdLastY;
   if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const steps = Math.max(1, Math.ceil(distance)); // 1 step per pixel of movement
+    const steps = Math.max(1, Math.ceil(distance / 2)); // 1 step per 2 pixels
     const stepX = dx / steps;
     const stepY = dy / steps;
 
