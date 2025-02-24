@@ -281,7 +281,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -358,7 +358,7 @@ function createShrimpMenu() {
   const gameHeight = game.scale.height;
 
   shrimpMenuContainer = this.add.container(gameWidth / 2, gameHeight / 2);
-  const menuBg = this.add.rectangle(0, 0, 200, 200, 0x333333).setOrigin(0.5).setDepth(12);
+  const menuBg = this.add.rectangle(0, 0, 300, 300, 0x333333).setOrigin(0.5).setDepth(12);
   shrimpMenuContainer.add(menuBg);
 
   shrimpMenuOptions = [];
