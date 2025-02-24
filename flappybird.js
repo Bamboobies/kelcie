@@ -19,9 +19,9 @@ let scoreSound, deathSound, flapSound;
 // Shrimp selection variables
 let shrimpVariants = [
   { name: 'Normal', tint: null },       // No tint for default
-  { name: 'Bronze', tint: 0xA0522D },   // Stronger, richer bronze
-  { name: 'Silver', tint: 0xE6E8FA },   // Bright, metallic silver
-  { name: 'Gold', tint: 0xFFA500 }      // Vivid, strong gold
+  { name: 'Bronze', tint: 0x8C5523 },   // Deep bronze
+  { name: 'Silver', tint: 0xCCCCCC },   // Bright silver
+  { name: 'Gold', tint: 0xFFD700 }      // Pure gold
 ];
 let selectedShrimpIndex = 0; // Default to Normal
 let menuVisible = false;
@@ -117,32 +117,41 @@ function create() {
   shrimpMenu.visible = false;
 
   shrimpVariants.forEach((variant, index) => {
-    const yPos = gameHeight / 2 - 60 + index * 50; // Increased spacing for sprite + text
+    const yPos = gameHeight / 2 - 60 + index * 50;
     const sprite = this.add.sprite(gameWidth / 2, yPos - 10, 'bird').setOrigin(0.5).setScale(0.0915).setDepth(13);
-    sprite.setTint(variant.tint || 0xffffff);
+    if (variant.tint) {
+      sprite.setTintFill(0x808080); // Desaturate to grayscale
+      sprite.setTint(variant.tint);  // Apply metallic tint
+    }
     sprite.visible = false;
 
     const text = this.add.text(gameWidth / 2, yPos + 10, variant.name, {
       fontFamily: '"Press Start 2P", sans-serif',
-      fontSize: '12px', // Smaller text to fit under sprite
+      fontSize: '12px',
       fill: '#fff'
     }).setOrigin(0.5).setDepth(13);
     text.visible = false;
 
-    const option = this.add.rectangle(gameWidth / 2, yPos, 100, 40, 0x000000, 0).setOrigin(0.5).setDepth(12); // Invisible hitbox
+    const option = this.add.rectangle(gameWidth / 2, yPos, 100, 40, 0x000000, 0).setOrigin(0.5).setDepth(12);
     option.setInteractive();
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
-      bird.setTint(variant.tint || 0xffffff);
-      ghostBird.setTint(variant.tint || 0xffffff);
-      toggleShrimpMenu.call(this); // Hide menu after selection
+      if (variant.tint) {
+        bird.setTintFill(0x808080);
+        bird.setTint(variant.tint);
+        ghostBird.setTintFill(0x808080);
+        ghostBird.setTint(variant.tint);
+      } else {
+        bird.clearTint();
+        ghostBird.clearTint();
+      }
+      toggleShrimpMenu.call(this);
     });
     option.visible = false;
 
     shrimpMenuOptions.push({ sprite, text, hitbox: option });
   });
 
-  // Global pointerdown for flapping during gameplay
   this.input.on('pointerdown', () => {
     if (gameStarted && !gameOver && !menuVisible) flap();
   });
@@ -247,22 +256,6 @@ function update() {
       ghostBird.visible = false;
     }
   }
-
-  if (gameOver && bird.y > game.scale.height + bird.displayHeight) {
-    showRestartScreen();
-    shrimpSelectButton.visible = true;
-    shrimpSelectText.visible = true;
-  } else if (gameStarted) {
-    shrimpSelectButton.visible = false;
-    shrimpSelectText.visible = false;
-  }
-
-  shrimpMenu.visible = menuVisible;
-  shrimpMenuOptions.forEach(option => {
-    option.sprite.visible = menuVisible;
-    option.text.visible = menuVisible;
-    option.hitbox.visible = menuVisible;
-  });
 }
 
 function startGame() {
@@ -349,6 +342,9 @@ function hitPipe() {
   gameOver = true;
   pipes.setVelocityX(0);
   scoreZones.setVelocityX(0);
+  shrimpSelectButton.visible = false; // Ensure hidden during fall
+  shrimpSelectText.visible = false;
+  toggleShrimpMenu.call(this, false); // Hide menu immediately
 
   ghostBird.setPosition(bird.x, bird.y);
   ghostBird.angle = bird.angle;
@@ -359,6 +355,8 @@ function hitPipe() {
 function showRestartScreen() {
   gameOverText.setText('GAME OVER');
   restartText.setText('TAP TO RESTART');
+  shrimpSelectButton.visible = true; // Show button only when fully stopped
+  shrimpSelectText.visible = true;
 }
 
 function restartGame() {
@@ -368,8 +366,15 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  bird.setTint(shrimpVariants[selectedShrimpIndex].tint || 0xffffff);
-  ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint || 0xffffff);
+  if (shrimpVariants[selectedShrimpIndex].tint) {
+    bird.setTintFill(0x808080);
+    bird.setTint(shrimpVariants[selectedShrimpIndex].tint);
+    ghostBird.setTintFill(0x808080);
+    ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
+  } else {
+    bird.clearTint();
+    ghostBird.clearTint();
+  }
   ghostBird.visible = false;
   pipes.clear(true, true);
   scoreZones.clear(true, true);
