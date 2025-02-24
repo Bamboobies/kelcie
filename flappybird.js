@@ -9,12 +9,19 @@ const PIPE_SPAWN_DELAY = 1550;
 const BACKGROUND_SPEED = -10;
 
 let game, bird, ghostBird, pipes, scoreZones, scoreText, highScoreText;
-let titleText, startText, gameOverText, restartText;
+let titleText, startText, gameOverText, restartText, shrimpSelectButton, shrimpSelectText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
 let birdCollisionMask;
 let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
+// Shrimp selection variables
+let shrimpVariants = [
+  { name: 'Bronze', tint: 0xCD7F32 }, // Bronze color
+  { name: 'Silver', tint: 0xC0C0C0 }, // Silver color
+  { name: 'Gold', tint: 0xFFD700 }   // Gold color
+];
+let selectedShrimpIndex = 0; // Default to Bronze
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -55,12 +62,14 @@ function create() {
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.allowGravity = false;
   bird.setDepth(10);
+  bird.setTint(shrimpVariants[selectedShrimpIndex].tint); // Apply initial tint
   birdLastX = bird.x;
   birdLastY = bird.y;
 
   ghostBird = this.add.sprite(bird.x, bird.y, 'ghostBird').setOrigin(0.5).setScale(0.0915);
   ghostBird.setAlpha(0.3);
   ghostBird.setDepth(11);
+  ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint); // Match ghost to selected shrimp
   ghostBird.visible = false;
 
   pipes = this.physics.add.group();
@@ -81,6 +90,23 @@ function create() {
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10);
 
+  // Shrimp selection button
+  shrimpSelectButton = this.add.rectangle(gameWidth / 2, gameHeight * 0.7, 150, 40, 0x00ff00).setOrigin(0.5).setDepth(10);
+  shrimpSelectText = this.add.text(gameWidth / 2, gameHeight * 0.7, shrimpVariants[selectedShrimpIndex].name, {
+    fontFamily: '"Press Start 2P", sans-serif',
+    fontSize: '16px',
+    fill: '#000'
+  }).setOrigin(0.5).setDepth(11);
+  shrimpSelectButton.setInteractive();
+  shrimpSelectButton.on('pointerdown', () => {
+    selectedShrimpIndex = (selectedShrimpIndex + 1) % shrimpVariants.length; // Cycle through variants
+    shrimpSelectText.setText(shrimpVariants[selectedShrimpIndex].name);
+    bird.setTint(shrimpVariants[selectedShrimpIndex].tint); // Update bird tint
+    ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint); // Update ghost tint
+  });
+  shrimpSelectButton.visible = !gameStarted; // Visible on main menu
+  shrimpSelectText.visible = !gameStarted;
+
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
     else if (gameOver && bird.y > game.scale.height + bird.displayHeight) restartGame.call(scene);
@@ -98,7 +124,6 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Initialize sounds
   scoreSound = this.sound.add('score');
   deathSound = this.sound.add('death');
   flapSound = this.sound.add('flap');
@@ -191,6 +216,11 @@ function update() {
 
   if (gameOver && bird.y > game.scale.height + bird.displayHeight) {
     showRestartScreen();
+    shrimpSelectButton.visible = true; // Show button on restart screen
+    shrimpSelectText.visible = true;
+  } else {
+    shrimpSelectButton.visible = false; // Hide during gameplay
+    shrimpSelectText.visible = false;
   }
 }
 
@@ -199,12 +229,14 @@ function startGame() {
   bird.body.allowGravity = true;
   titleText.setText('');
   startText.setText('');
+  shrimpSelectButton.visible = false; // Hide button when game starts
+  shrimpSelectText.visible = false;
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
 }
 
 function flap() {
   bird.body.setVelocityY(FLAP_STRENGTH);
-  flapSound.play({ volume: 0.7 }); // Slightly quieter flap sound
+  flapSound.play({ volume: 0.7 });
 }
 
 function addPipes() {
@@ -264,7 +296,7 @@ function checkScore() {
       scoreZone.passed = true;
       score++;
       scoreText.setText('SCORE: ' + score);
-      scoreSound.play({ volume: 1.5 }); // Louder score sound
+      scoreSound.play({ volume: 1.5 });
     }
   });
 }
@@ -294,6 +326,8 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
+  bird.setTint(shrimpVariants[selectedShrimpIndex].tint);
+  ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
   ghostBird.visible = false;
   pipes.clear(true, true);
   scoreZones.clear(true, true);
