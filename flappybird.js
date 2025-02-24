@@ -79,7 +79,7 @@ function create() {
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
-    else if (gameOver && bird.y > game.scale.height + bird.displayHeight) restartGame.call(scene); // Restart after falling off
+    else if (gameOver && bird.y > game.scale.height + bird.displayHeight) restartGame.call(scene);
     else if (!gameOver) flap();
   });
 
@@ -167,6 +167,11 @@ function update() {
     birdLastX = bird.x;
     birdLastY = bird.y;
     checkScore();
+
+    // Check for bottom collision and trigger death instantly
+    if (bird.y + bird.displayHeight / 2 >= game.scale.height) {
+      hitPipe.call(this);
+    }
   }
 
   // Ghost floats upward when dead
@@ -428,4 +433,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-    }
+}
