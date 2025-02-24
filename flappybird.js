@@ -292,7 +292,7 @@ function createCollisionMask(sprite) {
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Ultra-precise pixel-perfect collision with rotation
+// Absolute perfection pixel-perfect collision
 function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
@@ -320,8 +320,12 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     pipeSprite.body.height
   );
 
-  // Swept bounds
+  // Extend swept bounds with velocity
+  const vx = birdSprite.body.velocity.x * (1 / 60); // Approximate delta time
+  const vy = birdSprite.body.velocity.y * (1 / 60);
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
+  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx), Math.abs(vy));
+
   const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
 
@@ -331,13 +335,13 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const birdCenterX = birdSprite.body.x + birdSprite.body.width * 0.5;
   const birdCenterY = birdSprite.body.y + birdSprite.body.height * 0.5;
 
-  // Sub-pixel check for current position
+  // Ultra-dense sub-pixel check
+  const step = 0.25; // 4 checks per mask pixel
   const x1 = (intersection.x - birdSprite.body.x) / scaleX;
   const y1 = (intersection.y - birdSprite.body.y) / scaleY;
   const width = intersection.width / scaleX;
   const height = intersection.height / scaleY;
 
-  const step = 0.5; // Sub-pixel step size
   for (let y = y1; y < y1 + height; y += step) {
     for (let x = x1; x < x1 + width; x += step) {
       const relX = x - maskWidth * 0.5;
@@ -356,12 +360,12 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     }
   }
 
-  // Sub-pixel path sampling with velocity
-  const dx = birdSprite.x - birdLastX;
-  const dy = birdSprite.y - birdLastY;
+  // Ultra-dense path sampling with velocity
+  const dx = birdSprite.x - birdLastX + vx;
+  const dy = birdSprite.y - birdLastY + vy;
   if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const steps = Math.max(1, Math.ceil(distance / step)); // Sub-pixel steps
+    const steps = Math.max(1, Math.ceil(distance / step)); // 4 steps per pixel
     const stepX = dx / steps;
     const stepY = dy / steps;
 
