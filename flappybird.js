@@ -14,7 +14,6 @@ let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
 let birdCollisionMask;
 let birdLastX, birdLastY;
-// Sound variables
 let scoreSound, deathSound, flapSound;
 
 window.onload = () => {
@@ -30,7 +29,6 @@ function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
   this.load.image('ghostBird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
   this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
-  // Load sound files from local directory
   this.load.audio('score', 'score.wav');
   this.load.audio('death', 'death.wav');
   this.load.audio('flap', 'flap.wav');
@@ -206,7 +204,7 @@ function startGame() {
 
 function flap() {
   bird.body.setVelocityY(FLAP_STRENGTH);
-  flapSound.play(); // Play flap sound
+  flapSound.play({ volume: 0.7 }); // Slightly quieter flap sound
 }
 
 function addPipes() {
@@ -266,7 +264,7 @@ function checkScore() {
       scoreZone.passed = true;
       score++;
       scoreText.setText('SCORE: ' + score);
-      scoreSound.play(); // Play score sound
+      scoreSound.play({ volume: 1.5 }); // Louder score sound
     }
   });
 }
@@ -281,7 +279,7 @@ function hitPipe() {
   ghostBird.setPosition(bird.x, bird.y);
   ghostBird.angle = bird.angle;
   ghostBird.visible = true;
-  deathSound.play(); // Play death sound
+  deathSound.play();
 }
 
 function showRestartScreen() {
