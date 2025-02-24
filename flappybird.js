@@ -292,7 +292,7 @@ function createCollisionMask(sprite) {
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Absolute perfection pixel-perfect collision
+// Optimized, perfect pixel-perfect collision
 function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
@@ -320,11 +320,11 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     pipeSprite.body.height
   );
 
-  // Extend swept bounds with velocity
-  const vx = birdSprite.body.velocity.x * (1 / 60); // Approximate delta time
+  // Swept bounds with velocity
+  const vx = birdSprite.body.velocity.x * (1 / 60);
   const vy = birdSprite.body.velocity.y * (1 / 60);
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
-  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx), Math.abs(vy));
+  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx) * 0.5, Math.abs(vy) * 0.5); // Minimal velocity buffer
 
   const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
@@ -335,15 +335,19 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const birdCenterX = birdSprite.body.x + birdSprite.body.width * 0.5;
   const birdCenterY = birdSprite.body.y + birdSprite.body.height * 0.5;
 
-  // Ultra-dense sub-pixel check
-  const step = 0.25; // 4 checks per mask pixel
-  const x1 = (intersection.x - birdSprite.body.x) / scaleX;
-  const y1 = (intersection.y - birdSprite.body.y) / scaleY;
-  const width = intersection.width / scaleX;
-  const height = intersection.height / scaleY;
+  // Optimized check for current position
+  const x1 = Math.floor((intersection.x - birdSprite.body.x) / scaleX);
+  const y1 = Math.floor((intersection.y - birdSprite.body.y) / scaleY);
+  const width = Math.ceil(intersection.width / scaleX);
+  const height = Math.ceil(intersection.height / scaleY);
 
-  for (let y = y1; y < y1 + height; y += step) {
-    for (let x = x1; x < x1 + width; x += step) {
+  const startX = Math.max(0, x1);
+  const startY = Math.max(0, y1);
+  const endX = Math.min(maskWidth, x1 + width);
+  const endY = Math.min(maskHeight, y1 + height);
+
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
       const relX = x - maskWidth * 0.5;
       const relY = y - maskHeight * 0.5;
       const rotatedX = relX * cosAngle - relY * sinAngle + maskWidth * 0.5;
@@ -360,12 +364,12 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     }
   }
 
-  // Ultra-dense path sampling with velocity
+  // Optimized path sampling
   const dx = birdSprite.x - birdLastX + vx;
   const dy = birdSprite.y - birdLastY + vy;
   if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const steps = Math.max(1, Math.ceil(distance / step)); // 4 steps per pixel
+    const steps = Math.max(1, Math.ceil(distance / 2)); // 1 step per 2 pixels
     const stepX = dx / steps;
     const stepY = dy / steps;
 
@@ -380,13 +384,18 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
       );
 
       if (Phaser.Geom.Rectangle.Overlaps(interpBounds, pipeBounds)) {
-        const x1 = (pipeBounds.x - interpX + (birdSprite.body.width * 0.5)) / scaleX;
-        const y1 = (pipeBounds.y - interpY + (birdSprite.body.height * 0.5)) / scaleY;
-        const width = pipeBounds.width / scaleX;
-        const height = pipeBounds.height / scaleY;
+        const x1 = Math.floor((pipeBounds.x - interpX + (birdSprite.body.width * 0.5)) / scaleX);
+        const y1 = Math.floor((pipeBounds.y - interpY + (birdSprite.body.height * 0.5)) / scaleY);
+        const width = Math.ceil(pipeBounds.width / scaleX);
+        const height = Math.ceil(pipeBounds.height / scaleY);
 
-        for (let y = y1; y < y1 + height; y += step) {
-          for (let x = x1; x < x1 + width; x += step) {
+        const startX = Math.max(0, x1);
+        const startY = Math.max(0, y1);
+        const endX = Math.min(maskWidth, x1 + width);
+        const endY = Math.min(maskHeight, y1 + height);
+
+        for (let y = startY; y < endY; y++) {
+          for (let x = startX; x < endX; x++) {
             const relX = x - maskWidth * 0.5;
             const relY = y - maskHeight * 0.5;
             const rotatedX = relX * cosAngle - relY * sinAngle + maskWidth * 0.5;
