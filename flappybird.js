@@ -14,6 +14,8 @@ let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
 let birdCollisionMask;
 let birdLastX, birdLastY;
+// Sound variables
+let scoreSound, deathSound, flapSound;
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -28,6 +30,10 @@ function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
   this.load.image('ghostBird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
   this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
+  // Load sound files from local directory
+  this.load.audio('score', 'score.wav');
+  this.load.audio('death', 'death.wav');
+  this.load.audio('flap', 'flap.wav');
 }
 
 function create() {
@@ -49,7 +55,7 @@ function create() {
   overlay.setDepth(-1);
 
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
-  bird.body.allowGravity = false; // No world bounds collision
+  bird.body.allowGravity = false;
   bird.setDepth(10);
   birdLastX = bird.x;
   birdLastY = bird.y;
@@ -93,6 +99,11 @@ function create() {
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
+
+  // Initialize sounds
+  scoreSound = this.sound.add('score');
+  deathSound = this.sound.add('death');
+  flapSound = this.sound.add('flap');
 
   function interpolateColor(color1, color2, factor) {
     const r1 = (color1 >> 16) & 0xFF;
@@ -168,13 +179,11 @@ function update() {
     birdLastY = bird.y;
     checkScore();
 
-    // Check for bottom collision and trigger death instantly
     if (bird.y + bird.displayHeight / 2 >= game.scale.height) {
       hitPipe.call(this);
     }
   }
 
-  // Ghost floats upward when dead
   if (gameOver && ghostBird.visible) {
     ghostBird.y -= 4;
     if (ghostBird.y < -ghostBird.displayHeight) {
@@ -182,7 +191,6 @@ function update() {
     }
   }
 
-  // Show restart screen when bird falls off bottom
   if (gameOver && bird.y > game.scale.height + bird.displayHeight) {
     showRestartScreen();
   }
@@ -198,6 +206,7 @@ function startGame() {
 
 function flap() {
   bird.body.setVelocityY(FLAP_STRENGTH);
+  flapSound.play(); // Play flap sound
 }
 
 function addPipes() {
@@ -257,6 +266,7 @@ function checkScore() {
       scoreZone.passed = true;
       score++;
       scoreText.setText('SCORE: ' + score);
+      scoreSound.play(); // Play score sound
     }
   });
 }
@@ -271,6 +281,7 @@ function hitPipe() {
   ghostBird.setPosition(bird.x, bird.y);
   ghostBird.angle = bird.angle;
   ghostBird.visible = true;
+  deathSound.play(); // Play death sound
 }
 
 function showRestartScreen() {
