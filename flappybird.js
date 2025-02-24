@@ -18,10 +18,10 @@ let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 // Shrimp selection variables
 let shrimpVariants = [
-  { name: 'Normal', tint: null },    // No tint for default
-  { name: 'Bronze', tint: 0xCD7F32 }, // Bronze color
-  { name: 'Silver', tint: 0xC0C0C0 }, // Silver color
-  { name: 'Gold', tint: 0xFFD700 }    // Gold color
+  { name: 'Normal', tint: null },       // No tint for default
+  { name: 'Bronze', tint: 0xA0522D },   // Stronger, richer bronze
+  { name: 'Silver', tint: 0xE6E8FA },   // Bright, metallic silver
+  { name: 'Gold', tint: 0xFFA500 }      // Vivid, strong gold
 ];
 let selectedShrimpIndex = 0; // Default to Normal
 let menuVisible = false;
@@ -117,12 +117,19 @@ function create() {
   shrimpMenu.visible = false;
 
   shrimpVariants.forEach((variant, index) => {
-    const yPos = gameHeight / 2 - 60 + index * 40;
-    const option = this.add.text(gameWidth / 2, yPos, variant.name, {
+    const yPos = gameHeight / 2 - 60 + index * 50; // Increased spacing for sprite + text
+    const sprite = this.add.sprite(gameWidth / 2, yPos - 10, 'bird').setOrigin(0.5).setScale(0.0915).setDepth(13);
+    sprite.setTint(variant.tint || 0xffffff);
+    sprite.visible = false;
+
+    const text = this.add.text(gameWidth / 2, yPos + 10, variant.name, {
       fontFamily: '"Press Start 2P", sans-serif',
-      fontSize: '16px',
+      fontSize: '12px', // Smaller text to fit under sprite
       fill: '#fff'
     }).setOrigin(0.5).setDepth(13);
+    text.visible = false;
+
+    const option = this.add.rectangle(gameWidth / 2, yPos, 100, 40, 0x000000, 0).setOrigin(0.5).setDepth(12); // Invisible hitbox
     option.setInteractive();
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
@@ -131,7 +138,13 @@ function create() {
       toggleShrimpMenu.call(this); // Hide menu after selection
     });
     option.visible = false;
-    shrimpMenuOptions.push(option);
+
+    shrimpMenuOptions.push({ sprite, text, hitbox: option });
+  });
+
+  // Global pointerdown for flapping during gameplay
+  this.input.on('pointerdown', () => {
+    if (gameStarted && !gameOver && !menuVisible) flap();
   });
 
   birdCollisionMask = createCollisionMask(bird);
@@ -245,7 +258,11 @@ function update() {
   }
 
   shrimpMenu.visible = menuVisible;
-  shrimpMenuOptions.forEach(option => option.visible = menuVisible);
+  shrimpMenuOptions.forEach(option => {
+    option.sprite.visible = menuVisible;
+    option.text.visible = menuVisible;
+    option.hitbox.visible = menuVisible;
+  });
 }
 
 function startGame() {
@@ -370,7 +387,11 @@ function toggleShrimpMenu(forceHide = null) {
     menuVisible = !menuVisible;
   }
   shrimpMenu.visible = menuVisible;
-  shrimpMenuOptions.forEach(option => option.visible = menuVisible);
+  shrimpMenuOptions.forEach(option => {
+    option.sprite.visible = menuVisible;
+    option.text.visible = menuVisible;
+    option.hitbox.visible = menuVisible;
+  });
 }
 
 // Precompute collision mask with validation
