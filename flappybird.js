@@ -268,7 +268,7 @@ function addPipes() {
 
   let minGapY = 120;
   let maxGapY = gameHeight - PIPE_GAP - 120;
-  let gapY = Phaser.Math.Between(minGapY, maxGapY);
+  let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
   let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
   pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
@@ -516,4 +516,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-                   }
+}
