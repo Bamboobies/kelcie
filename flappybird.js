@@ -270,28 +270,28 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Between(minGapY, maxGapY);
 
-  let pipeTopBody = this.physics.add.sprite(gameWidth + PIPE_WIDTH, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
+  let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
   pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
   pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
   pipeTopBody.body.immovable = true;
 
   let bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
-  let pipeBottomBody = this.physics.add.sprite(gameWidth + PIPE_WIDTH, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
+  let pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
   pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.immovable = true;
 
-  let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
+  let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
   pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.immovable = true;
 
-  let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
+  let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
   pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 20, PIPE_GAP + 60, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   this.physics.add.existing(scoreZone);
   scoreZone.body.setVelocityX(PIPE_SPEED);
   scoreZone.body.allowGravity = false;
@@ -516,4 +516,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-    }
+                   }
