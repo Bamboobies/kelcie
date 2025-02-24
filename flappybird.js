@@ -18,10 +18,10 @@ let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 // Shrimp selection variables
 let shrimpVariants = [
-  { name: 'Normal', key: 'bird', tint: null },         // Original sprite
-  { name: 'Bronze', key: 'birdGray', tint: 0x8C5523 }, // Deep bronze
-  { name: 'Silver', key: 'birdGray', tint: 0xCCCCCC }, // Bright silver
-  { name: 'Gold', key: 'birdGray', tint: 0xFFD700 }    // Vivid gold
+  { name: 'Normal', tint: null },       // No tint for default
+  { name: 'Bronze', tint: 0xCD7F32 },   // Strong, rich bronze
+  { name: 'Silver', tint: 0xD9D9D9 },   // Bright, true silver
+  { name: 'Gold', tint: 0xFFD700 }      // Bold, radiant gold
 ];
 let selectedShrimpIndex = 0;
 let menuVisible = false;
@@ -41,27 +41,6 @@ function preload() {
   this.load.audio('score', 'score.wav');
   this.load.audio('death', 'death.wav');
   this.load.audio('flap', 'flap.wav');
-
-  // Generate grayscale sprite with full detail
-  const texture = this.textures.get('bird').getSourceImage();
-  const canvas = document.createElement('canvas');
-  canvas.width = texture.width;
-  canvas.height = texture.height;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(texture, 0, 0);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    const r = imageData.data[i];
-    const g = imageData.data[i + 1];
-    const b = imageData.data[i + 2];
-    const gray = 0.3 * r + 0.59 * g + 0.11 * b; // Luminosity method
-    imageData.data[i] = gray;
-    imageData.data[i + 1] = gray;
-    imageData.data[i + 2] = gray;
-    // Preserve alpha channel
-  }
-  ctx.putImageData(imageData, 0, 0);
-  this.textures.addImage('birdGray', canvas);
 }
 
 function create() {
@@ -74,22 +53,19 @@ function create() {
   const scaleFactor = gameHeight / imageHeight;
   const scaledWidth = imageWidth * scaleFactor;
 
-  background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0);
-  background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0);
-  background1.setScale(scaleFactor);
-  background2.setScale(scaleFactor);
+  background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0).setScale(scaleFactor);
+  background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0).setScale(scaleFactor);
 
-  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
-  overlay.setDepth(-1);
+  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5).setDepth(-1);
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, shrimpVariants[selectedShrimpIndex].key).setOrigin(0.5).setScale(0.0915);
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.allowGravity = false;
   bird.setDepth(10);
   if (shrimpVariants[selectedShrimpIndex].tint) bird.setTint(shrimpVariants[selectedShrimpIndex].tint);
   birdLastX = bird.x;
   birdLastY = bird.y;
 
-  ghostBird = this.add.sprite(bird.x, bird.y, shrimpVariants[selectedShrimpIndex].key).setOrigin(0.5).setScale(0.0915);
+  ghostBird = this.add.sprite(bird.x, bird.y, 'bird').setOrigin(0.5).setScale(0.0915);
   ghostBird.setAlpha(0.3);
   ghostBird.setDepth(11);
   if (shrimpVariants[selectedShrimpIndex].tint) ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
@@ -120,7 +96,7 @@ function create() {
   });
 
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
-  highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10);
+  highScoreText = this.add.text(20, 50, 'HIGH SCORE: ' + highScore, textStyle).setDepth(10);
 
   // Shrimp selection button (bottom-right, darker green)
   shrimpSelectButton = this.add.rectangle(gameWidth - 80, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10);
@@ -140,7 +116,7 @@ function create() {
 
   shrimpVariants.forEach((variant, index) => {
     const yPos = gameHeight / 2 - 60 + index * 50;
-    const sprite = this.add.sprite(gameWidth / 2, yPos - 10, variant.key).setOrigin(0.5).setScale(0.0915).setDepth(13);
+    const sprite = this.add.sprite(gameWidth / 2, yPos - 10, 'bird').setOrigin(0.5).setScale(0.0915).setDepth(13);
     if (variant.tint) sprite.setTint(variant.tint);
     sprite.visible = false;
 
@@ -155,12 +131,13 @@ function create() {
     option.setInteractive();
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
-      bird.setTexture(variant.key);
-      if (variant.tint) bird.setTint(variant.tint);
-      else bird.clearTint();
-      ghostBird.setTexture(variant.key);
-      if (variant.tint) ghostBird.setTint(variant.tint);
-      else ghostBird.clearTint();
+      if (variant.tint) {
+        bird.setTint(variant.tint);
+        ghostBird.setTint(variant.tint);
+      } else {
+        bird.clearTint();
+        ghostBird.clearTint();
+      }
       toggleShrimpMenu.call(this);
     });
     option.visible = false;
@@ -175,9 +152,7 @@ function create() {
   birdCollisionMask = createCollisionMask(bird);
 
   this.physics.add.overlap(bird, pipes, (birdSprite, pipeSprite) => {
-    if (optimizedPixelPerfectCollision(birdSprite, pipeSprite)) {
-      hitPipe.call(this);
-    }
+    if (optimizedPixelPerfectCollision(birdSprite, pipeSprite)) hitPipe.call(this);
   }, null, this);
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
@@ -186,60 +161,6 @@ function create() {
   scoreSound = this.sound.add('score');
   deathSound = this.sound.add('death');
   flapSound = this.sound.add('flap');
-
-  function interpolateColor(color1, color2, factor) {
-    const r1 = (color1 >> 16) & 0xFF;
-    const g1 = (color1 >> 8) & 0xFF;
-    const b1 = color1 & 0xFF;
-    const r2 = (color2 >> 16) & 0xFF;
-    const g2 = (color2 >> 8) & 0xFF;
-    const b2 = color2 & 0xFF;
-    const r = Math.round(r1 + (r2 - r1) * factor);
-    const g = Math.round(g1 + (g2 - g1) * factor);
-    const b = Math.round(b1 + (b2 - b1) * factor);
-    return (r << 16) + (g << 8) + b;
-  }
-
-  const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0x00A300, 1);
-  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  const startColor = 0x5C7A43;
-  const endColor = 0xA0D22A;
-  const pipeSteps = 16;
-  const stepWidth = PIPE_WIDTH / pipeSteps;
-  for (let i = 0; i < pipeSteps; i++) {
-    const center = (pipeSteps - 1) / 2;
-    const distance = Math.abs(i - center) / center;
-    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
-    const color = interpolateColor(endColor, startColor, factor);
-    pipeGraphics.fillStyle(color, 1);
-    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512);
-  }
-  pipeGraphics.lineStyle(1, 0x003300, 1);
-  pipeGraphics.lineBetween(1, 0, 1, 512);
-  pipeGraphics.lineBetween(PIPE_WIDTH - 1, 0, PIPE_WIDTH - 1, 512);
-  pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
-  pipeGraphics.destroy();
-
-  const capGraphics = this.add.graphics();
-  capGraphics.fillStyle(0x006600, 1);
-  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  const capSteps = 20;
-  const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
-  for (let i = 0; i < capSteps; i++) {
-    const center = (capSteps - 1) / 2;
-    const distance = Math.abs(i - center) / center;
-    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
-    const color = interpolateColor(endColor, startColor, factor);
-    capGraphics.fillStyle(color, 1);
-    const x = Math.floor(i * stepWidthCap);
-    const width = Math.ceil((i + 1) * stepWidthCap) - x;
-    capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT);
-  }
-  capGraphics.lineStyle(1, 0x003300, 1);
-  capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
-  capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  capGraphics.destroy();
 }
 
 function update() {
@@ -261,21 +182,15 @@ function update() {
     birdLastY = bird.y;
     checkScore();
 
-    if (bird.y + bird.displayHeight / 2 >= game.scale.height) {
-      hitPipe.call(this);
-    }
+    if (bird.y + bird.displayHeight / 2 >= game.scale.height) hitPipe.call(this);
   }
 
   if (gameOver && ghostBird.visible) {
-    ghostBird.y -= 4; // Reduced frequency could help lag, but kept simple
-    if (ghostBird.y < -ghostBird.displayHeight) {
-      ghostBird.visible = false;
-    }
+    ghostBird.y -= 4; // Simplified ghost movement
+    if (ghostBird.y < -ghostBird.displayHeight) ghostBird.visible = false;
   }
 
-  if (gameOver && bird.y > game.scale.height + bird.displayHeight) {
-    showRestartScreen.call(this);
-  }
+  if (gameOver && bird.y > game.scale.height + bird.displayHeight) showRestartScreen.call(this);
 }
 
 function startGame() {
@@ -328,14 +243,8 @@ function addPipes() {
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   this.physics.add.existing(scoreZone);
 
-  pipes.add(pipeTopBody);
-  pipes.add(pipeBottomBody);
-  pipes.add(pipeTopCap);
-  pipes.add(pipeBottomCap);
-  scoreZones.add(scoreZone);
-
-  let allPipes = [pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone];
-  allPipes.forEach(pipe => {
+  pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap, scoreZone]);
+  pipes.children.iterate(pipe => {
     pipe.body.setVelocityX(PIPE_SPEED);
     pipe.body.allowGravity = false;
     pipe.body.checkWorldBounds = true;
@@ -346,7 +255,7 @@ function addPipes() {
 }
 
 function checkScore() {
-  scoreZones.getChildren().forEach(scoreZone => {
+  scoreZones.children.iterate(scoreZone => {
     if (!scoreZone.passed && scoreZone.x < bird.x) {
       scoreZone.passed = true;
       score++;
@@ -386,10 +295,9 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  bird.setTexture(shrimpVariants[selectedShrimpIndex].key);
   if (shrimpVariants[selectedShrimpIndex].tint) bird.setTint(shrimpVariants[selectedShrimpIndex].tint);
   else bird.clearTint();
-  ghostBird.setTexture(shrimpVariants[selectedShrimpIndex].key);
+  ghostBird.setTexture('bird');
   if (shrimpVariants[selectedShrimpIndex].tint) ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
   else ghostBird.clearTint();
   ghostBird.visible = false;
@@ -497,9 +405,7 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
       const ry = Math.floor(rotatedY);
       if (rx >= 0 && rx < maskWidth && ry >= 0 && ry < maskHeight) {
         const index = ry * maskWidth + rx;
-        if (birdCollisionMask.mask[index] === 1) {
-          return true;
-        }
+        if (birdCollisionMask.mask[index] === 1) return true;
       }
     }
   }
@@ -544,9 +450,7 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
             const ry = Math.floor(rotatedY);
             if (rx >= 0 && rx < maskWidth && ry >= 0 && ry < maskHeight) {
               const index = ry * maskWidth + rx;
-              if (birdCollisionMask.mask[index] === 1) {
-                return true;
-              }
+              if (birdCollisionMask.mask[index] === 1) return true;
             }
           }
         }
