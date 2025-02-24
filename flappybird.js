@@ -26,7 +26,7 @@ window.onload = () => {
 
 function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
-  this.load.image('ghostBird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png'); // Same image, opacity adjusted in create
+  this.load.image('ghostBird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
   this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
 }
 
@@ -48,18 +48,16 @@ function create() {
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1);
 
-  // Shrimp sprite with higher depth
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
-  bird.setDepth(10); // In front of pipes (depth 5)
+  bird.setDepth(10);
   birdLastX = bird.x;
   birdLastY = bird.y;
 
-  // Ghost sprite, initially invisible
   ghostBird = this.add.sprite(bird.x, bird.y, 'ghostBird').setOrigin(0.5).setScale(0.0915);
-  ghostBird.setAlpha(0.3); // Low opacity for ghost effect
-  ghostBird.setDepth(11); // Slightly above shrimp
+  ghostBird.setAlpha(0.3);
+  ghostBird.setDepth(11);
   ghostBird.visible = false;
 
   pipes = this.physics.add.group();
@@ -155,7 +153,6 @@ function create() {
 function update() {
   if (!gameStarted) return;
 
-  // Background scrolling stops on death
   if (!gameOver) {
     background1.x += BACKGROUND_SPEED * (1 / 60);
     background2.x += BACKGROUND_SPEED * (1 / 60);
@@ -173,15 +170,14 @@ function update() {
     checkScore();
   }
 
-  // Ghost floats upward when dead
+  // Ghost floats upward faster when dead
   if (gameOver && ghostBird.visible) {
-    ghostBird.y -= 2; // Float upward at a steady pace
+    ghostBird.y -= 4; // Increased from 2 to 4
     if (ghostBird.y < -ghostBird.displayHeight) {
-      ghostBird.visible = false; // Hide when off-screen
+      ghostBird.visible = false;
     }
   }
 
-  // Show restart screen when bird hits bottom
   if (gameOver && bird.body.blocked.down) {
     showRestartScreen();
   }
@@ -264,12 +260,11 @@ function hitPipe() {
   if (gameOver) return;
 
   gameOver = true;
-  pipes.setVelocityX(0); // Stop pipe movement
-  scoreZones.setVelocityX(0); // Stop score zones
+  pipes.setVelocityX(0);
+  scoreZones.setVelocityX(0);
 
-  // Spawn ghost at shrimp's position
   ghostBird.setPosition(bird.x, bird.y);
-  ghostBird.angle = bird.angle; // Match rotation
+  ghostBird.angle = bird.angle;
   ghostBird.visible = true;
 }
 
@@ -285,7 +280,7 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  ghostBird.visible = false; // Hide ghost
+  ghostBird.visible = false;
   pipes.clear(true, true);
   scoreZones.clear(true, true);
   gameOverText.setText('');
