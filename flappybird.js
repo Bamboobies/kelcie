@@ -73,9 +73,11 @@ function create() {
     else flap();
   });
 
-  // Replace collider with pixel-perfect overlap detection
+  // Updated overlap with pixel-perfect collision
   this.physics.add.overlap(bird, pipes, (birdSprite, pipeSprite) => {
+    console.log('Overlap detected between bird and pipe'); // Debug: Confirm overlap triggers
     if (pixelPerfectCollision(birdSprite, pipeSprite)) {
+      console.log('Pixel-perfect collision confirmed'); // Debug: Confirm pixel collision
       hitPipe.call(this);
     }
   }, null, this);
@@ -83,7 +85,6 @@ function create() {
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
 
-  // Helper function to interpolate between two colors
   function interpolateColor(color1, color2, factor) {
     const r1 = (color1 >> 16) & 0xFF;
     const g1 = (color1 >> 8) & 0xFF;
@@ -97,7 +98,6 @@ function create() {
     return (r << 16) + (g << 8) + b;
   }
 
-  // Pre-generate pipe texture
   const pipeGraphics = this.add.graphics();
   pipeGraphics.fillStyle(0x00A300, 1);
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
@@ -119,7 +119,6 @@ function create() {
   pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
   pipeGraphics.destroy();
 
-  // Pre-generate endcap texture
   const capGraphics = this.add.graphics();
   capGraphics.fillStyle(0x006600, 1);
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
@@ -265,7 +264,7 @@ function restartGame() {
   restartText.setText('');
 }
 
-// Pixel-perfect collision detection function
+// Updated pixel-perfect collision function with scaling support
 function pixelPerfectCollision(sprite1, sprite2) {
   const bounds1 = sprite1.getBounds();
   const bounds2 = sprite2.getBounds();
@@ -284,24 +283,40 @@ function pixelPerfectCollision(sprite1, sprite2) {
   canvas.height = intersection.height;
   const ctx = canvas.getContext('2d');
 
-  const x1 = intersection.x - bounds1.x;
-  const y1 = intersection.y - bounds1.y;
-  ctx.drawImage(texture1, frame1.x + x1, frame1.y + y1, intersection.width, intersection.height, 0, 0, intersection.width, intersection.height);
+  // Adjust for sprite scaling
+  const scaleX1 = sprite1.scaleX;
+  const scaleY1 = sprite1.scaleY;
+  const scaleX2 = sprite2.scaleX;
+  const scaleY2 = sprite2.scaleY;
 
+  const x1 = (intersection.x - bounds1.x) / scaleX1;
+  const y1 = (intersection.y - bounds1.y) / scaleY1;
+  const width1 = intersection.width / scaleX1;
+  const height1 = intersection.height / scaleY1;
+
+  ctx.drawImage(texture1, frame1.x + x1, frame1.y + y1, width1, height1, 0, 0, intersection.width, intersection.height);
   const data1 = ctx.getImageData(0, 0, intersection.width, intersection.height).data;
 
   ctx.clearRect(0, 0, intersection.width, intersection.height);
-  const x2 = intersection.x - bounds2.x;
-  const y2 = intersection.y - bounds2.y;
-  ctx.drawImage(texture2, frame2.x + x2, frame2.y + y2, intersection.width, intersection.height, 0, 0, intersection.width, intersection.height);
 
+  const x2 = (intersection.x - bounds2.x) / scaleX2;
+  const y2 = (intersection.y - bounds2.y) / scaleY2;
+  const width2 = intersection.width / scaleX2;
+  const height2 = intersection.height / scaleY2;
+
+  ctx.drawImage(texture2, frame2.x + x2, frame2.y + y2, width2, height2, 0, 0, intersection.width, intersection.height);
   const data2 = ctx.getImageData(0, 0, intersection.width, intersection.height).data;
 
+  let collisionDetected = false;
   for (let i = 3; i < data1.length; i += 4) {
     if (data1[i] > 0 && data2[i] > 0) {
-      return true;
+      collisionDetected = true;
+      break; // Exit loop once collision is found
     }
   }
 
-  return false;
+  // Debug: Log pixel data check result
+  console.log('Pixel check result:', collisionDetected, 'Intersection:', intersection);
+
+  return collisionDetected;
 }
