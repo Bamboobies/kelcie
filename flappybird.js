@@ -18,14 +18,7 @@ window.onload = () => {
   game = new Phaser.Game({
     type: Phaser.AUTO,
     scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
-    physics: { 
-      default: 'arcade', 
-      arcade: { 
-        gravity: { y: GRAVITY }, 
-        debug: false, 
-        fps: 120 // Increase physics update rate for tighter checks
-      } 
-    },
+    physics: { default: 'arcade', arcade: { gravity: { y: GRAVITY }, debug: false } },
     scene: { preload, create, update }
   });
 };
@@ -83,8 +76,7 @@ function create() {
 
   birdCollisionMask = createCollisionMask(bird);
 
-  // Hybrid collision: Arcade Physics collider with pixel-perfect refinement
-  this.physics.add.collider(bird, pipes, (birdSprite, pipeSprite) => {
+  this.physics.add.overlap(bird, pipes, (birdSprite, pipeSprite) => {
     if (pixelPerfectCollision(birdSprite, pipeSprite)) {
       hitPipe.call(this);
     }
@@ -196,22 +188,26 @@ function addPipes() {
   pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
   pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
   pipeTopBody.body.immovable = true;
+  pipeTopBody.body.moves = false; // Ensure pipes don’t move
 
   let bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
   let pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
   pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.immovable = true;
+  pipeBottomBody.body.moves = false;
 
   let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
   pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.immovable = true;
+  pipeTopCap.body.moves = false;
 
   let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
   pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
+  pipeBottomCap.body.moves = false;
 
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   this.physics.add.existing(scoreZone);
@@ -292,12 +288,14 @@ function createCollisionMask(sprite) {
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Simplified and precise pixel-perfect collision
+// Refined pixel-perfect collision with buffer
 function pixelPerfectCollision(birdSprite, pipeSprite) {
   const bounds1 = birdSprite.getBounds();
   const bounds2 = pipeSprite.getBounds();
 
-  // Use Arcade Physics bounds directly for initial overlap
+  // Add a small buffer to the bird’s bounds
+  Phaser.Geom.Rectangle.Inflate(bounds1, 2, 2);
+
   const intersection = Phaser.Geom.Rectangle.Intersection(bounds1, bounds2);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
 
@@ -321,8 +319,7 @@ function pixelPerfectCollision(birdSprite, pipeSprite) {
     for (let x = startX; x < endX; x++) {
       const index = y * birdCollisionMask.width + x;
       if (birdCollisionMask.mask[index] === 1) {
-        // Pipes are solid, so any overlap with a non-transparent pixel is a hit
-        return true;
+        return true; // Collision with solid pipe
       }
     }
   }
