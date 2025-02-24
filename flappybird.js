@@ -273,7 +273,7 @@ function restartGame() {
   birdLastY = bird.y;
 }
 
-// Precompute collision mask for the shrimp sprite
+// Precompute collision mask for the shrimp sprite with additional edge detection
 function createCollisionMask(sprite) {
   const texture = sprite.texture.getSourceImage();
   const frame = sprite.frame;
@@ -282,99 +282,4 @@ function createCollisionMask(sprite) {
   canvas.height = frame.height;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(texture, frame.x, frame.y, frame.width, frame.height, 0, 0, frame.width, frame.height);
-  const imageData = ctx.getImageData(0, 0, frame.width, frame.height);
-  const mask = new Uint8Array(frame.width * frame.height);
-  for (let i = 0, j = 0; i < imageData.data.length; i += 4, j++) {
-    mask[j] = imageData.data[i + 3] > 0 ? 1 : 0; // 1 for non-transparent, 0 for transparent
-  }
-  return { mask, width: frame.width, height: frame.height };
-}
-
-// Enhanced pixel-perfect collision with continuous detection
-function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
-  const scaleX = birdSprite.scaleX;
-  const scaleY = birdSprite.scaleY;
-  const maskWidth = birdCollisionMask.width;
-  const maskHeight = birdCollisionMask.height;
-
-  // Define current and previous bounds
-  const currentBounds = birdSprite.getBounds();
-  const lastBounds = new Phaser.Geom.Rectangle(
-    birdLastX - (birdSprite.width * scaleX * 0.5),
-    birdLastY - (birdSprite.height * scaleY * 0.5),
-    birdSprite.width * scaleX,
-    birdSprite.height * scaleY
-  );
-  const pipeBounds = pipeSprite.getBounds();
-
-  // Create a swept bounds area covering movement from last to current position
-  const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
-  Phaser.Geom.Rectangle.Inflate(sweptBounds, 2, 2); // Small buffer
-
-  const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
-  if (intersection.width <= 0 || intersection.height <= 0) return false;
-
-  // Fallback bounding box check (coarse safety net)
-  if (Phaser.Geom.Rectangle.Overlaps(currentBounds, pipeBounds)) {
-    // Convert intersection to bird's texture coordinates
-    const birdX = birdSprite.x - (birdSprite.width * scaleX * 0.5);
-    const birdY = birdSprite.y - (birdSprite.height * scaleY * 0.5);
-    const x1 = Math.floor((intersection.x - birdX) / scaleX);
-    const y1 = Math.floor((intersection.y - birdY) / scaleY);
-    const width = Math.ceil(intersection.width / scaleX);
-    const height = Math.ceil(intersection.height / scaleY);
-
-    const startX = Math.max(0, x1);
-    const startY = Math.max(0, y1);
-    const endX = Math.min(maskWidth, x1 + width);
-    const endY = Math.min(maskHeight, y1 + height);
-
-    for (let y = startY; y < endY; y++) {
-      for (let x = startX; x < endX; x++) {
-        const index = y * maskWidth + x;
-        if (birdCollisionMask.mask[index] === 1) {
-          return true; // Collision detected
-        }
-      }
-    }
-  }
-
-  // If no pixel collision, check if the bird fully passed through (fine safety net)
-  const dx = birdSprite.x - birdLastX;
-  const dy = birdSprite.y - birdLastY;
-  if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
-    const steps = Math.max(Math.abs(dx), Math.abs(dy)) / 2; // Sample points along path
-    for (let t = 0; t <= 1; t += 1 / steps) {
-      const interpX = birdLastX + dx * t;
-      const interpY = birdLastY + dy * t;
-      const interpBounds = new Phaser.Geom.Rectangle(
-        interpX - (birdSprite.width * scaleX * 0.5),
-        interpY - (birdSprite.height * scaleY * 0.5),
-        birdSprite.width * scaleX,
-        birdSprite.height * scaleY
-      );
-      if (Phaser.Geom.Rectangle.Overlaps(interpBounds, pipeBounds)) {
-        const x1 = Math.floor((pipeBounds.x - interpX + (birdSprite.width * scaleX * 0.5)) / scaleX);
-        const y1 = Math.floor((pipeBounds.y - interpY + (birdSprite.height * scaleY * 0.5)) / scaleY);
-        const width = Math.ceil(pipeBounds.width / scaleX);
-        const height = Math.ceil(pipeBounds.height / scaleY);
-
-        const startX = Math.max(0, x1);
-        const startY = Math.max(0, y1);
-        const endX = Math.min(maskWidth, x1 + width);
-        const endY = Math.min(maskHeight, y1 + height);
-
-        for (let y = startY; y < endY; y++) {
-          for (let x = startX; x < endX; x++) {
-            const index = y * maskWidth + x;
-            if (birdCollisionMask.mask[index] === 1) {
-              return true; // Collision along path
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return false;
-}
+  const imageData = ctx.getImageData(0, 0, frame.width
