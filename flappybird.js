@@ -8,7 +8,7 @@ const PIPE_CAP_HEIGHT = 20;
 const PIPE_SPAWN_DELAY = 1550;
 const BACKGROUND_SPEED = -10;
 
-let game, bird, pipes, scoreZones, scoreText, highScoreText;
+let game, bird, ghostBird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
@@ -26,6 +26,7 @@ window.onload = () => {
 
 function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
+  this.load.image('ghostBird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png'); // Same image, opacity adjusted in create
   this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
 }
 
@@ -47,11 +48,19 @@ function create() {
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1);
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915); // Adjust scale as needed
+  // Shrimp sprite with higher depth
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
+  bird.setDepth(10); // In front of pipes (depth 5)
   birdLastX = bird.x;
   birdLastY = bird.y;
+
+  // Ghost sprite, initially invisible
+  ghostBird = this.add.sprite(bird.x, bird.y, 'ghostBird').setOrigin(0.5).setScale(0.0915);
+  ghostBird.setAlpha(0.3); // Low opacity for ghost effect
+  ghostBird.setDepth(11); // Slightly above shrimp
+  ghostBird.visible = false;
 
   pipes = this.physics.add.group();
   scoreZones = this.physics.add.group();
@@ -73,7 +82,7 @@ function create() {
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
-    else if (gameOver && bird.body.blocked.down) restartGame.call(scene); // Only restart after hitting bottom
+    else if (gameOver && bird.body.blocked.down) restartGame.call(scene);
     else if (!gameOver) flap();
   });
 
@@ -146,32 +155,35 @@ function create() {
 function update() {
   if (!gameStarted) return;
 
-  // Background scrolling continues even after death
-  background1.x += BACKGROUND_SPEED * (1 / 60);
-  background2.x += BACKGROUND_SPEED * (1 / 60);
-
-  if (background1.x + background1.displayWidth <= 0) {
-    background1.x = background2.x + background2.displayWidth;
-  }
-  if (background2.x + background2.displayWidth <= 0) {
-    background2.x = background1.x + background1.displayWidth;
-  }
-
-  // Rotate bird while alive, continue falling when dead
+  // Background scrolling stops on death
   if (!gameOver) {
+    background1.x += BACKGROUND_SPEED * (1 / 60);
+    background2.x += BACKGROUND_SPEED * (1 / 60);
+
+    if (background1.x + background1.displayWidth <= 0) {
+      background1.x = background2.x + background2.displayWidth;
+    }
+    if (background2.x + background2.displayWidth <= 0) {
+      background2.x = background1.x + background1.displayWidth;
+    }
+
     bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
-  }
-
-  // Check if bird hits bottom after death
-  if (gameOver && bird.body.blocked.down) {
-    showRestartScreen();
-  }
-
-  // Stop scoring and pipe movement when dead
-  if (!gameOver) {
-    checkScore();
     birdLastX = bird.x;
     birdLastY = bird.y;
+    checkScore();
+  }
+
+  // Ghost floats upward when dead
+  if (gameOver && ghostBird.visible) {
+    ghostBird.y -= 2; // Float upward at a steady pace
+    if (ghostBird.y < -ghostBird.displayHeight) {
+      ghostBird.visible = false; // Hide when off-screen
+    }
+  }
+
+  // Show restart screen when bird hits bottom
+  if (gameOver && bird.body.blocked.down) {
+    showRestartScreen();
   }
 }
 
@@ -252,10 +264,13 @@ function hitPipe() {
   if (gameOver) return;
 
   gameOver = true;
-  // Don't pause physics—let bird fall
-  this.physics.world.gravity.y = GRAVITY; // Ensure gravity stays active
   pipes.setVelocityX(0); // Stop pipe movement
   scoreZones.setVelocityX(0); // Stop score zones
+
+  // Spawn ghost at shrimp's position
+  ghostBird.setPosition(bird.x, bird.y);
+  ghostBird.angle = bird.angle; // Match rotation
+  ghostBird.visible = true;
 }
 
 function showRestartScreen() {
@@ -269,10 +284,10 @@ function restartGame() {
   scoreText.setText('SCORE: ' + score);
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
-  bird.angle = 0; // Reset rotation
+  bird.angle = 0;
+  ghostBird.visible = false; // Hide ghost
   pipes.clear(true, true);
   scoreZones.clear(true, true);
-  this.physics.world.gravity.y = GRAVITY; // Reset gravity just in case
   gameOverText.setText('');
   restartText.setText('');
   birdLastX = bird.x;
@@ -307,7 +322,6 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const maskHeight = birdCollisionMask.height;
   const angle = Phaser.Math.DegToRad(birdSprite.angle);
 
-  // Physics body bounds
   const currentBounds = new Phaser.Geom.Rectangle(
     birdSprite.body.x,
     birdSprite.body.y,
@@ -327,7 +341,6 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     pipeSprite.body.height
   );
 
-  // Swept bounds with enhanced velocity buffer
   const vx = birdSprite.body.velocity.x * (1 / 60) * 2;
   const vy = birdSprite.body.velocity.y * (1 / 60) * 2;
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
@@ -336,13 +349,11 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
 
-  // Rotation transform
   const cosAngle = Math.cos(-angle);
   const sinAngle = Math.sin(-angle);
   const birdCenterX = birdSprite.body.x + birdSprite.body.width * 0.5;
   const birdCenterY = birdSprite.body.y + birdSprite.body.height * 0.5;
 
-  // Check current position
   const x1 = Math.floor((intersection.x - birdSprite.body.x) / scaleX);
   const y1 = Math.floor((intersection.y - birdSprite.body.y) / scaleY);
   const width = Math.ceil(intersection.width / scaleX);
@@ -371,12 +382,11 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     }
   }
 
-  // Path sampling with maximum density
   const dx = birdSprite.x - birdLastX + vx;
   const dy = birdSprite.y - birdLastY + vy;
   if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const steps = Math.max(1, Math.ceil(distance * 3)); // 3 steps per pixel
+    const steps = Math.max(1, Math.ceil(distance * 3));
     const stepX = dx / steps;
     const stepY = dy / steps;
 
