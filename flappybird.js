@@ -13,7 +13,7 @@ let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
 let birdCollisionMask;
-let birdLastX, birdLastY; // Track previous position for continuous collision
+let birdLastX, birdLastY;
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -50,7 +50,7 @@ function create() {
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
-  birdLastX = bird.x; // Initialize last position
+  birdLastX = bird.x;
   birdLastY = bird.y;
 
   pipes = this.physics.add.group();
@@ -164,7 +164,6 @@ function update() {
 
   checkScore();
 
-  // Update last position after movement
   birdLastX = bird.x;
   birdLastY = bird.y;
 }
@@ -269,11 +268,11 @@ function restartGame() {
   this.physics.resume();
   gameOverText.setText('');
   restartText.setText('');
-  birdLastX = bird.x; // Reset last position
+  birdLastX = bird.x;
   birdLastY = bird.y;
 }
 
-// Precompute collision mask for the shrimp sprite with additional edge detection
+// Precompute collision mask with validation
 function createCollisionMask(sprite) {
   const texture = sprite.texture.getSourceImage();
   const frame = sprite.frame;
@@ -284,101 +283,107 @@ function createCollisionMask(sprite) {
   ctx.drawImage(texture, frame.x, frame.y, frame.width, frame.height, 0, 0, frame.width, frame.height);
   const imageData = ctx.getImageData(0, 0, frame.width, frame.height);
   const mask = new Uint8Array(frame.width * frame.height);
-  
-  // Enhanced edge detection for better collision
-  const threshold = 20; // Alpha threshold for edge detection
-  for (let y = 0; y < frame.height; y++) {
-    for (let x = 0; x < frame.width; x++) {
-      const idx = (y * frame.width + x) * 4;
-      const alpha = imageData.data[idx + 3];
-      
-      // Check neighboring pixels for edges
-      if (alpha > threshold) {
-        mask[y * frame.width + x] = 1;
-        // Add slight padding around edges for more reliable collision
-        for (let dy = -1; dy <= 1; dy++) {
-          for (let dx = -1; dx <= 1; dx++) {
-            const nx = x + dx;
-            const ny = y + dy;
-            if (nx >= 0 && nx < frame.width && ny >= 0 && ny < frame.height) {
-              const nIdx = ny * frame.width + nx;
-              mask[nIdx] = 1;
-            }
-          }
-        }
-      }
-    }
+  let nonTransparentCount = 0;
+  for (let i = 0, j = 0; i < imageData.data.length; i += 4, j++) {
+    mask[j] = imageData.data[i + 3] > 0 ? 1 : 0;
+    if (mask[j] === 1) nonTransparentCount++;
   }
-  
+  console.log('Mask created: ', frame.width, 'x', frame.height, 'Non-transparent pixels:', nonTransparentCount);
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Enhanced pixel-perfect collision with continuous detection and improved sampling
+// Enhanced pixel-perfect collision with maximum accuracy
 function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
   const maskWidth = birdCollisionMask.width;
   const maskHeight = birdCollisionMask.height;
 
-  // Calculate velocity-based bounds expansion
-  const velocityX = birdSprite.x - birdLastX;
-  const velocityY = birdSprite.y - birdLastY;
-  const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-  
-  // Dynamic sampling based on speed
-  const samplingRate = Math.max(1, Math.ceil(speed / 4));
-  
-  // Create bounds with velocity-based expansion
-  const currentBounds = birdSprite.getBounds();
-  const lastBounds = new Phaser.Geom.Rectangle(
-    birdLastX - (birdSprite.width * scaleX * 0.5),
-    birdLastY - (birdSprite.height * scaleY * 0.5),
-    birdSprite.width * scaleX,
-    birdSprite.height * scaleY
+  // Use physics body bounds for precision
+  const currentBounds = new Phaser.Geom.Rectangle(
+    birdSprite.body.x,
+    birdSprite.body.y,
+    birdSprite.body.width,
+    birdSprite.body.height
   );
-  
-  // Expand bounds based on velocity
+  const lastBounds = new Phaser.Geom.Rectangle(
+    birdLastX - (birdSprite.body.width * 0.5),
+    birdLastY - (birdSprite.body.height * 0.5),
+    birdSprite.body.width,
+    birdSprite.body.height
+  );
+  const pipeBounds = new Phaser.Geom.Rectangle(
+    pipeSprite.body.x,
+    pipeSprite.body.y,
+    pipeSprite.body.width,
+    pipeSprite.body.height
+  );
+
+  // Swept bounds with increased buffer
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
-  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(velocityX), Math.abs(velocityY));
-  
-  const pipeBounds = pipeSprite.getBounds();
+  Phaser.Geom.Rectangle.Inflate(sweptBounds, 4, 4); // Larger buffer for safety
+
   const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
-  
   if (intersection.width <= 0 || intersection.height <= 0) return false;
 
-  // Trajectory-based collision check
-  for (let t = 0; t <= 1; t += 1 / samplingRate) {
-    const interpX = birdLastX + velocityX * t;
-    const interpY = birdLastY + velocityY * t;
-    
-    // Calculate sprite bounds at interpolated position
-    const interpBounds = new Phaser.Geom.Rectangle(
-      interpX - (birdSprite.width * scaleX * 0.5),
-      interpY - (birdSprite.height * scaleY * 0.5),
-      birdSprite.width * scaleX,
-      birdSprite.height * scaleY
-    );
-    
-    if (Phaser.Geom.Rectangle.Overlaps(interpBounds, pipeBounds)) {
-      // Convert to texture coordinates with improved precision
-      const x1 = Math.floor((pipeBounds.x - interpX + (birdSprite.width * scaleX * 0.5)) / scaleX);
-      const y1 = Math.floor((pipeBounds.y - interpY + (birdSprite.height * scaleY * 0.5)) / scaleY);
-      const width = Math.ceil(pipeBounds.width / scaleX);
-      const height = Math.ceil(pipeBounds.height / scaleY);
+  // Check current position with sub-pixel precision
+  const birdX = birdSprite.body.x;
+  const birdY = birdSprite.body.y;
+  const x1 = (intersection.x - birdX) / scaleX;
+  const y1 = (intersection.y - birdY) / scaleY;
+  const width = intersection.width / scaleX;
+  const height = intersection.height / scaleY;
 
-      // Optimized boundary checks
-      const startX = Math.max(0, x1);
-      const startY = Math.max(0, y1);
-      const endX = Math.min(maskWidth, x1 + width);
-      const endY = Math.min(maskHeight, y1 + height);
+  const startX = Math.max(0, Math.floor(x1));
+  const startY = Math.max(0, Math.floor(y1));
+  const endX = Math.min(maskWidth, Math.ceil(x1 + width));
+  const endY = Math.min(maskHeight, Math.ceil(y1 + height));
 
-      // Scan with increased precision at high speeds
-      const skipFactor = Math.max(1, Math.floor(4 / samplingRate));
-      for (let y = startY; y < endY; y += skipFactor) {
-        for (let x = startX; x < endX; x += skipFactor) {
-          const index = y * maskWidth + x;
-          if (birdCollisionMask.mask[index] === 1) {
-            return true;
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
+      const index = y * maskWidth + x;
+      if (birdCollisionMask.mask[index] === 1) {
+        return true;
+      }
+    }
+  }
+
+  // High-resolution path sampling for continuous detection
+  const dx = birdSprite.x - birdLastX;
+  const dy = birdSprite.y - birdLastY;
+  if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const steps = Math.max(1, Math.ceil(distance)); // 1 step per pixel of movement
+    const stepX = dx / steps;
+    const stepY = dy / steps;
+
+    for (let i = 0; i <= steps; i++) {
+      const interpX = birdLastX + stepX * i;
+      const interpY = birdLastY + stepY * i;
+      const interpBounds = new Phaser.Geom.Rectangle(
+        interpX - (birdSprite.body.width * 0.5),
+        interpY - (birdSprite.body.height * 0.5),
+        birdSprite.body.width,
+        birdSprite.body.height
+      );
+
+      if (Phaser.Geom.Rectangle.Overlaps(interpBounds, pipeBounds)) {
+        const x1 = (pipeBounds.x - interpX + (birdSprite.body.width * 0.5)) / scaleX;
+        const y1 = (pipeBounds.y - interpY + (birdSprite.body.height * 0.5)) / scaleY;
+        const width = pipeBounds.width / scaleX;
+        const height = pipeBounds.height / scaleY;
+
+        const startX = Math.max(0, Math.floor(x1));
+        const startY = Math.max(0, Math.floor(y1));
+        const endX = Math.min(maskWidth, Math.ceil(x1 + width));
+        const endY = Math.min(maskHeight, Math.ceil(y1 + height));
+
+        for (let y = startY; y < endY; y++) {
+          for (let x = startX; x < endX; x++) {
+            const index = y * maskWidth + x;
+            if (birdCollisionMask.mask[index] === 1) {
+              return true;
+            }
           }
         }
       }
