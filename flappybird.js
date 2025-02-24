@@ -13,6 +13,7 @@ let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
 let birdCollisionMask;
+let birdLastX, birdLastY; // Track previous position for continuous collision
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -49,6 +50,8 @@ function create() {
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
+  birdLastX = bird.x; // Initialize last position
+  birdLastY = bird.y;
 
   pipes = this.physics.add.group();
   scoreZones = this.physics.add.group();
@@ -77,7 +80,7 @@ function create() {
   birdCollisionMask = createCollisionMask(bird);
 
   this.physics.add.overlap(bird, pipes, (birdSprite, pipeSprite) => {
-    if (pixelPerfectCollision(birdSprite, pipeSprite)) {
+    if (optimizedPixelPerfectCollision(birdSprite, pipeSprite)) {
       hitPipe.call(this);
     }
   }, null, this);
@@ -160,6 +163,10 @@ function update() {
   }
 
   checkScore();
+
+  // Update last position after movement
+  birdLastX = bird.x;
+  birdLastY = bird.y;
 }
 
 function startGame() {
@@ -188,26 +195,22 @@ function addPipes() {
   pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
   pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
   pipeTopBody.body.immovable = true;
-  pipeTopBody.body.moves = false; // Ensure pipes don’t move
 
   let bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
   let pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
   pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.immovable = true;
-  pipeBottomBody.body.moves = false;
 
   let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
   pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.immovable = true;
-  pipeTopCap.body.moves = false;
 
   let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
   pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
-  pipeBottomCap.body.moves = false;
 
   let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   this.physics.add.existing(scoreZone);
@@ -266,9 +269,11 @@ function restartGame() {
   this.physics.resume();
   gameOverText.setText('');
   restartText.setText('');
+  birdLastX = bird.x; // Reset last position
+  birdLastY = bird.y;
 }
 
-// Create collision mask with validation
+// Precompute collision mask for the shrimp sprite
 function createCollisionMask(sprite) {
   const texture = sprite.texture.getSourceImage();
   const frame = sprite.frame;
@@ -279,47 +284,94 @@ function createCollisionMask(sprite) {
   ctx.drawImage(texture, frame.x, frame.y, frame.width, frame.height, 0, 0, frame.width, frame.height);
   const imageData = ctx.getImageData(0, 0, frame.width, frame.height);
   const mask = new Uint8Array(frame.width * frame.height);
-  let nonTransparentCount = 0;
   for (let i = 0, j = 0; i < imageData.data.length; i += 4, j++) {
-    mask[j] = imageData.data[i + 3] > 0 ? 1 : 0;
-    if (mask[j] === 1) nonTransparentCount++;
+    mask[j] = imageData.data[i + 3] > 0 ? 1 : 0; // 1 for non-transparent, 0 for transparent
   }
-  console.log('Mask created: ', frame.width, 'x', frame.height, 'Non-transparent pixels:', nonTransparentCount);
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Refined pixel-perfect collision with buffer
-function pixelPerfectCollision(birdSprite, pipeSprite) {
-  const bounds1 = birdSprite.getBounds();
-  const bounds2 = pipeSprite.getBounds();
-
-  // Add a small buffer to the bird’s bounds
-  Phaser.Geom.Rectangle.Inflate(bounds1, 2, 2);
-
-  const intersection = Phaser.Geom.Rectangle.Intersection(bounds1, bounds2);
-  if (intersection.width <= 0 || intersection.height <= 0) return false;
-
+// Enhanced pixel-perfect collision with continuous detection
+function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
+  const maskWidth = birdCollisionMask.width;
+  const maskHeight = birdCollisionMask.height;
 
-  const birdX = birdSprite.x - (birdSprite.width * scaleX * 0.5);
-  const birdY = birdSprite.y - (birdSprite.height * scaleY * 0.5);
+  // Define current and previous bounds
+  const currentBounds = birdSprite.getBounds();
+  const lastBounds = new Phaser.Geom.Rectangle(
+    birdLastX - (birdSprite.width * scaleX * 0.5),
+    birdLastY - (birdSprite.height * scaleY * 0.5),
+    birdSprite.width * scaleX,
+    birdSprite.height * scaleY
+  );
+  const pipeBounds = pipeSprite.getBounds();
 
-  const x1 = Math.floor((intersection.x - birdX) / scaleX);
-  const y1 = Math.floor((intersection.y - birdY) / scaleY);
-  const width = Math.ceil(intersection.width / scaleX);
-  const height = Math.ceil(intersection.height / scaleY);
+  // Create a swept bounds area covering movement from last to current position
+  const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
+  Phaser.Geom.Rectangle.Inflate(sweptBounds, 2, 2); // Small buffer
 
-  const startX = Math.max(0, x1);
-  const startY = Math.max(0, y1);
-  const endX = Math.min(birdCollisionMask.width, x1 + width);
-  const endY = Math.min(birdCollisionMask.height, y1 + height);
+  const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
+  if (intersection.width <= 0 || intersection.height <= 0) return false;
 
-  for (let y = startY; y < endY; y++) {
-    for (let x = startX; x < endX; x++) {
-      const index = y * birdCollisionMask.width + x;
-      if (birdCollisionMask.mask[index] === 1) {
-        return true; // Collision with solid pipe
+  // Fallback bounding box check (coarse safety net)
+  if (Phaser.Geom.Rectangle.Overlaps(currentBounds, pipeBounds)) {
+    // Convert intersection to bird's texture coordinates
+    const birdX = birdSprite.x - (birdSprite.width * scaleX * 0.5);
+    const birdY = birdSprite.y - (birdSprite.height * scaleY * 0.5);
+    const x1 = Math.floor((intersection.x - birdX) / scaleX);
+    const y1 = Math.floor((intersection.y - birdY) / scaleY);
+    const width = Math.ceil(intersection.width / scaleX);
+    const height = Math.ceil(intersection.height / scaleY);
+
+    const startX = Math.max(0, x1);
+    const startY = Math.max(0, y1);
+    const endX = Math.min(maskWidth, x1 + width);
+    const endY = Math.min(maskHeight, y1 + height);
+
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        const index = y * maskWidth + x;
+        if (birdCollisionMask.mask[index] === 1) {
+          return true; // Collision detected
+        }
+      }
+    }
+  }
+
+  // If no pixel collision, check if the bird fully passed through (fine safety net)
+  const dx = birdSprite.x - birdLastX;
+  const dy = birdSprite.y - birdLastY;
+  if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
+    const steps = Math.max(Math.abs(dx), Math.abs(dy)) / 2; // Sample points along path
+    for (let t = 0; t <= 1; t += 1 / steps) {
+      const interpX = birdLastX + dx * t;
+      const interpY = birdLastY + dy * t;
+      const interpBounds = new Phaser.Geom.Rectangle(
+        interpX - (birdSprite.width * scaleX * 0.5),
+        interpY - (birdSprite.height * scaleY * 0.5),
+        birdSprite.width * scaleX,
+        birdSprite.height * scaleY
+      );
+      if (Phaser.Geom.Rectangle.Overlaps(interpBounds, pipeBounds)) {
+        const x1 = Math.floor((pipeBounds.x - interpX + (birdSprite.width * scaleX * 0.5)) / scaleX);
+        const y1 = Math.floor((pipeBounds.y - interpY + (birdSprite.height * scaleY * 0.5)) / scaleY);
+        const width = Math.ceil(pipeBounds.width / scaleX);
+        const height = Math.ceil(pipeBounds.height / scaleY);
+
+        const startX = Math.max(0, x1);
+        const startY = Math.max(0, y1);
+        const endX = Math.min(maskWidth, x1 + width);
+        const endY = Math.min(maskHeight, y1 + height);
+
+        for (let y = startY; y < endY; y++) {
+          for (let x = startX; x < endX; x++) {
+            const index = y * maskWidth + x;
+            if (birdCollisionMask.mask[index] === 1) {
+              return true; // Collision along path
+            }
+          }
+        }
       }
     }
   }
