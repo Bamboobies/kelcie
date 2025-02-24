@@ -320,11 +320,12 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     pipeSprite.body.height
   );
 
-  // Swept bounds with velocity
+  // Swept bounds with velocity, biased downward
   const vx = birdSprite.body.velocity.x * (1 / 60);
   const vy = birdSprite.body.velocity.y * (1 / 60);
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
-  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx) * 0.5, Math.abs(vy) * 0.5); // Minimal velocity buffer
+  const vyAdjust = vy > 0 ? Math.abs(vy) : 0; // Extra downward buffer when falling
+  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx) * 0.5, vyAdjust);
 
   const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
@@ -335,7 +336,7 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const birdCenterX = birdSprite.body.x + birdSprite.body.width * 0.5;
   const birdCenterY = birdSprite.body.y + birdSprite.body.height * 0.5;
 
-  // Optimized check for current position
+  // Check current position
   const x1 = Math.floor((intersection.x - birdSprite.body.x) / scaleX);
   const y1 = Math.floor((intersection.y - birdSprite.body.y) / scaleY);
   const width = Math.ceil(intersection.width / scaleX);
@@ -364,12 +365,12 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     }
   }
 
-  // Optimized path sampling
+  // Path sampling optimized for bottom edge when falling
   const dx = birdSprite.x - birdLastX + vx;
   const dy = birdSprite.y - birdLastY + vy;
   if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
     const distance = Math.sqrt(dx * dx + dy * dy);
-    const steps = Math.max(1, Math.ceil(distance / 2)); // 1 step per 2 pixels
+    const steps = Math.max(1, Math.ceil(distance)); // 1 step per pixel
     const stepX = dx / steps;
     const stepY = dy / steps;
 
@@ -380,14 +381,14 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
         interpX - (birdSprite.body.width * 0.5),
         interpY - (birdSprite.body.height * 0.5),
         birdSprite.body.width,
-        birdSprite.body.height
+        birdSprite.body.height + (vy > 0 ? vyAdjust : 0) // Extend downward when falling
       );
 
       if (Phaser.Geom.Rectangle.Overlaps(interpBounds, pipeBounds)) {
         const x1 = Math.floor((pipeBounds.x - interpX + (birdSprite.body.width * 0.5)) / scaleX);
         const y1 = Math.floor((pipeBounds.y - interpY + (birdSprite.body.height * 0.5)) / scaleY);
         const width = Math.ceil(pipeBounds.width / scaleX);
-        const height = Math.ceil(pipeBounds.height / scaleY);
+        const height = Math.ceil((pipeBounds.height + (vy > 0 ? vyAdjust : 0)) / scaleY);
 
         const startX = Math.max(0, x1);
         const startY = Math.max(0, y1);
