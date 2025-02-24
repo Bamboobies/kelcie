@@ -73,7 +73,12 @@ function create() {
     else flap();
   });
 
-  this.physics.add.collider(bird, pipes, hitPipe, null, this);
+  // Replace collider with pixel-perfect overlap detection
+  this.physics.add.overlap(bird, pipes, (birdSprite, pipeSprite) => {
+    if (pixelPerfectCollision(birdSprite, pipeSprite)) {
+      hitPipe.call(this);
+    }
+  }, null, this);
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
   highScoreText.setText('HIGH SCORE: ' + highScore);
@@ -92,57 +97,48 @@ function create() {
     return (r << 16) + (g << 8) + b;
   }
 
-  // Pre-generate pipe texture (pixel-art Mario pipe with wider light center, narrower dark edges, subtler gradient)
+  // Pre-generate pipe texture
   const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0x00A300, 1); // Base green (unused, overwritten by gradient)
+  pipeGraphics.fillStyle(0x00A300, 1);
   pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  // Pixel-art gradient with 16 steps, wider light center, narrower dark edges, subtler colors
-  const startColor = 0x5C7A43; // Lighter medium dark green (less dark edges)
-  const endColor = 0xA0D22A;   // Medium yellow-green (center, unchanged)
+  const startColor = 0x5C7A43;
+  const endColor = 0xA0D22A;
   const pipeSteps = 16;
   const stepWidth = PIPE_WIDTH / pipeSteps;
   for (let i = 0; i < pipeSteps; i++) {
-    // Use a flatter bell curve for wider light center, narrower dark edges
     const center = (pipeSteps - 1) / 2;
-    const distance = Math.abs(i - center) / center; // 0 at center, 1 at edges
-    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5); // Flatter curve (0 at center, 1 at edges, slower transition)
-    const color = interpolateColor(endColor, startColor, factor); // Light in wider center, less dark on narrower sides
+    const distance = Math.abs(i - center) / center;
+    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
+    const color = interpolateColor(endColor, startColor, factor);
     pipeGraphics.fillStyle(color, 1);
-    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512); // No overlap for pixel-art look
+    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512);
   }
-  // Thin dark outline on sides only
-  pipeGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
-  pipeGraphics.lineBetween(1, 0, 1, 512); // Left side
-  pipeGraphics.lineBetween(PIPE_WIDTH - 1, 0, PIPE_WIDTH - 1, 512); // Right side
+  pipeGraphics.lineStyle(1, 0x003300, 1);
+  pipeGraphics.lineBetween(1, 0, 1, 512);
+  pipeGraphics.lineBetween(PIPE_WIDTH - 1, 0, PIPE_WIDTH - 1, 512);
   pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
   pipeGraphics.destroy();
-  console.log('Pipe texture exists:', this.textures.exists('pipeTexture'));
 
-  // Pre-generate endcap texture (pixel-art Mario rim with wider light center, narrower dark edges, subtler gradient, fixed)
+  // Pre-generate endcap texture
   const capGraphics = this.add.graphics();
-  capGraphics.fillStyle(0x006600, 1); // Base darker green (unused, overwritten by gradient)
+  capGraphics.fillStyle(0x006600, 1);
   capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  // Pixel-art gradient with 20 steps, wider light center, narrower dark edges, subtler colors (vertical, fixed)
   const capSteps = 20;
   const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
   for (let i = 0; i < capSteps; i++) {
-    // Use a flatter bell curve for wider light center, narrower dark edges
     const center = (capSteps - 1) / 2;
-    const distance = Math.abs(i - center) / center; // 0 at center, 1 at edges
-    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5); // Flatter curve (0 at center, 1 at edges, slower transition)
-    const color = interpolateColor(endColor, startColor, factor); // Light in wider center, less dark on narrower sides
+    const distance = Math.abs(i - center) / center;
+    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
+    const color = interpolateColor(endColor, startColor, factor);
     capGraphics.fillStyle(color, 1);
-    // Ensure precise pixel alignment to avoid vertical lines
-    const x = Math.floor(i * stepWidthCap); // Floor to avoid floating-point precision issues
-    const width = Math.ceil((i + 1) * stepWidthCap) - x; // Calculate exact width, avoiding overlap
-    capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT); // Use precise pixel positions
+    const x = Math.floor(i * stepWidthCap);
+    const width = Math.ceil((i + 1) * stepWidthCap) - x;
+    capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT);
   }
-  // Thin dark outline
-  capGraphics.lineStyle(1, 0x003300, 1); // Thin dark green outline
+  capGraphics.lineStyle(1, 0x003300, 1);
   capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
   capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   capGraphics.destroy();
-  console.log('Cap texture exists:', this.textures.exists('capTexture'));
 }
 
 function update() {
@@ -189,26 +185,22 @@ function addPipes() {
   let maxGapY = gameHeight - PIPE_GAP - 120;
   let gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  // Top pipe body (sprite instead of rectangle)
   let pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
   pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
   pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
   pipeTopBody.body.immovable = true;
 
-  // Bottom pipe body (sprite instead of rectangle)
   let bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
   let pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
   pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
   pipeBottomBody.body.immovable = true;
 
-  // Top pipe endcap (sprite instead of rectangle)
   let pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
   pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeTopCap.body.immovable = true;
 
-  // Bottom pipe endcap (sprite instead of rectangle)
   let pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
   pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
@@ -271,4 +263,45 @@ function restartGame() {
   this.physics.resume();
   gameOverText.setText('');
   restartText.setText('');
+}
+
+// Pixel-perfect collision detection function
+function pixelPerfectCollision(sprite1, sprite2) {
+  const bounds1 = sprite1.getBounds();
+  const bounds2 = sprite2.getBounds();
+
+  const intersection = Phaser.Geom.Rectangle.Intersection(bounds1, bounds2);
+  if (intersection.width <= 0 || intersection.height <= 0) return false;
+
+  const frame1 = sprite1.frame;
+  const frame2 = sprite2.frame;
+
+  const texture1 = sprite1.texture.getSourceImage();
+  const texture2 = sprite2.texture.getSourceImage();
+
+  const canvas = document.createElement('canvas');
+  canvas.width = intersection.width;
+  canvas.height = intersection.height;
+  const ctx = canvas.getContext('2d');
+
+  const x1 = intersection.x - bounds1.x;
+  const y1 = intersection.y - bounds1.y;
+  ctx.drawImage(texture1, frame1.x + x1, frame1.y + y1, intersection.width, intersection.height, 0, 0, intersection.width, intersection.height);
+
+  const data1 = ctx.getImageData(0, 0, intersection.width, intersection.height).data;
+
+  ctx.clearRect(0, 0, intersection.width, intersection.height);
+  const x2 = intersection.x - bounds2.x;
+  const y2 = intersection.y - bounds2.y;
+  ctx.drawImage(texture2, frame2.x + x2, frame2.y + y2, intersection.width, intersection.height, 0, 0, intersection.width, intersection.height);
+
+  const data2 = ctx.getImageData(0, 0, intersection.width, intersection.height).data;
+
+  for (let i = 3; i < data1.length; i += 4) {
+    if (data1[i] > 0 && data2[i] > 0) {
+      return true;
+    }
+  }
+
+  return false;
 }
