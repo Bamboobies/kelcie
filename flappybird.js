@@ -65,14 +65,12 @@ function create() {
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915);
   bird.body.allowGravity = false;
   bird.setDepth(10);
-  // No tint applied by default (Normal)
   birdLastX = bird.x;
   birdLastY = bird.y;
 
   ghostBird = this.add.sprite(bird.x, bird.y, 'ghostBird').setOrigin(0.5).setScale(0.0915);
   ghostBird.setAlpha(0.3);
   ghostBird.setDepth(11);
-  // No tint applied to ghost by default
   ghostBird.visible = false;
 
   pipes = this.physics.add.group();
@@ -87,8 +85,17 @@ function create() {
   }).setOrigin(0.5);
 
   startText = this.add.text(gameWidth / 2, gameHeight * 0.5, 'TAP TO START', textStyle).setOrigin(0.5).setDepth(10);
+  startText.setInteractive();
+  startText.on('pointerdown', () => {
+    if (!gameStarted && !menuVisible) startGame.call(scene);
+  });
+
   gameOverText = this.add.text(gameWidth / 2, gameHeight * 0.5, '', textStyle).setOrigin(0.5).setDepth(10);
   restartText = this.add.text(gameWidth / 2, gameHeight * 0.6, '', textStyle).setOrigin(0.5).setDepth(10);
+  restartText.setInteractive();
+  restartText.on('pointerdown', () => {
+    if (gameOver && bird.y > game.scale.height + bird.displayHeight && !menuVisible) restartGame.call(scene);
+  });
 
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: 0', textStyle).setDepth(10);
@@ -119,18 +126,12 @@ function create() {
     option.setInteractive();
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
-      bird.setTint(variant.tint || 0xffffff); // Clear tint for Normal
+      bird.setTint(variant.tint || 0xffffff);
       ghostBird.setTint(variant.tint || 0xffffff);
       toggleShrimpMenu.call(this); // Hide menu after selection
     });
     option.visible = false;
     shrimpMenuOptions.push(option);
-  });
-
-  this.input.on('pointerdown', () => {
-    if (!gameStarted) startGame.call(scene);
-    else if (gameOver && bird.y > game.scale.height + bird.displayHeight) restartGame.call(scene);
-    else if (!gameOver) flap();
   });
 
   birdCollisionMask = createCollisionMask(bird);
@@ -243,7 +244,6 @@ function update() {
     shrimpSelectText.visible = false;
   }
 
-  // Update menu visibility
   shrimpMenu.visible = menuVisible;
   shrimpMenuOptions.forEach(option => option.visible = menuVisible);
 }
@@ -255,7 +255,7 @@ function startGame() {
   startText.setText('');
   shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
-  toggleShrimpMenu.call(this, false); // Ensure menu is hidden
+  toggleShrimpMenu.call(this, false);
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
 }
 
@@ -358,12 +358,11 @@ function restartGame() {
   scoreZones.clear(true, true);
   gameOverText.setText('');
   restartText.setText('');
-  toggleShrimpMenu.call(this, false); // Ensure menu is hidden
+  toggleShrimpMenu.call(this, false);
   birdLastX = bird.x;
   birdLastY = bird.y;
 }
 
-// Toggle shrimp selection menu
 function toggleShrimpMenu(forceHide = null) {
   if (forceHide !== null) {
     menuVisible = forceHide;
