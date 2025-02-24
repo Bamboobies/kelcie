@@ -47,7 +47,7 @@ function create() {
   const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5);
   overlay.setDepth(-1);
 
-  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915); // Adjust scale here as needed
+  bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, 'bird').setOrigin(0.5).setScale(0.0915); // Adjust scale as needed
   bird.body.setCollideWorldBounds(true);
   bird.body.allowGravity = false;
   birdLastX = bird.x;
@@ -73,8 +73,8 @@ function create() {
 
   this.input.on('pointerdown', () => {
     if (!gameStarted) startGame.call(scene);
-    else if (gameOver) restartGame.call(scene);
-    else flap();
+    else if (gameOver && bird.body.blocked.down) restartGame.call(scene); // Only restart after hitting bottom
+    else if (!gameOver) flap();
   });
 
   birdCollisionMask = createCollisionMask(bird);
@@ -144,8 +144,9 @@ function create() {
 }
 
 function update() {
-  if (gameOver || !gameStarted) return;
+  if (!gameStarted) return;
 
+  // Background scrolling continues even after death
   background1.x += BACKGROUND_SPEED * (1 / 60);
   background2.x += BACKGROUND_SPEED * (1 / 60);
 
@@ -156,16 +157,22 @@ function update() {
     background2.x = background1.x + background1.displayWidth;
   }
 
-  bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
-
-  if (bird.body.blocked.down) {
-    hitPipe.call(this);
+  // Rotate bird while alive, continue falling when dead
+  if (!gameOver) {
+    bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
   }
 
-  checkScore();
+  // Check if bird hits bottom after death
+  if (gameOver && bird.body.blocked.down) {
+    showRestartScreen();
+  }
 
-  birdLastX = bird.x;
-  birdLastY = bird.y;
+  // Stop scoring and pipe movement when dead
+  if (!gameOver) {
+    checkScore();
+    birdLastX = bird.x;
+    birdLastY = bird.y;
+  }
 }
 
 function startGame() {
@@ -245,16 +252,15 @@ function hitPipe() {
   if (gameOver) return;
 
   gameOver = true;
-  this.physics.pause();
+  // Don't pause physics—let bird fall
+  this.physics.world.gravity.y = GRAVITY; // Ensure gravity stays active
+  pipes.setVelocityX(0); // Stop pipe movement
+  scoreZones.setVelocityX(0); // Stop score zones
+}
 
+function showRestartScreen() {
   gameOverText.setText('GAME OVER');
   restartText.setText('TAP TO RESTART');
-
-  if (score > highScore) {
-    highScore = score;
-    localStorage.setItem('flappyHighScore', highScore);
-    highScoreText.setText('HIGH SCORE: ' + highScore);
-  }
 }
 
 function restartGame() {
@@ -263,9 +269,10 @@ function restartGame() {
   scoreText.setText('SCORE: ' + score);
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
+  bird.angle = 0; // Reset rotation
   pipes.clear(true, true);
   scoreZones.clear(true, true);
-  this.physics.resume();
+  this.physics.world.gravity.y = GRAVITY; // Reset gravity just in case
   gameOverText.setText('');
   restartText.setText('');
   birdLastX = bird.x;
@@ -321,7 +328,7 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   );
 
   // Swept bounds with enhanced velocity buffer
-  const vx = birdSprite.body.velocity.x * (1 / 60) * 2; // Doubled for full frame coverage
+  const vx = birdSprite.body.velocity.x * (1 / 60) * 2;
   const vy = birdSprite.body.velocity.y * (1 / 60) * 2;
   const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
   Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx), Math.abs(vy));
@@ -416,4 +423,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-                                }
+}
