@@ -115,7 +115,7 @@ function create() {
   shrimpMenu = this.add.rectangle(gameWidth / 2, gameHeight / 2, 200, 200, 0x333333).setOrigin(0.5).setDepth(12);
   shrimpMenu.visible = false;
 
-  shrimpMenuOptions = shrimpVariants.map((variant, index) => {
+  shrimpVariants.forEach((variant, index) => {
     const yPos = gameHeight / 2 - 60 + index * 50;
     const sprite = this.add.sprite(gameWidth / 2, yPos - 10, variant.key).setOrigin(0.5).setScale(0.0915).setDepth(13);
     if (variant.tint) sprite.setTint(variant.tint);
@@ -133,14 +133,16 @@ function create() {
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
       bird.setTexture(variant.key);
-      if (variant.tint) bird.setTint(variant.tint); else bird.clearTint();
+      if (variant.tint) bird.setTint(variant.tint);
+      else bird.clearTint();
       ghostBird.setTexture(variant.key);
-      if (variant.tint) ghostBird.setTint(variant.tint); else ghostBird.clearTint();
+      if (variant.tint) ghostBird.setTint(variant.tint);
+      else ghostBird.clearTint();
       toggleShrimpMenu.call(this);
     });
     option.visible = false;
 
-    return { sprite, text, hitbox: option };
+    shrimpMenuOptions.push({ sprite, text, hitbox: option });
   });
 
   this.input.on('pointerdown', () => {
@@ -149,8 +151,20 @@ function create() {
 
   birdCollisionMask = createCollisionMask(bird);
 
+  // Pipe collision overlap
   this.physics.add.overlap(bird, pipes, (birdSprite, pipeSprite) => {
     if (optimizedPixelPerfectCollision(birdSprite, pipeSprite)) hitPipe.call(this);
+  }, null, this);
+
+  // Score zone overlap
+  this.physics.add.overlap(bird, scoreZones, (birdSprite, scoreZone) => {
+    if (!scoreZone.passed) {
+      scoreZone.passed = true;
+      score++;
+      scoreText.setText('SCORE: ' + score);
+      scoreSound.play();
+      scoreZone.destroy(); // Optional: Removes scoreZone after scoring
+    }
   }, null, this);
 
   highScore = localStorage.getItem('flappyHighScore') || 0;
@@ -226,10 +240,9 @@ function update() {
     if (background1.x + background1.displayWidth <= 0) background1.x = background2.x + background2.displayWidth;
     if (background2.x + background2.displayWidth <= 0) background2.x = background1.x + background1.displayWidth;
 
-    bird.angle = Phaser.Math.Clamp(bird.body.velocity.y * 0.5, -20, 90);
+    bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
     birdLastX = bird.x;
     birdLastY = bird.y;
-    checkScore();
 
     if (bird.y + bird.displayHeight / 2 >= game.scale.height) hitPipe.call(this);
   }
@@ -289,7 +302,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   this.physics.add.existing(scoreZone);
   scoreZone.body.setVelocityX(PIPE_SPEED);
   scoreZone.body.allowGravity = false;
@@ -306,17 +319,6 @@ function addPipes() {
   });
 
   scoreZones.add(scoreZone);
-}
-
-function checkScore() {
-  scoreZones.children.iterate(scoreZone => {
-    if (!scoreZone.passed && scoreZone.x + scoreZone.width / 2 < bird.x) {
-      scoreZone.passed = true;
-      score++;
-      scoreText.setText('SCORE: ' + score);
-      scoreSound.play();
-    }
-  });
 }
 
 function hitPipe() {
@@ -360,8 +362,6 @@ function restartGame() {
   scoreZones.clear(true, true);
   gameOverText.setText('');
   restartText.setText('');
-  shrimpSelectButton.visible = true;
-  shrimpSelectText.visible = true;
   toggleShrimpMenu.call(this, false);
   birdLastX = bird.x;
   birdLastY = bird.y;
