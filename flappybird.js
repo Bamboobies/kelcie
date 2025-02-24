@@ -23,7 +23,7 @@ let shrimpVariants = [
   { name: 'Silver', key: 'birdGray', tint: 0xCCCCCC }, // Bright silver
   { name: 'Gold', key: 'birdGray', tint: 0xFFD700 }    // Vivid gold
 ];
-let selectedShrimpIndex = 0; // Default to Normal
+let selectedShrimpIndex = 0;
 let menuVisible = false;
 
 window.onload = () => {
@@ -42,7 +42,7 @@ function preload() {
   this.load.audio('death', 'death.wav');
   this.load.audio('flap', 'flap.wav');
 
-  // Simulate grayscale sprite (replace with actual 'birdGray.png' if provided)
+  // Generate grayscale sprite with full detail
   const texture = this.textures.get('bird').getSourceImage();
   const canvas = document.createElement('canvas');
   canvas.width = texture.width;
@@ -55,7 +55,10 @@ function preload() {
     const g = imageData.data[i + 1];
     const b = imageData.data[i + 2];
     const gray = 0.3 * r + 0.59 * g + 0.11 * b; // Luminosity method
-    imageData.data[i] = imageData.data[i + 1] = imageData.data[i + 2] = gray;
+    imageData.data[i] = gray;
+    imageData.data[i + 1] = gray;
+    imageData.data[i + 2] = gray;
+    // Preserve alpha channel
   }
   ctx.putImageData(imageData, 0, 0);
   this.textures.addImage('birdGray', canvas);
@@ -131,7 +134,7 @@ function create() {
   shrimpSelectButton.visible = !gameStarted;
   shrimpSelectText.visible = !gameStarted;
 
-  // Shrimp selection menu (hidden by default)
+  // Pre-create shrimp menu efficiently
   shrimpMenu = this.add.rectangle(gameWidth / 2, gameHeight / 2, 200, 200, 0x333333).setOrigin(0.5).setDepth(12);
   shrimpMenu.visible = false;
 
@@ -264,7 +267,7 @@ function update() {
   }
 
   if (gameOver && ghostBird.visible) {
-    ghostBird.y -= 4;
+    ghostBird.y -= 4; // Reduced frequency could help lag, but kept simple
     if (ghostBird.y < -ghostBird.displayHeight) {
       ghostBird.visible = false;
     }
@@ -552,4 +555,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-    }
+}
