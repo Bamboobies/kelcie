@@ -12,7 +12,7 @@ let game, bird, pipes, scoreZones, scoreText, highScoreText;
 let titleText, startText, gameOverText, restartText;
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
-let birdCollisionMask; // Precomputed mask for the shrimp
+let birdCollisionMask;
 
 window.onload = () => {
   game = new Phaser.Game({
@@ -77,7 +77,7 @@ function create() {
   // Precompute the bird's collision mask
   birdCollisionMask = createCollisionMask(bird);
 
-  // Optimized overlap with pixel-perfect collision
+  // Updated overlap with tighter collision check
   this.physics.add.overlap(bird, pipes, (birdSprite, pipeSprite) => {
     if (optimizedPixelPerfectCollision(birdSprite, pipeSprite)) {
       hitPipe.call(this);
@@ -283,26 +283,32 @@ function createCollisionMask(sprite) {
   return { mask, width: frame.width, height: frame.height };
 }
 
-// Optimized pixel-perfect collision
+// Optimized pixel-perfect collision with velocity adjustment
 function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const bounds1 = birdSprite.getBounds();
   const bounds2 = pipeSprite.getBounds();
 
+  // Expand the bird's bounds slightly to account for velocity and frame timing
+  const velocityX = birdSprite.body.velocity.x * (1 / 60); // Delta time approximation
+  const velocityY = birdSprite.body.velocity.y * (1 / 60);
+  Phaser.Geom.Rectangle.Inflate(bounds1, Math.abs(velocityX) + 2, Math.abs(velocityY) + 2);
+
   const intersection = Phaser.Geom.Rectangle.Intersection(bounds1, bounds2);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
 
-  // Since pipes are fully solid, we only need to check the bird's mask against the pipe's bounds
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
 
   const maskWidth = birdCollisionMask.width;
   const maskHeight = birdCollisionMask.height;
 
-  // Convert intersection to bird's texture coordinates
-  const x1 = Math.floor((intersection.x - bounds1.x) / scaleX);
-  const y1 = Math.floor((intersection.y - bounds1.y) / scaleY);
-  const width = Math.floor(intersection.width / scaleX);
-  const height = Math.floor(intersection.height / scaleY);
+  // Convert intersection to bird's texture coordinates, adjusting for origin
+  const birdX = birdSprite.x - (birdSprite.width * scaleX * 0.5); // Account for origin 0.5
+  const birdY = birdSprite.y - (birdSprite.height * scaleY * 0.5);
+  const x1 = Math.floor((intersection.x - birdX) / scaleX);
+  const y1 = Math.floor((intersection.y - birdY) / scaleY);
+  const width = Math.ceil(intersection.width / scaleX);
+  const height = Math.ceil(intersection.height / scaleY);
 
   // Ensure bounds stay within the mask
   const startX = Math.max(0, x1);
@@ -315,10 +321,12 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
     for (let x = startX; x < endX; x++) {
       const index = y * maskWidth + x;
       if (birdCollisionMask.mask[index] === 1) {
+        // Debug: Log collision point
+        // console.log('Collision at mask coords:', x, y);
         return true; // Collision with pipe (assumed solid)
       }
     }
   }
 
   return false;
-  }
+}
