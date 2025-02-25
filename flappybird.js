@@ -202,7 +202,7 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      if (!zone.passed && zone.x + zone.width < bird.x - bird.displayWidth / 2) { // Score when zone's right edge passes bird's right edge
+      if (!zone.passed && zone.x + zone.width < bird.x) { // Score when zone's right edge passes bird's left edge
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
@@ -404,6 +404,19 @@ function createCollisionMask(sprite) {
   return { mask, width: frame.width, height: frame.height };
 }
 
+function interpolateColor(color1, color2, factor) {
+  const r1 = (color1 >> 16) & 0xFF;
+  const g1 = (color1 >> 8) & 0xFF;
+  const b1 = color1 & 0xFF;
+  const r2 = (color2 >> 16) & 0xFF;
+  const g2 = (color2 >> 8) & 0xFF;
+  const b2 = color2 & 0xFF;
+  const r = Math.round(r1 + (r2 - r1) * factor);
+  const g = Math.round(g1 + (g2 - g1) * factor);
+  const b = Math.round(b1 + (b2 - b1) * factor);
+  return (r << 16) + (g << 8) + b;
+}
+
 function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX;
   const scaleY = birdSprite.scaleY;
@@ -516,4 +529,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+                         }
