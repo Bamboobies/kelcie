@@ -114,7 +114,10 @@ function create() {
       fill: '#fff'
     }).setOrigin(0.5).setDepth(11);
     shrimpSelectButton.setInteractive();
-    shrimpSelectButton.on('pointerdown', toggleShrimpMenu, this);
+    shrimpSelectButton.on('pointerdown', () => {
+      console.log('Shrimp button clicked'); // Debug log
+      toggleShrimpMenu.call(this);
+    });
     shrimpSelectButton.visible = !gameStarted;
     shrimpSelectText.visible = !gameStarted;
 
@@ -211,7 +214,7 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      if (!zone.passed && bird.x > zone.x) { // Score when bird passes the center of the scoreZone
+      if (!zone.passed && bird.x > zone.x && bird.x < zone.x + zone.width) { // Score when bird is within scoreZone
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
@@ -279,7 +282,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 20, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -348,6 +351,7 @@ function toggleShrimpMenu(forceHide = null) {
   } else if (forceHide === true || (forceHide === null && !menuVisible)) {
     createShrimpMenu.call(this);
     menuVisible = true;
+    console.log('Shrimp menu opened'); // Debug log
   }
 }
 
@@ -520,4 +524,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+                           }
