@@ -18,9 +18,9 @@ let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 let shrimpVariants = [
   { name: 'Normal', key: 'bird', tint: null },
-  { name: 'Bronze', key: 'birdGray', tint: 0xFF8C38 },
-  { name: 'Silver', key: 'birdGray', tint: 0xF0F0F0 },
-  { name: 'Gold', key: 'birdGray', tint: 0xFFEE58 }
+  { name: 'Bronze', key: 'bird', tint: 0xFF8C38 },
+  { name: 'Silver', key: 'bird', tint: 0xF0F0F0 },
+  { name: 'Gold', key: 'bird', tint: 0xFFEE58 }
 ];
 let selectedShrimpIndex = 0;
 let menuVisible = false;
@@ -109,8 +109,8 @@ function create() {
     console.log('Shrimp button clicked');
     toggleShrimpMenu.call(this);
   });
-  shrimpSelectButton.visible = !gameStarted;
-  shrimpSelectText.visible = !gameStarted;
+  shrimpSelectButton.visible = true;
+  shrimpSelectText.visible = true;
 
   this.input.on('pointerdown', () => {
     if (gameStarted && !gameOver && !menuVisible) flap();
@@ -202,7 +202,7 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      if (!zone.passed && zone.x < bird.x - bird.width / 2) { // Score when zone passes bird's center
+      if (!zone.passed && zone.x + zone.width < bird.x) { // Score when zone's right edge passes bird's left edge
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
@@ -270,7 +270,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 20, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -318,6 +318,8 @@ function restartGame() {
   gameOverText.setText('');
   restartText.setText('');
   toggleShrimpMenu.call(this, false);
+  shrimpSelectButton.visible = true;
+  shrimpSelectText.visible = true;
   birdLastX = bird.x;
   birdLastY = bird.y;
 }
@@ -527,4 +529,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+      }
