@@ -115,7 +115,7 @@ function create() {
     }).setOrigin(0.5).setDepth(11);
     shrimpSelectButton.setInteractive();
     shrimpSelectButton.on('pointerdown', () => {
-      console.log('Shrimp button clicked'); // Debug log
+      console.log('Shrimp button clicked');
       toggleShrimpMenu.call(this);
     });
     shrimpSelectButton.visible = !gameStarted;
@@ -214,7 +214,8 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      if (!zone.passed && bird.x > zone.x && bird.x < zone.x + zone.width) { // Score when bird is within scoreZone
+      const zoneCenter = zone.x;
+      if (!zone.passed && bird.x > zoneCenter - 10 && bird.x < zoneCenter + 10) { // Score near center of zone
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
@@ -282,7 +283,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 20, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2 + 20, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -351,7 +352,7 @@ function toggleShrimpMenu(forceHide = null) {
   } else if (forceHide === true || (forceHide === null && !menuVisible)) {
     createShrimpMenu.call(this);
     menuVisible = true;
-    console.log('Shrimp menu opened'); // Debug log
+    console.log('Shrimp menu opened');
   }
 }
 
@@ -359,23 +360,27 @@ function createShrimpMenu() {
   const gameWidth = game.scale.width;
   const gameHeight = game.scale.height;
 
-  shrimpMenuContainer = this.add.container(gameWidth / 2, gameHeight / 2);
-  const menuBg = this.add.rectangle(0, 0, 200, 200, 0x333333).setOrigin(0.5).setDepth(12);
+  shrimpMenuContainer = this.add.container(gameWidth / 2, gameHeight / 2).setDepth(20); // High depth to be in front
+  const menuBg = this.add.rectangle(0, 0, 400, 150, 0x333333).setOrigin(0.5); // Larger background
   shrimpMenuContainer.add(menuBg);
 
   shrimpMenuOptions = [];
   shrimpVariants.forEach((variant, index) => {
-    const yPos = -60 + index * 50;
-    const sprite = this.add.sprite(0, yPos - 10, variant.key).setOrigin(0.5).setScale(0.0915).setDepth(13);
+    const col = index % 3; // 0, 1, 2 for 3 columns
+    const row = Math.floor(index / 3); // 0 or 1 for rows
+    const xPos = -120 + col * 120; // Spacing: -120, 0, 120
+    const yPos = row * 70 - 35; // Rows: -35, 35
+
+    const sprite = this.add.sprite(xPos, yPos - 10, variant.key).setOrigin(0.5).setScale(0.0915);
     if (variant.tint) sprite.setTint(variant.tint);
 
-    const text = this.add.text(0, yPos + 10, variant.name, {
+    const text = this.add.text(xPos, yPos + 20, variant.name, {
       fontFamily: '"Press Start 2P", sans-serif',
       fontSize: '12px',
       fill: '#fff'
-    }).setOrigin(0.5).setDepth(13);
+    }).setOrigin(0.5);
 
-    const option = this.add.rectangle(0, yPos, 100, 40, 0x000000, 0).setOrigin(0.5).setDepth(12);
+    const option = this.add.rectangle(xPos, yPos, 100, 40, 0x000000, 0).setOrigin(0.5);
     option.setInteractive();
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
@@ -524,4 +529,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-                           }
+}
