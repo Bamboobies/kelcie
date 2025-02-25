@@ -214,7 +214,7 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      if (!zone.passed && zone.x < bird.x - bird.width / 2) { // Score when zone passes bird's center
+      if (!zone.passed && zone.x + zone.width / 2 < bird.x) { // Score when bird passes zone center
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
@@ -282,7 +282,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -360,7 +360,8 @@ function createShrimpMenu() {
   const gameHeight = game.scale.height;
 
   shrimpMenuContainer = this.add.container(gameWidth / 2, gameHeight / 2).setDepth(20);
-  const menuBg = this.add.rectangle(0, 0, 400, 150, 0x333333).setOrigin(0.5);
+  const menuBg = this.add.rectangle(0, 0, 400, 150, 0x444444).setOrigin(0.5);
+  menuBg.setStrokeStyle(2, 0xFFFFFF); // White border
   shrimpMenuContainer.add(menuBg);
 
   shrimpMenuOptions = [];
@@ -370,16 +371,18 @@ function createShrimpMenu() {
     const xPos = -120 + col * 120;
     const yPos = row * 70 - 35;
 
-    const sprite = this.add.sprite(xPos, yPos - 10, variant.key).setOrigin(0.5).setScale(0.0915);
+    const sprite = this.add.sprite(xPos, yPos - 15, variant.key).setOrigin(0.5).setScale(0.0915);
     if (variant.tint) sprite.setTint(variant.tint);
 
-    const text = this.add.text(xPos, yPos + 20, variant.name, {
+    const text = this.add.text(xPos, yPos + 25, variant.name, {
       fontFamily: '"Press Start 2P", sans-serif',
-      fontSize: '12px',
-      fill: '#fff'
+      fontSize: '16px', // Larger text
+      fill: '#fff',
+      stroke: '#000000',
+      strokeThickness: 2 // Shadow effect
     }).setOrigin(0.5);
 
-    const option = this.add.rectangle(xPos, yPos, 100, 40, 0x000000, 0).setOrigin(0.5);
+    const option = this.add.rectangle(xPos, yPos, 100, 50, 0x000000, 0).setOrigin(0.5);
     option.setInteractive();
     option.on('pointerdown', () => {
       selectedShrimpIndex = index;
@@ -391,6 +394,8 @@ function createShrimpMenu() {
       else ghostBird.clearTint();
       toggleShrimpMenu.call(this, false);
     });
+    option.on('pointerover', () => sprite.setScale(0.1)); // Hover effect
+    option.on('pointerout', () => sprite.setScale(0.0915));
 
     shrimpMenuContainer.add([sprite, text, option]);
     shrimpMenuOptions.push({ sprite, text, hitbox: option });
