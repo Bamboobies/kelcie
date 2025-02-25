@@ -81,7 +81,7 @@ function create() {
     ghostBird.visible = false;
 
     pipes = this.physics.add.group();
-    scoreZones = this.add.group(); // Non-physics group for scoring
+    scoreZones = this.add.group();
 
     const textStyle = { fontFamily: '"Press Start 2P", sans-serif', fontSize: '20px', fill: '#fff' };
     const titleFontSize = Math.min(gameWidth * 0.075, 32);
@@ -135,7 +135,6 @@ function create() {
     deathSound = this.sound.add('death');
     flapSound = this.sound.add('flap', { volume: 0.7 });
 
-    // Pipe texture generation (back in create)
     function interpolateColor(color1, color2, factor) {
       const r1 = (color1 >> 16) & 0xFF;
       const g1 = (color1 >> 8) & 0xFF;
@@ -210,17 +209,16 @@ function update() {
     birdLastX = bird.x;
     birdLastY = bird.y;
 
-    // Manual scoring check
     scoreZones.children.iterate(zone => {
-      zone.x += PIPE_SPEED * (1 / 60); // Move scoreZone with pipes
-      if (!zone.passed && bird.x > zone.x && bird.x < zone.x + zone.width) {
+      zone.x += PIPE_SPEED * (1 / 60);
+      if (!zone.passed && bird.x > zone.x) { // Score when bird passes the center of the scoreZone
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
         scoreSound.play();
         console.log('Score incremented:', score);
       }
-      if (zone.x + zone.width < 0) zone.destroy(); // Clean up off-screen zones
+      if (zone.x + zone.width < 0) zone.destroy();
     });
 
     if (bird.y + bird.displayHeight / 2 >= game.scale.height) hitPipe.call(this);
@@ -281,7 +279,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -522,4 +520,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-    }
+}
