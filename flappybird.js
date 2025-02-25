@@ -214,8 +214,7 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      const zoneCenter = zone.x;
-      if (!zone.passed && bird.x > zoneCenter - 10 && bird.x < zoneCenter + 10) { // Score near center of zone
+      if (!zone.passed && zone.x < bird.x) { // Score when bird passes zone's left edge
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
@@ -283,7 +282,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2 + 20, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -360,16 +359,16 @@ function createShrimpMenu() {
   const gameWidth = game.scale.width;
   const gameHeight = game.scale.height;
 
-  shrimpMenuContainer = this.add.container(gameWidth / 2, gameHeight / 2).setDepth(20); // High depth to be in front
-  const menuBg = this.add.rectangle(0, 0, 400, 150, 0x333333).setOrigin(0.5); // Larger background
+  shrimpMenuContainer = this.add.container(gameWidth / 2, gameHeight / 2).setDepth(20);
+  const menuBg = this.add.rectangle(0, 0, 400, 150, 0x333333).setOrigin(0.5);
   shrimpMenuContainer.add(menuBg);
 
   shrimpMenuOptions = [];
   shrimpVariants.forEach((variant, index) => {
-    const col = index % 3; // 0, 1, 2 for 3 columns
-    const row = Math.floor(index / 3); // 0 or 1 for rows
-    const xPos = -120 + col * 120; // Spacing: -120, 0, 120
-    const yPos = row * 70 - 35; // Rows: -35, 35
+    const col = index % 3;
+    const row = Math.floor(index / 3);
+    const xPos = -120 + col * 120;
+    const yPos = row * 70 - 35;
 
     const sprite = this.add.sprite(xPos, yPos - 10, variant.key).setOrigin(0.5).setScale(0.0915);
     if (variant.tint) sprite.setTint(variant.tint);
