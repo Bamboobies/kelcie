@@ -18,9 +18,9 @@ let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 let shrimpVariants = [
   { name: 'Normal', key: 'bird', tint: null },
-  { name: 'Bronze', key: 'birdGray', tint: 0xFF8C00 }, // Brighter orange
-  { name: 'Silver', key: 'birdGray', tint: 0xE0E0E0 }, // Lighter grey
-  { name: 'Gold', key: 'birdGray', tint: 0xFFFF00 }   // Pure yellow-gold
+  { name: 'Bronze', key: 'birdGray', tint: 0xFF8C00 },
+  { name: 'Silver', key: 'birdGray', tint: 0xE0E0E0 },
+  { name: 'Gold', key: 'birdGray', tint: 0xFFFF00 }
 ];
 let selectedShrimpIndex = 0;
 let menuVisible = false;
@@ -270,7 +270,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 60, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 80, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -529,4 +529,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+    }
