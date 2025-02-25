@@ -43,62 +43,6 @@ function preload() {
     this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
     this.load.image('birdGray', 'https://i.ibb.co/STtKYCh/greyshrimp.png');
     this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
-
-    // Pre-generate pipe texture
-    const pipeCanvas = document.createElement('canvas');
-    pipeCanvas.width = PIPE_WIDTH;
-    pipeCanvas.height = 512;
-    const pipeCtx = pipeCanvas.getContext('2d');
-    pipeCtx.fillStyle = '#00A300';
-    pipeCtx.fillRect(0, 0, PIPE_WIDTH, 512);
-    const startColor = { r: 0x5C, g: 0x7A, b: 0x43 };
-    const endColor = { r: 0xA0, g: 0xD2, b: 0x2A };
-    const pipeSteps = 16;
-    const stepWidth = PIPE_WIDTH / pipeSteps;
-    for (let i = 0; i < pipeSteps; i++) {
-      const center = (pipeSteps - 1) / 2;
-      const distance = Math.abs(i - center) / center;
-      const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
-      const r = Math.round(startColor.r + (endColor.r - startColor.r) * factor);
-      const g = Math.round(startColor.g + (endColor.g - startColor.g) * factor);
-      const b = Math.round(startColor.b + (endColor.b - startColor.b) * factor);
-      pipeCtx.fillStyle = `rgb(${r},${g},${b})`;
-      pipeCtx.fillRect(i * stepWidth, 0, stepWidth, 512);
-    }
-    pipeCtx.strokeStyle = '#003300';
-    pipeCtx.lineWidth = 1;
-    pipeCtx.beginPath();
-    pipeCtx.moveTo(1, 0); pipeCtx.lineTo(1, 512);
-    pipeCtx.moveTo(PIPE_WIDTH - 1, 0); pipeCtx.lineTo(PIPE_WIDTH - 1, 512);
-    pipeCtx.stroke();
-    this.textures.addCanvas('pipeTexture', pipeCanvas);
-
-    // Pre-generate cap texture
-    const capCanvas = document.createElement('canvas');
-    capCanvas.width = PIPE_WIDTH + 10;
-    capCanvas.height = PIPE_CAP_HEIGHT;
-    const capCtx = capCanvas.getContext('2d');
-    capCtx.fillStyle = '#006600';
-    capCtx.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-    const capSteps = 20;
-    const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
-    for (let i = 0; i < capSteps; i++) {
-      const center = (capSteps - 1) / 2;
-      const distance = Math.abs(i - center) / center;
-      const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
-      const r = Math.round(startColor.r + (endColor.r - startColor.r) * factor);
-      const g = Math.round(startColor.g + (endColor.g - startColor.g) * factor);
-      const b = Math.round(startColor.b + (endColor.b - startColor.b) * factor);
-      capCtx.fillStyle = `rgb(${r},${g},${b})`;
-      const x = Math.floor(i * stepWidthCap);
-      const width = Math.ceil((i + 1) * stepWidthCap) - x;
-      capCtx.fillRect(x, 0, width, PIPE_CAP_HEIGHT);
-    }
-    capCtx.strokeStyle = '#003300';
-    capCtx.lineWidth = 1;
-    capCtx.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
-    this.textures.addCanvas('capTexture', capCanvas);
-
     this.load.audio('score', 'score.wav');
     this.load.audio('death', 'death.wav');
     this.load.audio('flap', 'flap.wav');
@@ -194,6 +138,61 @@ function create() {
     deathSound = this.sound.add('death');
     flapSound = this.sound.add('flap', { volume: 0.7 });
 
+    // Pipe texture generation (back in create)
+    function interpolateColor(color1, color2, factor) {
+      const r1 = (color1 >> 16) & 0xFF;
+      const g1 = (color1 >> 8) & 0xFF;
+      const b1 = color1 & 0xFF;
+      const r2 = (color2 >> 16) & 0xFF;
+      const g2 = (color2 >> 8) & 0xFF;
+      const b2 = color2 & 0xFF;
+      const r = Math.round(r1 + (r2 - r1) * factor);
+      const g = Math.round(g1 + (g2 - g1) * factor);
+      const b = Math.round(b1 + (b2 - b1) * factor);
+      return (r << 16) + (g << 8) + b;
+    }
+
+    const pipeGraphics = this.add.graphics();
+    pipeGraphics.fillStyle(0x00A300, 1);
+    pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
+    const startColor = 0x5C7A43;
+    const endColor = 0xA0D22A;
+    const pipeSteps = 16;
+    const stepWidth = PIPE_WIDTH / pipeSteps;
+    for (let i = 0; i < pipeSteps; i++) {
+      const center = (pipeSteps - 1) / 2;
+      const distance = Math.abs(i - center) / center;
+      const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
+      const color = interpolateColor(endColor, startColor, factor);
+      pipeGraphics.fillStyle(color, 1);
+      pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512);
+    }
+    pipeGraphics.lineStyle(1, 0x003300, 1);
+    pipeGraphics.lineBetween(1, 0, 1, 512);
+    pipeGraphics.lineBetween(PIPE_WIDTH - 1, 0, PIPE_WIDTH - 1, 512);
+    pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
+    pipeGraphics.destroy();
+
+    const capGraphics = this.add.graphics();
+    capGraphics.fillStyle(0x006600, 1);
+    capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+    const capSteps = 20;
+    const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
+    for (let i = 0; i < capSteps; i++) {
+      const center = (capSteps - 1) / 2;
+      const distance = Math.abs(i - center) / center;
+      const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
+      const color = interpolateColor(endColor, startColor, factor);
+      capGraphics.fillStyle(color, 1);
+      const x = Math.floor(i * stepWidthCap);
+      const width = Math.ceil((i + 1) * stepWidthCap) - x;
+      capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT);
+    }
+    capGraphics.lineStyle(1, 0x003300, 1);
+    capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
+    capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+    capGraphics.destroy();
+
     console.log('Create completed successfully');
   } catch (e) {
     console.error('Create failed:', e);
@@ -216,7 +215,7 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      if (!zone.passed && zone.x < bird.x) { // Score when bird passes zone's left edge
+      if (!zone.passed && zone.x + zone.width / 2 + 20 < bird.x) { // Score when bird passes zone center + offset
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
@@ -284,7 +283,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 50, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -327,7 +326,7 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  pipes.setVelocityX(PIPE_SPEED); // Reset pipe movement
+  pipes.setVelocityX(PIPE_SPEED);
   pipes.clear(true, true);
   scoreZones.clear(true, true);
   gameOverText.setText('');
