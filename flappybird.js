@@ -214,12 +214,12 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      if (!zone.passed && zone.x < bird.x) { // Score when bird passes zone's left edge
+      if (!zone.passed && zone.x < bird.x - bird.width / 2) { // Score when zone passes bird's center
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
         scoreSound.play();
-        console.log('Score incremented:', score);
+        console.log(`Score incremented: ${score}, bird.x: ${bird.x}, zone.x: ${zone.x}`);
       }
       if (zone.x + zone.width < 0) zone.destroy();
     });
@@ -282,7 +282,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP / 2, 10, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -528,4 +528,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+      }
