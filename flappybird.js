@@ -18,11 +18,11 @@ let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 let shrimpVariants = [
   { name: 'Normal', key: 'bird', tint: null, unlockScore: 0 },
-  { name: 'Bronze', key: 'birdWhite', tint: 0xFF8C38, unlockScore: 25 },
-  { name: 'Silver', key: 'birdWhite', tint: 0xF0F0F0, unlockScore: 50 },
-  { name: 'Gold', key: 'birdWhite', tint: 0xFFEE58, unlockScore: 100 },
-  { name: 'Blue', key: 'birdWhite', tint: 0x2196F3, unlockScore: 250 },
-  { name: 'Lavender', key: 'birdWhite', tint: 0xCE93D8, unlockScore: 500 }
+  { name: 'Bronze', key: 'birdWhite', tint: 0xCD7F32, unlockScore: 25 },
+  { name: 'Silver', key: 'birdWhite', tint: 0xC0C0C0, unlockScore: 50 },
+  { name: 'Gold', key: 'birdWhite', tint: 0xDAA520, unlockScore: 100 },
+  { name: 'Blue', key: 'birdWhite', tint: 0x1E90FF, unlockScore: 250 },
+  { name: 'Lavender', key: 'birdWhite', tint: 0xDA70D6, unlockScore: 500 }
 ];
 let selectedShrimpIndex = 0;
 let menuVisible = false;
@@ -38,7 +38,7 @@ window.onload = () => {
 
 function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
-  this.load.image('birdWhite', 'https://i.ibb.co/1G273Kkc/whiteshrimp-2.png'); // New white shrimp base
+  this.load.image('birdWhite', 'https://i.ibb.co/1G273Kkc/whiteshrimp-2.png');
   this.load.image('background', 'https://i.ibb.co/2XWRWxZ/1739319234354.jpg');
   this.load.audio('score', 'score.wav');
   this.load.audio('death', 'death.wav');
@@ -111,7 +111,7 @@ function create() {
     console.log('Shrimp button clicked');
     toggleShrimpMenu.call(this);
   });
-  shrimpSelectButton.visible = true;
+  shrimpSelectButton.visible = true; // Only visible on start initially
   shrimpSelectText.visible = true;
 
   this.input.on('pointerdown', () => {
@@ -235,7 +235,7 @@ function startGame() {
   bird.body.allowGravity = true;
   titleText.setText('');
   startText.setText('');
-  shrimpSelectButton.visible = false;
+  shrimpSelectButton.visible = false; // Hide during gameplay
   shrimpSelectText.visible = false;
   toggleShrimpMenu.call(this, false);
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
@@ -296,7 +296,7 @@ function hitPipe() {
 
   gameOver = true;
   pipes.setVelocityX(0);
-  shrimpSelectButton.visible = false;
+  shrimpSelectButton.visible = false; // Hide during fall
   shrimpSelectText.visible = false;
   toggleShrimpMenu.call(this, false);
 
@@ -309,7 +309,7 @@ function hitPipe() {
 function showRestartScreen() {
   gameOverText.setText('GAME OVER');
   restartText.setText('TAP TO RESTART');
-  shrimpSelectButton.visible = true;
+  shrimpSelectButton.visible = true; // Show on restart screen
   shrimpSelectText.visible = true;
 }
 
@@ -320,13 +320,13 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  bird.body.enable = false; // Disable physics temporarily
+  bird.body.enable = false; // Disable physics during reset
   pipes.clear(true, true);
   scoreZones.clear(true, true);
   gameOverText.setText('');
   restartText.setText('');
   toggleShrimpMenu.call(this, false);
-  shrimpSelectButton.visible = true;
+  shrimpSelectButton.visible = true; // Show on restart screen
   shrimpSelectText.visible = true;
   birdLastX = bird.x;
   birdLastY = bird.y;
