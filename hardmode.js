@@ -1,4 +1,9 @@
-
+// hardmode.js
+window.startHardMode = function() {
+  // Your hard mode game initialization code here
+  console.log("Hard Mode Launched!");
+  // Example: new Phaser.Game({...}) for hard mode
+};
 // === GAME SETTINGS ===
 const GRAVITY = 900;
 const FLAP_STRENGTH = -300;
