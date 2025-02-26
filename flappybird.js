@@ -17,7 +17,6 @@ let birdCollisionMask;
 let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 let gameWidth, gameHeight; // Cached dimensions
-let deltaFactor = 1 / 60; // For consistent timing
 const shrimpVariants = [
   { name: 'Normal', key: 'bird', tint: null, unlockScore: 0 },
   { name: 'Bronze', key: 'birdWhite', tint: 0xCD7F32, unlockScore: 25 },
@@ -113,7 +112,8 @@ function create() {
   birdLastY = bird.y;
 
   ghostBird = this.add.sprite(bird.x, bird.y, shrimpVariants[selectedShrimpIndex].key)
-    .setOrigin(0.5).setScale(0.0915).setAlpha(0.3).setDepth(11).setVisible(false);
+    .setOrigin(0.5).setScale(0.0915).setAlpha(0.3).setDepth(11);
+  ghostBird.visible = false;
   if (shrimpVariants[selectedShrimpIndex].tint) ghostBird.setTint(shrimpVariants[selectedShrimpIndex].tint);
 
   pipes = this.physics.add.group({ immovable: true, allowGravity: false });
@@ -126,27 +126,31 @@ function create() {
     fill: '#ffcc00' 
   }).setOrigin(0.5);
 
-  startText = this.add.text(gameWidth / 2, gameHeight * 0.5, 'TAP TO START', textStyle).setOrigin(0.5).setDepth(10)
-    .setInteractive().on('pointerdown', () => !gameStarted && !menuVisible && startGame.call(scene));
+  startText = this.add.text(gameWidth / 2, gameHeight * 0.5, 'TAP TO START', textStyle).setOrigin(0.5).setDepth(10);
+  startText.setInteractive().on('pointerdown', () => !gameStarted && !menuVisible && startGame.call(scene));
 
   gameOverText = this.add.text(gameWidth / 2, gameHeight * 0.5, '', textStyle).setOrigin(0.5).setDepth(10);
-  restartText = this.add.text(gameWidth / 2, gameHeight * 0.6, '', textStyle).setOrigin(0.5).setDepth(10)
-    .setInteractive().on('pointerdown', () => gameOver && bird.y > gameHeight + bird.displayHeight && !menuVisible && restartGame.call(scene));
+  restartText = this.add.text(gameWidth / 2, gameHeight * 0.6, '', textStyle).setOrigin(0.5).setDepth(10);
+  restartText.setInteractive().on('pointerdown', () => gameOver && bird.y > gameHeight + bird.displayHeight && !menuVisible && restartGame.call(scene));
 
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: ' + highScore, textStyle).setDepth(10);
 
-  shrimpSelectButton = this.add.rectangle(gameWidth - 80, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10)
-    .setInteractive().on('pointerdown', () => toggleShrimpMenu.call(this));
+  shrimpSelectButton = this.add.rectangle(gameWidth - 80, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10);
   shrimpSelectText = this.add.text(gameWidth - 80, gameHeight - 30, 'Shrimp', {
     fontFamily: '"Press Start 2P", sans-serif', fontSize: '16px', fill: '#fff'
   }).setOrigin(0.5).setDepth(11);
+  shrimpSelectButton.setInteractive().on('pointerdown', () => toggleShrimpMenu.call(this));
+  shrimpSelectButton.visible = true;
+  shrimpSelectText.visible = true;
 
-  hardModeButton = this.add.rectangle(gameWidth - 190, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10)
-    .setInteractive().on('pointerdown', () => (!gameStarted || (gameOver && bird.y > gameHeight + bird.displayHeight)) && launchHardMode());
+  hardModeButton = this.add.rectangle(gameWidth - 190, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10);
   hardModeText = this.add.text(gameWidth - 190, gameHeight - 30, 'Hard Mode', {
     fontFamily: '"Press Start 2P", sans-serif', fontSize: '16px', fill: '#fff'
   }).setOrigin(0.5).setDepth(11);
+  hardModeButton.setInteractive().on('pointerdown', () => (!gameStarted || (gameOver && bird.y > gameHeight + bird.displayHeight)) && launchHardMode());
+  hardModeButton.visible = true;
+  hardModeText.visible = true;
 
   this.input.on('pointerdown', () => gameStarted && !gameOver && !menuVisible && flap());
 
@@ -168,23 +172,24 @@ function create() {
 function update(time, delta) {
   if (!gameStarted) return;
 
-  deltaFactor = delta / 1000; // Normalize delta to seconds
+  const deltaFactor = delta / 1000; // Normalize to seconds for smoother movement
 
   if (!gameOver) {
-    const bgSpeed = BACKGROUND_SPEED * deltaFactor;
-    background1.x += bgSpeed;
-    background2.x += bgSpeed;
+    background1.x += BACKGROUND_SPEED * deltaFactor;
+    background2.x += BACKGROUND_SPEED * deltaFactor;
     if (background1.x + background1.displayWidth <= 0) background1.x = background2.x + background2.displayWidth;
     if (background2.x + background2.displayWidth <= 0) background2.x = background1.x + background1.displayWidth;
 
-    bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4) * deltaFactor * 60, -20, 20);
+    bird.angle = Phaser.Math.Clamp(bird.angle + (bird.body.velocity.y > 0 ? 2 : -4), -20, 20);
     birdLastX = bird.x;
     birdLastY = bird.y;
 
-    const pipeSpeed = PIPE_SPEED * deltaFactor;
     scoreZones.getChildren().forEach(zone => {
-      if (!zone || zone.x + zone.width < 0) return zone.destroy();
-      zone.x += pipeSpeed;
+      if (!zone || zone.x + zone.width < 0) {
+        zone.destroy();
+        return;
+      }
+      zone.x += PIPE_SPEED * deltaFactor;
       if (!zone.passed && zone.x + zone.width + 40 < bird.x) {
         zone.passed = true;
         score++;
@@ -198,14 +203,16 @@ function update(time, delta) {
       }
     });
 
-    pipes.getChildren().forEach(pipe => pipe.x + pipe.width < 0 && pipe.destroy());
+    pipes.getChildren().forEach(pipe => {
+      if (pipe.x + pipe.width < 0) pipe.destroy();
+    });
 
     if (bird.y + bird.displayHeight / 2 >= gameHeight) hitPipe.call(this);
   }
 
   if (gameOver && ghostBird.visible) {
-    ghostBird.y -= 4 * deltaFactor * 60;
-    if (ghostBird.y < -ghostBird.displayHeight) ghostBird.setVisible(false);
+    ghostBird.y -= 4 * deltaFactor * 60; // Adjusted with delta for consistency
+    if (ghostBird.y < -ghostBird.displayHeight) ghostBird.visible = false;
   }
 
   if (gameOver && bird.y > gameHeight + bird.displayHeight) showRestartScreen.call(this);
@@ -216,11 +223,14 @@ function startGame() {
   bird.body.allowGravity = true;
   titleText.setText('');
   startText.setText('');
-  shrimpSelectButton.setVisible(false);
-  shrimpSelectText.setVisible(false);
-  hardModeButton.setVisible(false);
-  hardModeText.setVisible(false);
-  if (shrimpMenuContainer) shrimpMenuContainer.destroy(), shrimpMenuContainer = null;
+  shrimpSelectButton.visible = false;
+  shrimpSelectText.visible = false;
+  hardModeButton.visible = false;
+  hardModeText.visible = false;
+  if (shrimpMenuContainer) {
+    shrimpMenuContainer.destroy();
+    shrimpMenuContainer = null;
+  }
   menuVisible = false;
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
 }
@@ -236,26 +246,39 @@ function addPipes() {
   const minGapY = 120, maxGapY = gameHeight - PIPE_GAP - 120;
   const gapY = Phaser.Math.Clamp(Phaser.Math.Between(minGapY, maxGapY), minGapY, maxGapY);
 
-  const pipeTopBody = pipes.create(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture')
-    .setOrigin(0, 1).setDepth(5).setDisplaySize(PIPE_WIDTH, gapY);
-  pipeTopBody.body.setSize(PIPE_WIDTH, gapY).setVelocityX(PIPE_SPEED);
+  const pipeTopBody = this.physics.add.sprite(gameWidth, gapY - PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 1).setDepth(5);
+  pipeTopBody.setDisplaySize(PIPE_WIDTH, gapY);
+  pipeTopBody.body.setSize(PIPE_WIDTH, gapY);
+  pipeTopBody.body.immovable = true;
 
   const bottomHeight = gameHeight - (gapY + PIPE_GAP + PIPE_CAP_HEIGHT);
-  const pipeBottomBody = pipes.create(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture')
-    .setOrigin(0, 0).setDepth(5).setDisplaySize(PIPE_WIDTH, bottomHeight);
-  pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight).setVelocityX(PIPE_SPEED);
+  const pipeBottomBody = this.physics.add.sprite(gameWidth, gapY + PIPE_GAP + PIPE_CAP_HEIGHT, 'pipeTexture').setOrigin(0, 0).setDepth(5);
+  pipeBottomBody.setDisplaySize(PIPE_WIDTH, bottomHeight);
+  pipeBottomBody.body.setSize(PIPE_WIDTH, bottomHeight);
+  pipeBottomBody.body.immovable = true;
 
-  const pipeTopCap = pipes.create(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture')
-    .setOrigin(0.5, 1).setDepth(5).setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT).setVelocityX(PIPE_SPEED);
+  const pipeTopCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY, 'capTexture').setOrigin(0.5, 1).setDepth(5);
+  pipeTopCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeTopCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeTopCap.body.immovable = true;
 
-  const pipeBottomCap = pipes.create(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture')
-    .setOrigin(0.5, 0).setDepth(5).setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT).setVelocityX(PIPE_SPEED);
+  const pipeBottomCap = this.physics.add.sprite(gameWidth + PIPE_WIDTH / 2, gapY + PIPE_GAP, 'capTexture').setOrigin(0.5, 0).setDepth(5);
+  pipeBottomCap.setDisplaySize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  pipeBottomCap.body.immovable = true;
 
-  const scoreZone = scoreZones.create(gameWidth + PIPE_WIDTH + 160, gapY + PIPE_GAP / 2, null, null, false)
-    .setSize(20, PIPE_GAP).setOrigin(0.5).setDepth(5).setVisible(false);
+  const scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 160, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
+
+  pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
+  pipes.children.iterate(pipe => {
+    pipe.body.setVelocityX(PIPE_SPEED);
+    pipe.body.allowGravity = false;
+    pipe.body.checkWorldBounds = true;
+    pipe.body.outOfBoundsKill = true;
+  });
+
+  scoreZones.add(scoreZone);
 }
 
 function hitPipe() {
@@ -263,40 +286,50 @@ function hitPipe() {
 
   gameOver = true;
   pipes.setVelocityX(0);
-  shrimpSelectButton.setVisible(false);
-  shrimpSelectText.setVisible(false);
-  hardModeButton.setVisible(false);
-  hardModeText.setVisible(false);
-  if (shrimpMenuContainer) shrimpMenuContainer.destroy(), shrimpMenuContainer = null;
+  shrimpSelectButton.visible = false;
+  shrimpSelectText.visible = false;
+  hardModeButton.visible = false;
+  hardModeText.visible = false;
+  if (shrimpMenuContainer) {
+    shrimpMenuContainer.destroy();
+    shrimpMenuContainer = null;
+  }
   menuVisible = false;
 
-  ghostBird.setPosition(bird.x, bird.y).setAngle(bird.angle).setVisible(true);
+  ghostBird.setPosition(bird.x, bird.y);
+  ghostBird.angle = bird.angle;
+  ghostBird.visible = true;
   deathSound.play();
 }
 
 function showRestartScreen() {
   gameOverText.setText('GAME OVER');
   restartText.setText('TAP TO RESTART');
-  shrimpSelectButton.setVisible(true);
-  shrimpSelectText.setVisible(true);
-  hardModeButton.setVisible(true);
-  hardModeText.setVisible(true);
+  shrimpSelectButton.visible = true;
+  shrimpSelectText.visible = true;
+  hardModeButton.visible = true;
+  hardModeText.visible = true;
 }
 
 function restartGame() {
   gameOver = false;
   score = 0;
   scoreText.setText('SCORE: ' + score);
-  bird.setPosition(gameWidth * 0.2, gameHeight / 2).body.setVelocity(0, 0).setAngle(0);
+  bird.setPosition(gameWidth * 0.2, gameHeight / 2);
+  bird.body.setVelocity(0, 0);
+  bird.angle = 0;
   pipes.clear(true, true);
   scoreZones.clear(true, true);
   gameOverText.setText('');
   restartText.setText('');
-  shrimpSelectButton.setVisible(false);
-  shrimpSelectText.setVisible(false);
-  hardModeButton.setVisible(false);
-  hardModeText.setVisible(false);
-  if (shrimpMenuContainer) shrimpMenuContainer.destroy(), shrimpMenuContainer = null;
+  shrimpSelectButton.visible = false;
+  shrimpSelectText.visible = false;
+  hardModeButton.visible = false;
+  hardModeText.visible = false;
+  if (shrimpMenuContainer) {
+    shrimpMenuContainer.destroy();
+    shrimpMenuContainer = null;
+  }
   menuVisible = false;
   birdLastX = bird.x;
   birdLastY = bird.y;
@@ -304,7 +337,10 @@ function restartGame() {
 
 function toggleShrimpMenu(forceHide = null) {
   if (forceHide === false || (forceHide === null && menuVisible)) {
-    if (shrimpMenuContainer) shrimpMenuContainer.destroy(), shrimpMenuContainer = null;
+    if (shrimpMenuContainer) {
+      shrimpMenuContainer.destroy();
+      shrimpMenuContainer = null;
+    }
     menuVisible = false;
   } else if (forceHide === true || (forceHide === null && !menuVisible && (!gameStarted || (gameOver && bird.y > gameHeight + bird.displayHeight)))) {
     createShrimpMenu.call(this);
@@ -314,8 +350,11 @@ function toggleShrimpMenu(forceHide = null) {
 
 function createShrimpMenu() {
   shrimpMenuContainer = this.add.container(gameWidth / 2, gameHeight / 2).setDepth(20);
-  shrimpMenuContainer.add(this.add.rectangle(0, 0, 400, 250, 0x444444).setOrigin(0.5).setStrokeStyle(2, 0xFFFFFF));
+  const menuBg = this.add.rectangle(0, 0, 400, 250, 0x444444).setOrigin(0.5);
+  menuBg.setStrokeStyle(2, 0xFFFFFF);
+  shrimpMenuContainer.add(menuBg);
 
+  shrimpMenuOptions = [];
   const unlockedVariants = shrimpVariants.filter(variant => highScore >= variant.unlockScore);
   unlockedVariants.forEach((variant, index) => {
     const col = index % 3, row = Math.floor(index / 3);
@@ -328,14 +367,16 @@ function createShrimpMenu() {
       fontFamily: '"Press Start 2P", sans-serif', fontSize: '16px', fill: '#fff', stroke: '#000000', strokeThickness: 2
     }).setOrigin(0.5);
 
-    const option = this.add.rectangle(xPos, yPos, 100, 50, 0x000000, 0).setOrigin(0.5)
-      .setInteractive()
+    const option = this.add.rectangle(xPos, yPos, 100, 50, 0x000000, 0).setOrigin(0.5);
+    option.setInteractive()
       .on('pointerdown', () => {
         selectedShrimpIndex = shrimpVariants.indexOf(variant);
-        bird.setTexture(variant.key).clearTint();
+        bird.setTexture(variant.key);
         if (variant.tint) bird.setTint(variant.tint);
-        ghostBird.setTexture(variant.key).clearTint();
+        else bird.clearTint();
+        ghostBird.setTexture(variant.key);
         if (variant.tint) ghostBird.setTint(variant.tint);
+        else ghostBird.clearTint();
         toggleShrimpMenu.call(this, false);
       })
       .on('pointerover', () => sprite.setScale(0.1))
@@ -375,31 +416,66 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   const scaleX = birdSprite.scaleX, scaleY = birdSprite.scaleY;
   const maskWidth = birdCollisionMask.width, maskHeight = birdCollisionMask.height;
   const angle = Phaser.Math.DegToRad(birdSprite.angle);
-  const cosAngle = Math.cos(-angle), sinAngle = Math.sin(-angle);
 
-  const birdBounds = birdSprite.body;
-  const pipeBounds = pipeSprite.body;
-  const intersection = Phaser.Geom.Rectangle.Intersection(
-    new Phaser.Geom.Rectangle(birdBounds.x, birdBounds.y, birdBounds.width, birdBounds.height),
-    new Phaser.Geom.Rectangle(pipeBounds.x, pipeBounds.y, pipeBounds.width, pipeBounds.height)
-  );
+  const currentBounds = new Phaser.Geom.Rectangle(birdSprite.body.x, birdSprite.body.y, birdSprite.body.width, birdSprite.body.height);
+  const lastBounds = new Phaser.Geom.Rectangle(birdLastX - (birdSprite.body.width * 0.5), birdLastY - (birdSprite.body.height * 0.5), birdSprite.body.width, birdSprite.body.height);
+  const pipeBounds = new Phaser.Geom.Rectangle(pipeSprite.body.x, pipeSprite.body.y, pipeSprite.body.width, pipeSprite.body.height);
 
+  const vx = birdSprite.body.velocity.x * (1 / 60) * 2;
+  const vy = birdSprite.body.velocity.y * (1 / 60) * 2;
+  const sweptBounds = Phaser.Geom.Rectangle.Union(currentBounds, lastBounds);
+  Phaser.Geom.Rectangle.Inflate(sweptBounds, Math.abs(vx), Math.abs(vy));
+
+  const intersection = Phaser.Geom.Rectangle.Intersection(sweptBounds, pipeBounds);
   if (intersection.width <= 0 || intersection.height <= 0) return false;
 
-  const x1 = Math.max(0, Math.floor((intersection.x - birdBounds.x) / scaleX));
-  const y1 = Math.max(0, Math.floor((intersection.y - birdBounds.y) / scaleY));
-  const endX = Math.min(maskWidth, x1 + Math.ceil(intersection.width / scaleX));
-  const endY = Math.min(maskHeight, y1 + Math.ceil(intersection.height / scaleY));
+  const cosAngle = Math.cos(-angle), sinAngle = Math.sin(-angle);
+  const x1 = Math.floor((intersection.x - birdSprite.body.x) / scaleX);
+  const y1 = Math.floor((intersection.y - birdSprite.body.y) / scaleY);
+  const width = Math.ceil(intersection.width / scaleX);
+  const height = Math.ceil(intersection.height / scaleY);
 
-  for (let y = y1; y < endY; y++) {
-    for (let x = x1; x < endX; x++) {
+  const startX = Math.max(0, x1), startY = Math.max(0, y1);
+  const endX = Math.min(maskWidth, x1 + width), endY = Math.min(maskHeight, y1 + height);
+
+  for (let y = startY; y < endY; y++) {
+    for (let x = startX; x < endX; x++) {
       const relX = x - maskWidth * 0.5, relY = y - maskHeight * 0.5;
-      const rx = Math.floor(relX * cosAngle - relY * sinAngle + maskWidth * 0.5);
-      const ry = Math.floor(relX * sinAngle + relY * cosAngle + maskHeight * 0.5);
-      if (rx >= 0 && rx < maskWidth && ry >= 0 && ry < maskHeight && birdCollisionMask.mask[ry * maskWidth + rx]) {
-        return true;
+      const rotatedX = relX * cosAngle - relY * sinAngle + maskWidth * 0.5;
+      const rotatedY = relX * sinAngle + relY * cosAngle + maskHeight * 0.5;
+      const rx = Math.floor(rotatedX), ry = Math.floor(rotatedY);
+      if (rx >= 0 && rx < maskWidth && ry >= 0 && ry < maskHeight && birdCollisionMask.mask[ry * maskWidth + rx] === 1) return true;
+    }
+  }
+
+  const dx = birdSprite.x - birdLastX + vx, dy = birdSprite.y - birdLastY + vy;
+  if (Math.abs(dx) > 0 || Math.abs(dy) > 0) {
+    const distance = Math.sqrt(dx * dx + dy * dy);
+    const steps = Math.max(1, Math.ceil(distance * 3));
+    const stepX = dx / steps, stepY = dy / steps;
+
+    for (let i = 0; i <= steps; i++) {
+      const interpX = birdLastX + stepX * i, interpY = birdLastY + stepY * i;
+      const interpBounds = new Phaser.Geom.Rectangle(interpX - (birdSprite.body.width * 0.5), interpY - (birdSprite.body.height * 0.5), birdSprite.body.width, birdSprite.body.height);
+      if (Phaser.Geom.Rectangle.Overlaps(interpBounds, pipeBounds)) {
+        const x1 = Math.floor((pipeBounds.x - interpX + (birdSprite.body.width * 0.5)) / scaleX);
+        const y1 = Math.floor((pipeBounds.y - interpY + (birdSprite.body.height * 0.5)) / scaleY);
+        const width = Math.ceil(pipeBounds.width / scaleX), height = Math.ceil(pipeBounds.height / scaleY);
+        const startX = Math.max(0, x1), startY = Math.max(0, y1);
+        const endX = Math.min(maskWidth, x1 + width), endY = Math.min(maskHeight, y1 + height);
+
+        for (let y = startY; y < endY; y++) {
+          for (let x = startX; x < endX; x++) {
+            const relX = x - maskWidth * 0.5, relY = y - maskHeight * 0.5;
+            const rotatedX = relX * cosAngle - relY * sinAngle + maskWidth * 0.5;
+            const rotatedY = relX * sinAngle + relY * cosAngle + maskHeight * 0.5;
+            const rx = Math.floor(rotatedX), ry = Math.floor(rotatedY);
+            if (rx >= 0 && rx < maskWidth && ry >= 0 && ry < maskHeight && birdCollisionMask.mask[ry * maskWidth + rx] === 1) return true;
+          }
+        }
       }
     }
   }
+
   return false;
-                }
+    }
