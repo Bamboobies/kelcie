@@ -17,12 +17,12 @@ let birdCollisionMask;
 let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 let shrimpVariants = [
-  { name: 'Normal', key: 'bird', tint: null, unlockScore: 0 },
-  { name: 'Bronze', key: 'birdGray', tint: 0xFFA500, unlockScore: 25 },
-  { name: 'Silver', key: 'birdGray', tint: 0xF0F0F0, unlockScore: 50 },
-  { name: 'Gold', key: 'birdGray', tint: 0xFFC107, unlockScore: 100 },
-  { name: 'Blue', key: 'birdGray', tint: 0x2196F3, unlockScore: 250 },
-  { name: 'Lavender', key: 'birdGray', tint: 0xCE93D8, unlockScore: 500 }
+  { name: 'Normal', key: 'bird', tint: null, unlockScore: 0 },          // Default, always unlocked
+  { name: 'Bronze', key: 'birdGray', tint: 0xFFB300, unlockScore: 25 }, // Edit unlockScore for testing
+  { name: 'Silver', key: 'birdGray', tint: 0xF5F5F5, unlockScore: 50 }, // Edit unlockScore for testing
+  { name: 'Gold', key: 'birdGray', tint: 0xFFCA28, unlockScore: 10 },  // Edit unlockScore for testing
+  { name: 'Blue', key: 'birdGray', tint: 0x42A5F5, unlockScore: 25 },  // Edit unlockScore for testing
+  { name: 'Lavender', key: 'birdGray', tint: 0xE1BEE7, unlockScore: 50 } // Edit unlockScore for testing
 ];
 let selectedShrimpIndex = 0;
 let menuVisible = false;
@@ -277,7 +277,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 100, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 120, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -320,8 +320,18 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  pipes.clear(true, true);
-  scoreZones.clear(true, true);
+  
+  // Hide instead of clear to reduce lag
+  pipes.children.iterate(pipe => {
+    pipe.visible = false;
+    pipe.active = false;
+    pipe.body.setVelocityX(0);
+  });
+  scoreZones.children.iterate(zone => {
+    zone.visible = false;
+    zone.active = false;
+  });
+  
   gameOverText.setText('');
   restartText.setText('');
   toggleShrimpMenu.call(this, false);
@@ -350,7 +360,7 @@ function createShrimpMenu() {
   const gameHeight = game.scale.height;
 
   shrimpMenuContainer = this.add.container(gameWidth / 2, gameHeight / 2).setDepth(20);
-  const menuBg = this.add.rectangle(0, 0, 400, 150, 0x444444).setOrigin(0.5);
+  const menuBg = this.add.rectangle(0, 0, 400, 250, 0x444444).setOrigin(0.5); // Height increased to 250
   menuBg.setStrokeStyle(2, 0xFFFFFF);
   shrimpMenuContainer.add(menuBg);
 
@@ -360,7 +370,7 @@ function createShrimpMenu() {
     const col = index % 3;
     const row = Math.floor(index / 3);
     const xPos = -120 + col * 120;
-    const yPos = row * 70 - 35;
+    const yPos = -70 + row * 140; // Adjusted for two rows
 
     const sprite = this.add.sprite(xPos, yPos - 15, variant.key).setOrigin(0.5).setScale(0.0915);
     if (variant.tint) sprite.setTint(variant.tint);
