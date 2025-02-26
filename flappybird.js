@@ -198,7 +198,7 @@ function update() {
     birdLastX = bird.x;
     birdLastY = bird.y;
 
-    scoreZones.children.iterate(zone => {
+    scoreZones.getChildren().forEach(zone => {
       if (!zone || zone.x + zone.width < 0) {
         zone.destroy();
         return;
@@ -298,8 +298,8 @@ function hitPipe() {
 
   gameOver = true;
   pipes.setVelocityX(0);
-  pipes.clear(true, true); // Cleanup here
-  scoreZones.clear(true, true); // Cleanup here
+  pipes.clear(true, true);
+  scoreZones.clear(true, true);
   shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
   if (shrimpMenuContainer) {
@@ -331,7 +331,7 @@ function restartGame() {
   bird.body.enable = false;
   gameOverText.setText('');
   restartText.setText('');
-  shrimpSelectButton.visible = false; // Hide on restart until next game over
+  shrimpSelectButton.visible = false; // Hide during gameplay
   shrimpSelectText.visible = false;
   if (shrimpMenuContainer) {
     shrimpMenuContainer.destroy();
@@ -512,4 +512,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+    }
