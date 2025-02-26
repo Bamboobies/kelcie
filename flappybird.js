@@ -17,10 +17,12 @@ let birdCollisionMask;
 let birdLastX, birdLastY;
 let scoreSound, deathSound, flapSound;
 let shrimpVariants = [
-  { name: 'Normal', key: 'bird', tint: null },
-  { name: 'Bronze', key: 'birdGray', tint: 0xFF8C00 },
-  { name: 'Silver', key: 'birdGray', tint: 0xE0E0E0 },
-  { name: 'Gold', key: 'birdGray', tint: 0xFFFF00 }
+  { name: 'Normal', key: 'bird', tint: null, unlockScore: 0 },
+  { name: 'Bronze', key: 'birdGray', tint: 0xFFA500, unlockScore: 25 },
+  { name: 'Silver', key: 'birdGray', tint: 0xF0F0F0, unlockScore: 50 },
+  { name: 'Gold', key: 'birdGray', tint: 0xFFC107, unlockScore: 100 },
+  { name: 'Blue', key: 'birdGray', tint: 0x2196F3, unlockScore: 250 },
+  { name: 'Lavender', key: 'birdGray', tint: 0xCE93D8, unlockScore: 500 }
 ];
 let selectedShrimpIndex = 0;
 let menuVisible = false;
@@ -202,10 +204,15 @@ function update() {
 
     scoreZones.children.iterate(zone => {
       zone.x += PIPE_SPEED * (1 / 60);
-      if (!zone.passed && zone.x + zone.width + 40 < bird.x) { // Score when zone right edge + delay passes bird
+      if (!zone.passed && zone.x + zone.width + 40 < bird.x) {
         zone.passed = true;
         score++;
         scoreText.setText('SCORE: ' + score);
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('flappyHighScore', highScore);
+          highScoreText.setText('HIGH SCORE: ' + highScore);
+        }
         scoreSound.play();
         console.log(`Score incremented: ${score}, bird.x: ${bird.x}, zone.x: ${zone.x}, bird.width: ${bird.width}`);
       }
@@ -270,7 +277,7 @@ function addPipes() {
   pipeBottomCap.body.setSize(PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
   pipeBottomCap.body.immovable = true;
 
-  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 80, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
+  let scoreZone = this.add.rectangle(gameWidth + PIPE_WIDTH + 100, gapY + PIPE_GAP / 2, 20, PIPE_GAP, 0xff0000, 0).setOrigin(0.5).setDepth(5);
   scoreZone.passed = false;
 
   pipes.addMultiple([pipeTopBody, pipeBottomBody, pipeTopCap, pipeBottomCap]);
@@ -348,7 +355,8 @@ function createShrimpMenu() {
   shrimpMenuContainer.add(menuBg);
 
   shrimpMenuOptions = [];
-  shrimpVariants.forEach((variant, index) => {
+  const unlockedVariants = shrimpVariants.filter(variant => highScore >= variant.unlockScore);
+  unlockedVariants.forEach((variant, index) => {
     const col = index % 3;
     const row = Math.floor(index / 3);
     const xPos = -120 + col * 120;
@@ -368,7 +376,7 @@ function createShrimpMenu() {
     const option = this.add.rectangle(xPos, yPos, 100, 50, 0x000000, 0).setOrigin(0.5);
     option.setInteractive();
     option.on('pointerdown', () => {
-      selectedShrimpIndex = index;
+      selectedShrimpIndex = shrimpVariants.indexOf(variant);
       bird.setTexture(variant.key);
       if (variant.tint) bird.setTint(variant.tint);
       else bird.clearTint();
@@ -529,4 +537,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-    }
+}
