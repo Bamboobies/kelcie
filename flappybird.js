@@ -36,6 +36,63 @@ window.onload = () => {
   });
 };
 
+// Pre-generate textures once
+function generateTextures(scene) {
+  const pipeGraphics = scene.add.graphics();
+  pipeGraphics.fillStyle(0x00A300, 1);
+  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
+  const startColor = 0x5C7A43;
+  const endColor = 0xA0D22A;
+  const pipeSteps = 16;
+  const stepWidth = PIPE_WIDTH / pipeSteps;
+  for (let i = 0; i < pipeSteps; i++) {
+    const center = (pipeSteps - 1) / 2;
+    const distance = Math.abs(i - center) / center;
+    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
+    const color = interpolateColor(endColor, startColor, factor);
+    pipeGraphics.fillStyle(color, 1);
+    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512);
+  }
+  pipeGraphics.lineStyle(1, 0x003300, 1);
+  pipeGraphics.lineBetween(1, 0, 1, 512);
+  pipeGraphics.lineBetween(PIPE_WIDTH - 1, 0, PIPE_WIDTH - 1, 512);
+  pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
+  pipeGraphics.destroy();
+
+  const capGraphics = scene.add.graphics();
+  capGraphics.fillStyle(0x006600, 1);
+  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  const capSteps = 20;
+  const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
+  for (let i = 0; i < capSteps; i++) {
+    const center = (capSteps - 1) / 2;
+    const distance = Math.abs(i - center) / center;
+    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
+    const color = interpolateColor(endColor, startColor, factor);
+    capGraphics.fillStyle(color, 1);
+    const x = Math.floor(i * stepWidthCap);
+    const width = Math.ceil((i + 1) * stepWidthCap) - x;
+    capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT);
+  }
+  capGraphics.lineStyle(1, 0x003300, 1);
+  capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
+  capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
+  capGraphics.destroy();
+}
+
+function interpolateColor(color1, color2, factor) {
+  const r1 = (color1 >> 16) & 0xFF;
+  const g1 = (color1 >> 8) & 0xFF;
+  const b1 = color1 & 0xFF;
+  const r2 = (color2 >> 16) & 0xFF;
+  const g2 = (color2 >> 8) & 0xFF;
+  const b2 = color2 & 0xFF;
+  const r = Math.round(r1 + (r2 - r1) * factor);
+  const g = Math.round(g1 + (g2 - g1) * factor);
+  const b = Math.round(b1 + (b2 - b1) * factor);
+  return (r << 16) + (g << 8) + b;
+}
+
 function preload() {
   this.load.image('bird', 'https://i.postimg.cc/prdzpSD2/trimmed-image.png');
   this.load.image('birdWhite', 'https://i.ibb.co/1G273Kkc/whiteshrimp-2.png');
@@ -58,7 +115,7 @@ function create() {
   background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0).setScale(scaleFactor);
   background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0).setScale(scaleFactor);
 
-  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5).setDepth(-1);
+  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5).setDepth(-1);
 
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, shrimpVariants[selectedShrimpIndex].key).setOrigin(0.5).setScale(0.0915);
   bird.body.allowGravity = false;
@@ -110,7 +167,7 @@ function create() {
   shrimpSelectButton.on('pointerdown', () => {
     toggleShrimpMenu.call(this);
   });
-  shrimpSelectButton.visible = true; // Start screen only
+  shrimpSelectButton.visible = true;
   shrimpSelectText.visible = true;
 
   this.input.on('pointerdown', () => {
@@ -130,59 +187,8 @@ function create() {
   deathSound = this.sound.add('death');
   flapSound = this.sound.add('flap', { volume: 0.7 });
 
-  function interpolateColor(color1, color2, factor) {
-    const r1 = (color1 >> 16) & 0xFF;
-    const g1 = (color1 >> 8) & 0xFF;
-    const b1 = color1 & 0xFF;
-    const r2 = (color2 >> 16) & 0xFF;
-    const g2 = (color2 >> 8) & 0xFF;
-    const b2 = color2 & 0xFF;
-    const r = Math.round(r1 + (r2 - r1) * factor);
-    const g = Math.round(g1 + (g2 - g1) * factor);
-    const b = Math.round(b1 + (b2 - b1) * factor);
-    return (r << 16) + (g << 8) + b;
-  }
-
-  const pipeGraphics = this.add.graphics();
-  pipeGraphics.fillStyle(0x00A300, 1);
-  pipeGraphics.fillRect(0, 0, PIPE_WIDTH, 512);
-  const startColor = 0x5C7A43;
-  const endColor = 0xA0D22A;
-  const pipeSteps = 16;
-  const stepWidth = PIPE_WIDTH / pipeSteps;
-  for (let i = 0; i < pipeSteps; i++) {
-    const center = (pipeSteps - 1) / 2;
-    const distance = Math.abs(i - center) / center;
-    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
-    const color = interpolateColor(endColor, startColor, factor);
-    pipeGraphics.fillStyle(color, 1);
-    pipeGraphics.fillRect(i * stepWidth, 0, stepWidth, 512);
-  }
-  pipeGraphics.lineStyle(1, 0x003300, 1);
-  pipeGraphics.lineBetween(1, 0, 1, 512);
-  pipeGraphics.lineBetween(PIPE_WIDTH - 1, 0, PIPE_WIDTH - 1, 512);
-  pipeGraphics.generateTexture('pipeTexture', PIPE_WIDTH, 512);
-  pipeGraphics.destroy();
-
-  const capGraphics = this.add.graphics();
-  capGraphics.fillStyle(0x006600, 1);
-  capGraphics.fillRect(0, 0, PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  const capSteps = 20;
-  const stepWidthCap = (PIPE_WIDTH + 10) / capSteps;
-  for (let i = 0; i < capSteps; i++) {
-    const center = (capSteps - 1) / 2;
-    const distance = Math.abs(i - center) / center;
-    const factor = Math.pow(Math.sin(distance * Math.PI / 2), 1.5);
-    const color = interpolateColor(endColor, startColor, factor);
-    capGraphics.fillStyle(color, 1);
-    const x = Math.floor(i * stepWidthCap);
-    const width = Math.ceil((i + 1) * stepWidthCap) - x;
-    capGraphics.fillRect(x, 0, width, PIPE_CAP_HEIGHT);
-  }
-  capGraphics.lineStyle(1, 0x003300, 1);
-  capGraphics.strokeRect(1, 1, PIPE_WIDTH + 8, PIPE_CAP_HEIGHT - 2);
-  capGraphics.generateTexture('capTexture', PIPE_WIDTH + 10, PIPE_CAP_HEIGHT);
-  capGraphics.destroy();
+  // Generate textures once at start
+  generateTextures(this);
 }
 
 function update() {
@@ -330,8 +336,8 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  pipes.clear(true, true); // Cleanup here after tap
-  scoreZones.clear(true, true); // Cleanup here after tap
+  pipes.clear(true, true);
+  scoreZones.clear(true, true);
   gameOverText.setText('');
   restartText.setText('');
   shrimpSelectButton.visible = false;
@@ -514,4 +520,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+        }
