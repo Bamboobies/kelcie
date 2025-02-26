@@ -217,6 +217,10 @@ function update() {
       }
     });
 
+    pipes.getChildren().forEach(pipe => {
+      if (pipe.x + pipe.width < 0) pipe.destroy();
+    });
+
     if (bird.y + bird.displayHeight / 2 >= game.scale.height) hitPipe.call(this);
   }
 
@@ -298,8 +302,6 @@ function hitPipe() {
 
   gameOver = true;
   pipes.setVelocityX(0);
-  pipes.clear(true, true);
-  scoreZones.clear(true, true);
   shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
   if (shrimpMenuContainer) {
@@ -328,10 +330,11 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-  bird.body.enable = false;
+  pipes.clear(true, true); // Cleanup here after tap
+  scoreZones.clear(true, true); // Cleanup here after tap
   gameOverText.setText('');
   restartText.setText('');
-  shrimpSelectButton.visible = false; // Hide during gameplay
+  shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
   if (shrimpMenuContainer) {
     shrimpMenuContainer.destroy();
@@ -340,7 +343,6 @@ function restartGame() {
   menuVisible = false;
   birdLastX = bird.x;
   birdLastY = bird.y;
-  bird.body.enable = true;
 }
 
 function toggleShrimpMenu(forceHide = null) {
@@ -512,4 +514,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-    }
+}
