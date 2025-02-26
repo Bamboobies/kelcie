@@ -9,7 +9,7 @@ const PIPE_SPAWN_DELAY = 1550;
 const BACKGROUND_SPEED = -10;
 
 let game, bird, ghostBird, pipes, scoreZones, scoreText, highScoreText;
-let titleText, startText, gameOverText, restartText, shrimpSelectButton, shrimpSelectText;
+let titleText, startText, gameOverText, restartText, shrimpSelectButton, shrimpSelectText, hardModeButton, hardModeText;
 let shrimpMenuContainer, shrimpMenuOptions = [];
 let score = 0, highScore = 0, gameStarted = false, gameOver = false;
 let background1, background2;
@@ -115,7 +115,7 @@ function create() {
   background1 = this.add.sprite(0, 0, 'background').setOrigin(0, 0).setScale(scaleFactor);
   background2 = this.add.sprite(scaledWidth, 0, 'background').setOrigin(0, 0).setScale(scaleFactor);
 
-  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5).setDepth(-1);
+  const overlay = this.add.rectangle(gameWidth / 2, gameHeight / 2, gameWidth, gameHeight, 0xffffff, 0.3).setOrigin(0.5, 0.5).setDepth(-1);
 
   bird = this.physics.add.sprite(gameWidth * 0.2, gameHeight / 2, shrimpVariants[selectedShrimpIndex].key).setOrigin(0.5).setScale(0.0915);
   bird.body.allowGravity = false;
@@ -170,6 +170,22 @@ function create() {
   shrimpSelectButton.visible = true;
   shrimpSelectText.visible = true;
 
+  // Hard Mode button - same size, left of shrimp button
+  hardModeButton = this.add.rectangle(gameWidth - 190, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10);
+  hardModeText = this.add.text(gameWidth - 190, gameHeight - 30, 'Hard Mode', {
+    fontFamily: '"Press Start 2P", sans-serif',
+    fontSize: '16px',
+    fill: '#fff'
+  }).setOrigin(0.5).setDepth(11);
+  hardModeButton.setInteractive();
+  hardModeButton.on('pointerdown', () => {
+    if (!gameStarted || (gameOver && bird.y > game.scale.height + bird.displayHeight)) {
+      launchHardMode();
+    }
+  });
+  hardModeButton.visible = true;
+  hardModeText.visible = true;
+
   this.input.on('pointerdown', () => {
     if (gameStarted && !gameOver && !menuVisible) flap();
   });
@@ -187,7 +203,6 @@ function create() {
   deathSound = this.sound.add('death');
   flapSound = this.sound.add('flap', { volume: 0.7 });
 
-  // Generate textures once at start
   generateTextures(this);
 }
 
@@ -245,6 +260,8 @@ function startGame() {
   startText.setText('');
   shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
+  hardModeButton.visible = false;
+  hardModeText.visible = false;
   if (shrimpMenuContainer) {
     shrimpMenuContainer.destroy();
     shrimpMenuContainer = null;
@@ -310,6 +327,8 @@ function hitPipe() {
   pipes.setVelocityX(0);
   shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
+  hardModeButton.visible = false;
+  hardModeText.visible = false;
   if (shrimpMenuContainer) {
     shrimpMenuContainer.destroy();
     shrimpMenuContainer = null;
@@ -327,6 +346,8 @@ function showRestartScreen() {
   restartText.setText('TAP TO RESTART');
   shrimpSelectButton.visible = true;
   shrimpSelectText.visible = true;
+  hardModeButton.visible = true;
+  hardModeText.visible = true;
 }
 
 function restartGame() {
@@ -342,6 +363,8 @@ function restartGame() {
   restartText.setText('');
   shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
+  hardModeButton.visible = false;
+  hardModeText.visible = false;
   if (shrimpMenuContainer) {
     shrimpMenuContainer.destroy();
     shrimpMenuContainer = null;
@@ -410,6 +433,16 @@ function createShrimpMenu() {
     shrimpMenuContainer.add([sprite, text, option]);
     shrimpMenuOptions.push({ sprite, text, hitbox: option });
   });
+}
+
+function launchHardMode() {
+  // Assuming hardmode.js is a separate script loaded in the HTML
+  if (typeof startHardMode === 'function') {
+    game.destroy(true); // Destroy current game instance
+    startHardMode(); // Launch hard mode from external script
+  } else {
+    console.error('Hard mode script not loaded or startHardMode function not found.');
+  }
 }
 
 function createCollisionMask(sprite) {
@@ -520,4 +553,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-        }
+                               }
