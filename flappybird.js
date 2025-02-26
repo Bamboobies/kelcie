@@ -320,17 +320,8 @@ function restartGame() {
   bird.setPosition(game.scale.width * 0.2, game.scale.height / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
-
-  pipes.children.iterate(pipe => {
-    pipe.visible = false;
-    pipe.active = false;
-    pipe.body.setVelocityX(0);
-  });
-  scoreZones.children.iterate(zone => {
-    zone.visible = false;
-    zone.active = false;
-  });
-
+  pipes.clear(true, true); // Reverted to original clear
+  scoreZones.clear(true, true); // Reverted to original clear
   gameOverText.setText('');
   restartText.setText('');
   toggleShrimpMenu.call(this, false);
@@ -546,4 +537,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-}
+        }
