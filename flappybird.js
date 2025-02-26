@@ -136,9 +136,9 @@ function create() {
   scoreText = this.add.text(20, 20, 'SCORE: 0', textStyle).setDepth(10);
   highScoreText = this.add.text(20, 50, 'HIGH SCORE: ' + highScore, textStyle).setDepth(10);
 
-  // Shrimp Button with Border
+  // Shrimp Button with Dark Green Border
   shrimpSelectButton = this.add.rectangle(gameWidth - 80, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10);
-  shrimpSelectButton.setStrokeStyle(2, 0xFFFFFF); // White border
+  shrimpSelectButton.setStrokeStyle(2, 0x003300); // Dark green border
   shrimpSelectText = this.add.text(gameWidth - 80, gameHeight - 30, 'Shrimp', {
     fontFamily: '"Press Start 2P", sans-serif', fontSize: '16px', fill: '#fff'
   }).setOrigin(0.5).setDepth(11);
@@ -146,11 +146,11 @@ function create() {
   shrimpSelectButton.visible = true;
   shrimpSelectText.visible = true;
 
-  // Hard Mode Button with Border and Adjusted Text
-  hardModeButton = this.add.rectangle(gameWidth - 190, gameHeight - 30, 100, 40, 0x006400).setOrigin(0.5).setDepth(10);
-  hardModeButton.setStrokeStyle(2, 0xFFFFFF); // White border
+  // Hard Mode Button with Dark Green Border and Wider Size
+  hardModeButton = this.add.rectangle(gameWidth - 190, gameHeight - 30, 120, 40, 0x006400).setOrigin(0.5).setDepth(10); // Increased width to 120
+  hardModeButton.setStrokeStyle(2, 0x003300); // Dark green border
   hardModeText = this.add.text(gameWidth - 190, gameHeight - 30, 'Hard Mode', {
-    fontFamily: '"Press Start 2P", sans-serif', fontSize: '14px', fill: '#fff' // Reduced font size to fit
+    fontFamily: '"Press Start 2P", sans-serif', fontSize: '14px', fill: '#fff'
   }).setOrigin(0.5).setDepth(11);
   hardModeButton.setInteractive().on('pointerdown', () => (!gameStarted || (gameOver && bird.y > gameHeight + bird.displayHeight)) && launchHardMode());
   hardModeButton.visible = true;
@@ -196,8 +196,8 @@ function update(time, delta) {
       zone.x += PIPE_SPEED * deltaFactor;
       if (!zone.passed && zone.x + zone.width + 40 < bird.x) {
         zone.passed = true;
-        score++; // Increment score
-        scoreText.setText('SCORE: ' + (score || 1)); // Display starts at 1
+        score++;
+        scoreText.setText('SCORE: ' + (score || 1));
         if (score > highScore) {
           highScore = score;
           localStorage.setItem('flappyHighScore', highScore);
@@ -215,7 +215,7 @@ function update(time, delta) {
   }
 
   if (gameOver && ghostBird.visible) {
-    ghostBird.y -= 4 * deltaFactor * 60;
+    ghostBird.y -= 8 * deltaFactor * 60; // Increased from 4 to 8 for faster rising
     if (ghostBird.y < -ghostBird.displayHeight) ghostBird.visible = false;
   }
 
@@ -236,7 +236,7 @@ function startGame() {
     shrimpMenuContainer = null;
   }
   menuVisible = false;
-  score = 0; // Reset score to 0, but display starts at 1
+  score = 0;
   scoreText.setText('SCORE: 0');
   this.time.addEvent({ delay: PIPE_SPAWN_DELAY, loop: true, callback: addPipes, callbackScope: this });
 }
@@ -320,7 +320,7 @@ function showRestartScreen() {
 function restartGame() {
   gameOver = false;
   score = 0;
-  scoreText.setText('SCORE: 0'); // Reset to 0, display starts at 1 on first pipe
+  scoreText.setText('SCORE: 0');
   bird.setPosition(gameWidth * 0.2, gameHeight / 2);
   bird.body.setVelocity(0, 0);
   bird.angle = 0;
@@ -337,6 +337,7 @@ function restartGame() {
     shrimpMenuContainer = null;
   }
   menuVisible = false;
+  ghostBird.visible = false; // Ensure ghost shrimp disappears on restart
   birdLastX = bird.x;
   birdLastY = bird.y;
 }
@@ -394,12 +395,11 @@ function createShrimpMenu() {
 }
 
 function launchHardMode() {
-  // Ensure hardmode.js is loaded and startHardMode is defined
   if (typeof startHardMode === 'function') {
     game.destroy(true); // Destroy current game instance
     startHardMode(); // Call the hard mode launch function from hardmode.js
   } else {
-    console.error('Hard mode script (hardmode.js) not loaded or startHardMode function not found.');
+    console.error('Hard mode script (hardmode.js) not loaded or startHardMode function not found. Ensure <script src="hardmode.js"></script> is in your HTML before the main script.');
   }
 }
 
@@ -485,4 +485,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-      }
+    }
