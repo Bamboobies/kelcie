@@ -298,8 +298,8 @@ function hitPipe() {
 
   gameOver = true;
   pipes.setVelocityX(0);
-  pipes.clear(true, true); // Move cleanup here
-  scoreZones.clear(true, true); // Move cleanup here
+  pipes.clear(true, true); // Cleanup here
+  scoreZones.clear(true, true); // Cleanup here
   shrimpSelectButton.visible = false;
   shrimpSelectText.visible = false;
   if (shrimpMenuContainer) {
@@ -331,8 +331,8 @@ function restartGame() {
   bird.body.enable = false;
   gameOverText.setText('');
   restartText.setText('');
-  shrimpSelectButton.visible = true;
-  shrimpSelectText.visible = true;
+  shrimpSelectButton.visible = false; // Hide on restart until next game over
+  shrimpSelectText.visible = false;
   if (shrimpMenuContainer) {
     shrimpMenuContainer.destroy();
     shrimpMenuContainer = null;
