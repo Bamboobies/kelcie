@@ -110,7 +110,7 @@ function create() {
   shrimpSelectButton.on('pointerdown', () => {
     toggleShrimpMenu.call(this);
   });
-  shrimpSelectButton.visible = true; // Start screen
+  shrimpSelectButton.visible = true; // Start screen only
   shrimpSelectText.visible = true;
 
   this.input.on('pointerdown', () => {
@@ -350,7 +350,7 @@ function toggleShrimpMenu(forceHide = null) {
       shrimpMenuContainer = null;
     }
     menuVisible = false;
-  } else if (forceHide === true || (forceHide === null && !menuVisible)) {
+  } else if (forceHide === true || (forceHide === null && !menuVisible && (!gameStarted || (gameOver && bird.y > game.scale.height + bird.displayHeight)))) {
     createShrimpMenu.call(this);
     menuVisible = true;
   }
@@ -512,4 +512,4 @@ function optimizedPixelPerfectCollision(birdSprite, pipeSprite) {
   }
 
   return false;
-                                                     }
+}
