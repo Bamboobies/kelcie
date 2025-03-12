@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chocolate Thunder: Reclaim the Silverado</title>
+    <title>Chocolate Thunder: Beat the Feds</title>
     <style>
         * {
             margin: 0;
@@ -12,8 +12,8 @@
         }
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #1a2a44; /* Dark blue background */
-            color: #d4af37; /* Gold text */
+            background-color: #1a2a44;
+            color: #d4af37;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -24,7 +24,7 @@
             width: 100%;
             max-width: 800px;
             height: 90vh;
-            background-color: #2a3b5a; /* Slightly lighter dark blue for contrast */
+            background-color: #2a3b5a;
             padding: 4vw;
             border-radius: 2vw;
             box-shadow: 0 0 2vw rgba(0, 0, 0, 0.7);
@@ -32,12 +32,12 @@
             flex-direction: column;
             justify-content: space-between;
             overflow-y: auto;
-            border: 1px solid #d4af37; /* Gold border for flair */
+            border: 1px solid #d4af37;
         }
         h1 {
             font-size: clamp(1.5rem, 5vw, 2.5rem);
             margin-bottom: 2vh;
-            text-shadow: 0 0 5px rgba(212, 175, 55, 0.5); /* Subtle gold glow */
+            text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
         }
         #output {
             font-size: clamp(1rem, 3.5vw, 1.25rem);
@@ -53,9 +53,9 @@
             justify-content: center;
         }
         button {
-            background-color: #d4af37; /* Gold buttons */
-            color: #1a2a44; /* Dark blue text on buttons */
-            border: 2px solid #b8932e; /* Slightly darker gold border */
+            background-color: #d4af37;
+            color: #1a2a44;
+            border: 2px solid #b8932e;
             padding: clamp(0.75rem, 2.5vw, 1rem) clamp(1.5rem, 4vw, 2rem);
             font-size: clamp(0.9rem, 3vw, 1.1rem);
             border-radius: 1vw;
@@ -66,21 +66,21 @@
             transition: background-color 0.3s, transform 0.1s;
         }
         button:hover {
-            background-color: #e6c74c; /* Lighter gold on hover */
-            transform: scale(1.05); /* Slight grow effect */
+            background-color: #e6c74c;
+            transform: scale(1.05);
         }
         button:active {
-            transform: scale(0.95); /* Slight shrink on click */
+            transform: scale(0.95);
         }
         #game-container::-webkit-scrollbar {
             width: 0.5vw;
         }
         #game-container::-webkit-scrollbar-thumb {
-            background: #d4af37; /* Gold scrollbar */
+            background: #d4af37;
             border-radius: 1vw;
         }
         #game-container::-webkit-scrollbar-track {
-            background: #1a2a44; /* Match background */
+            background: #1a2a44;
         }
         @media (max-width: 600px) {
             button {
@@ -103,21 +103,21 @@
 
         const scenes = {
             intro: {
-                text: "You’re Chocolate Thunder, a free-spirit libertarian renegade who lives for the open road and the gospel of liberty. Your silver Silverado with a black stripe wasn’t just a truck—it was your rolling fortress, packed with dog-eared copies of Ludwig von Mises and Murray Rothbard, a boombox blaring outlaw tunes, and a hidden stash of contraband freedom flags. Last week, the FBI, led by Agent Hannah Montana, ambushed your desert camp. They nabbed your Silverado after you laughed in their faces, refusing to hand over the keys to its secret compartment. 'No cage can hold me!' you roared, escaping into the night. Now, it’s time to take it back.",
+                text: "You’re Chocolate Thunder, a free-spirit libertarian renegade who roams the wild with your loyal chocolate lab, Athena. Your silver Silverado with a black stripe was your rolling sanctuary—loaded with Mises and Rothbard books, a boombox blasting outlaw anthems, and Athena’s newborn puppies nestled in the cab. Last week, the FBI, led by Agent Hannah Montana, raided your desert camp. They seized your Silverado, with Athena’s puppies still inside, after you refused to unlock its secret stash of freedom flags. 'No cage can hold us!' you bellowed, escaping with Athena by your side. Now, it’s time to reclaim your truck—and save her pups.",
                 choices: [
                     { text: "Begin the fight", next: "start" }
                 ]
             },
             start: {
-                text: "You’re holed up in a dusty motel, the taste of freedom still on your tongue. Your Silverado’s at an FBI outpost nearby, mocked by Hannah Montana’s smug grin. You call Loagan, your wild-eyed mechanic buddy with a BB gun slung over his shoulder. 'Loagan, the feds stole my soul—my Silverado,' you say, voice low. 'I need your help to liberate it.' He nods, ready. Sirens howl in the distance. What’s your play?",
+                text: "You’re in a dusty motel, Athena pacing beside you, her growls echoing your rage. Your Silverado—and her puppies—are at an FBI outpost nearby. You call Loagan, your chocolate milk-loving best friend, always clutching a BB gun and a carton of his favorite drink. 'Loagan, the feds stole my truck and Athena’s pups,' you snarl. 'I need your help to liberate them.' He gulps his milk and nods, ready. Sirens wail closer. What’s your move?",
                 choices: [
-                    { text: "Slip out the back", next: "sneakOut" },
+                    { text: "Slip out with Athena", next: "sneakOut" },
                     { text: "Rig a BB gun trap", next: "bbGunTrap" },
                     { text: "Ride out solo", next: "rideSolo" }
                 ]
             },
             sneakOut: {
-                text: "You ease out the back door, Loagan shadowing you with his BB gun. Through the haze, you see your Silverado parked at the outpost, Hannah Montana twirling its keys. You’ve got a smoke bomb tucked in your jacket. How do you roll?",
+                text: "You slip out the back, Athena at your heels, Loagan trailing with his BB gun and a slosh of chocolate milk. Through the dust, you spot your Silverado, Hannah Montana twirling its keys. You hear faint yips—Athena’s puppies are alive inside! You’ve got a smoke bomb ready. How do you roll?",
                 choices: [
                     { text: "Unleash the smoke bomb", next: "smokeBomb" },
                     { text: "Pick the lock", next: "pickLock" },
@@ -125,7 +125,7 @@
                 ]
             },
             bbGunTrap: {
-                text: "You set up Loagan’s BB gun to pepper the door when it opens. The FBI storms in—plink, plink! Chaos erupts, and you grin, tasting liberty. Your Silverado’s out there, calling. What’s next?",
+                text: "You rig Loagan’s BB gun to blast the door when it opens, while he chugs chocolate milk for courage. The FBI barges in—plink, plink! Chaos erupts as Athena barks furiously. Your Silverado and her pups are out there. What’s next?",
                 choices: [
                     { text: "Leap out the window", next: "windowEscape" },
                     { text: "Brawl with the pigs", next: "brawlPigs" },
@@ -133,14 +133,14 @@
                 ]
             },
             rideSolo: {
-                text: "You ditch Loagan, howling Mises’ 'Liberty is indivisible!' into the wind. You stalk to the outpost alone, spotting your Silverado under guard. Hannah Montana’s humming her old hits. Strike or bide your time?",
+                text: "You leave Loagan behind with his milk carton, Athena trotting beside you as you howl Mises’ 'Liberty is indivisible!' You reach the outpost alone, spotting your Silverado—puppy whines drift from the cab. Hannah Montana’s humming smugly. Strike or bide your time?",
                 choices: [
                     { text: "Charge the truck", next: "chargeTruck" },
                     { text: "Wait for an opening", next: "waitOpening" }
                 ]
             },
             smokeBomb: {
-                text: "You chuck the smoke bomb, and a gray cloud swallows the outpost. Hannah Montana chokes on her own smugness. Your Silverado’s in reach, but a rookie lurches toward you. Move fast!",
+                text: "You toss the smoke bomb, engulfing the outpost in haze. Hannah Montana hacks, blinded, as Athena snarls. Loagan wipes chocolate milk from his chin. Your Silverado’s close, puppies yipping faintly. A rookie staggers toward you. Move fast!",
                 choices: [
                     { text: "Drop the rookie", next: "dropRookie" },
                     { text: "Snag the keys", next: "snagKeys" },
@@ -148,112 +148,112 @@
                 ]
             },
             pickLock: {
-                text: "You crouch by your Silverado, picking the lock with a renegade’s focus. Hannah Montana’s distracted, Loagan hovering nearby. Finish it or call for backup?",
+                text: "You kneel by your Silverado, picking the lock as Athena whines for her pups inside. Hannah Montana’s distracted, Loagan sipping milk nearby. Finish it or call for backup?",
                 choices: [
                     { text: "Crack it open", next: "crackOpen" },
                     { text: "Get Loagan to shoot", next: "loaganShoot" }
                 ]
             },
             loaganDistraction: {
-                text: "You growl, 'Loagan, stir the pot.' He fires his BB gun at a barrel, and Hannah Montana spins away. Your Silverado’s free, but its tank’s dry. Fuel up or gun it?",
+                text: "You growl, 'Loagan, stir the pot.' He fires his BB gun at a barrel, chocolate milk splashing, and Hannah Montana spins away. Your Silverado’s free, puppies whimpering, but the tank’s dry. Fuel up or gun it?",
                 choices: [
                     { text: "Siphon some juice", next: "siphonJuice" },
                     { text: "Hotwire and pray", next: "hotwirePray" }
                 ]
             },
             windowEscape: {
-                text: "You smash through the window, hitting the dirt hard. Loagan stumbles after you. Your Silverado’s being hauled onto a flatbed. Stop it or tail it?",
+                text: "You crash through the window, Athena leaping after you, Loagan stumbling behind with his milk-stained shirt. Your Silverado’s on a flatbed, puppies barking inside. Stop it or tail it?",
                 choices: [
                     { text: "Wreck the flatbed", next: "wreckFlatbed" },
                     { text: "Run after it", next: "runAfter" }
                 ]
             },
             brawlPigs: {
-                text: "You swing wild, shouting Rothbard’s 'Freedom is self-ownership!' An agent drops, but Hannah Montana pulls her piece. 'Freeze, Thunder!' Duck or lunge?",
+                text: "You swing wild, shouting Rothbard’s 'Freedom is self-ownership!' as Athena snaps at heels. Loagan swings his milk carton. An agent drops, but Hannah Montana pulls her gun. 'Freeze, Thunder!' Duck or lunge?",
                 choices: [
                     { text: "Duck and bolt", next: "duckBolt" },
                     { text: "Lunge at her", next: "lungeHer" }
                 ]
             },
             duckWait: {
-                text: "You dive under a table, BB pellets rolling. The FBI clears out, but your Silverado’s towed off. Loagan mutters about an FBI garage. Hit it or hold off?",
+                text: "You dive under a table with Athena, BB pellets scattering. Loagan clutches his milk. The FBI clears out, but your Silverado’s towed—puppies and all. Loagan mutters about an FBI garage. Hit it or hold off?",
                 choices: [
                     { text: "Raid the garage", next: "raidGarage" },
                     { text: "Wait for dark", next: "waitDark" }
                 ]
             },
             chargeTruck: {
-                text: "You barrel toward your Silverado, a free man’s roar in your throat. Hannah Montana whirls, gun up, chopper overhead. Fight or fade?",
+                text: "You barrel toward your Silverado, Athena barking, a renegade’s roar in your chest. Hannah Montana whirls, gun up, chopper overhead. 'We’re shipping those pups to the ATF for execution,' she sneers. Fight or fade?",
                 choices: [
                     { text: "Take her down", next: "takeHerDown" },
                     { text: "Fade into shadows", next: "fadeShadows" }
                 ]
             },
             waitOpening: {
-                text: "You lurk, patient as a coyote. Hannah Montana steps off, and your Silverado’s ripe—but a drone hums above. Go now or take it out?",
+                text: "You lurk with Athena, her ears perked for her pups. Hannah Montana steps off, bragging into her radio, 'ATF’s gonna put those mutts down.' Your Silverado’s ripe, but a drone hums above. Go now or take it out?",
                 choices: [
                     { text: "Rush the truck", next: "rushTruck" },
                     { text: "Blast the drone", next: "blastDrone" }
                 ]
             },
             dropRookie: {
-                text: "You slug the rookie, and he’s out. Smoke fades—your Silverado’s yours, but Hannah Montana’s vanished. Ride out or hunt her?",
+                text: "You slug the rookie, and he flops. Smoke clears—your Silverado’s yours, Athena sniffing the cab where her puppies yip. Hannah Montana’s gone, but her ATF threat lingers. Ride out or hunt her?",
                 choices: [
                     { text: "Ride free", next: "rideFree" },
                     { text: "Hunt Hannah", next: "huntHannah" }
                 ]
             },
             snagKeys: {
-                text: "You swipe the keys off a crate. Your Silverado growls awake, but a chopper pins you in light. Burn rubber or hunker down?",
+                text: "You swipe the keys, and your Silverado rumbles, puppies tumbling in the cab. Athena leaps in as a chopper pins you in light. Hannah’s voice crackles: 'ATF’s waiting for those dogs!' Burn rubber or hunker down?",
                 choices: [
                     { text: "Burn rubber", next: "burnRubber" },
                     { text: "Hunker in the cab", next: "hunkerCab" }
                 ]
             },
             hotwireBeast: {
-                text: "You hotwire your Silverado, wires sparking like your soul. Loagan whoops, but an alarm screams. Floor it or kill the noise?",
+                text: "You hotwire your Silverado, sparks flying as Athena guards her pups. Loagan whoops, milk in hand, but an alarm blares. Hannah radios: 'ATF’s got a kennel with their name on it!' Floor it or kill the noise?",
                 choices: [
                     { text: "Floor it", next: "floorIt" },
                     { text: "Kill the alarm", next: "killAlarm" }
                 ]
             },
             crackOpen: {
-                text: "You crack the lock, but Hannah Montana spots you. 'Caught you, Thunder!' she taunts. Bolt or brawl?",
+                text: "You crack the lock, puppies yipping as Athena nuzzles the door. Hannah Montana spots you. 'Those pups are ATF bait!' she taunts. Bolt or brawl?",
                 choices: [
                     { text: "Bolt to the truck", next: "boltTruck" },
                     { text: "Brawl with her", next: "brawlHer" }
                 ]
             },
             loaganShoot: {
-                text: "Loagan pings Hannah Montana with a BB, and she staggers. You unlock your Silverado. Ride off or back him up?",
+                text: "Loagan pings Hannah Montana with a BB, milk splashing, and she staggers. You unlock your Silverado, Athena jumping in to her pups. Hannah yells, 'ATF’s gonna end them!' Ride off or back him up?",
                 choices: [
                     { text: "Ride off", next: "rideOff" },
                     { text: "Back Loagan", next: "backLoagan" }
                 ]
             },
             // Endgame Scenarios
-            siphonJuice: { text: "You siphon fuel, fire up your Silverado, and roll free. Liberty wins!", choices: [] },
-            hotwirePray: { text: "You hotwire it, but it dies. FBI nabs you. Game over!", choices: [] },
-            wreckFlatbed: { text: "You slash the flatbed’s tires, reclaim your Silverado, and ride out. Victory!", choices: [] },
-            runAfter: { text: "You run, but the flatbed’s gone. Game over!", choices: [] },
-            duckBolt: { text: "You duck and snag your truck. Freedom’s yours—win!", choices: [] },
-            lungeHer: { text: "You lunge, but she fires. Game over!", choices: [] },
-            raidGarage: { text: "You raid the garage, liberate your Silverado, and peel out. Victory!", choices: [] },
-            waitDark: { text: "You wait, but they move your truck. Game over!", choices: [] },
-            takeHerDown: { text: "You drop Hannah, grab your keys, and ride free. Silverado’s back!", choices: [] },
-            fadeShadows: { text: "You fade, but lose your truck. Game over!", choices: [] },
-            rushTruck: { text: "You hit your Silverado and burn out. Freedom reigns!", choices: [] },
-            blastDrone: { text: "You shoot, miss, and the drone tags you. Game over!", choices: [] },
-            rideFree: { text: "You tear off in your Silverado, wind in your hair. Victory!", choices: [] },
-            huntHannah: { text: "You hunt, but she ambushes you. Game over!", choices: [] },
-            burnRubber: { text: "You burn out, ditch the chopper, and reclaim your soul. Win!", choices: [] },
-            hunkerCab: { text: "You hunker, but the chopper nails you. Game over!", choices: [] },
-            floorIt: { text: "You floor it, alarm loud but free. Silverado’s yours—win!", choices: [] },
-            killAlarm: { text: "You kill it and roll out clean. Victory!", choices: [] },
-            boltTruck: { text: "You bolt, start your Silverado, and escape. Freedom!", choices: [] },
-            brawlHer: { text: "You brawl, but Hannah wins. Game over!", choices: [] },
-            rideOff: { text: "You ride off in your Silverado, a free spirit again. Win!", choices: [] },
-            backLoagan: { text: "You back him, but FBI swarms. Game over!", choices: [] }
+            siphonJuice: { text: "You siphon fuel, fire up your Silverado, and roll free with Athena and her pups. Liberty wins!", choices: [] },
+            hotwirePray: { text: "You hotwire it, but it dies. FBI nabs you, pups doomed. Game over!", choices: [] },
+            wreckFlatbed: { text: "You slash the flatbed’s tires, reclaim your Silverado, and ride out with Athena’s pups. Victory!", choices: [] },
+            runAfter: { text: "You run, but the flatbed’s gone—puppies with it. Game over!", choices: [] },
+            duckBolt: { text: "You duck, snag your truck, and save Athena’s pups. Freedom’s yours—win!", choices: [] },
+            lungeHer: { text: "You lunge, but she fires. Pups lost. Game over!", choices: [] },
+            raidGarage: { text: "You raid the garage, liberate your Silverado, and save the pups. Victory!", choices: [] },
+            waitDark: { text: "You wait, but they ship the pups to the ATF. Game over!", choices: [] },
+            takeHerDown: { text: "You drop Hannah, grab your keys, and ride free with Athena’s pups. Silverado’s back!", choices: [] },
+            fadeShadows: { text: "You fade, but lose your truck and pups. Game over!", choices: [] },
+            rushTruck: { text: "You hit your Silverado, rescue the pups, and burn out. Freedom reigns!", choices: [] },
+            blastDrone: { text: "You shoot, miss, and the drone tags you. Pups gone. Game over!", choices: [] },
+            rideFree: { text: "You tear off with Athena and her pups, wind in your hair. Victory!", choices: [] },
+            huntHannah: { text: "You hunt, but she ambushes you. Pups lost. Game over!", choices: [] },
+            burnRubber: { text: "You burn out, ditch the chopper, and save Athena’s pups. Win!", choices: [] },
+            hunkerCab: { text: "You hunker, but the chopper nails you. Pups doomed. Game over!", choices: [] },
+            floorIt: { text: "You floor it, alarm loud but free with the pups. Silverado’s yours—win!", choices: [] },
+            killAlarm: { text: "You kill it and roll out clean with Athena’s pups. Victory!", choices: [] },
+            boltTruck: { text: "You bolt, start your Silverado, and escape with the pups. Freedom!", choices: [] },
+            brawlHer: { text: "You brawl, but Hannah wins. Pups lost. Game over!", choices: [] },
+            rideOff: { text: "You ride off with Athena and her pups, a free spirit again. Win!", choices: [] },
+            backLoagan: { text: "You back him, but FBI swarms. Pups taken. Game over!", choices: [] }
         };
 
         let currentScene = 'intro';
