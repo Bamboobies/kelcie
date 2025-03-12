@@ -12,20 +12,19 @@
         }
         body {
             font-family: 'Arial', sans-serif;
-            background-color: #1a2a44;
+            background: linear-gradient(135deg, #1a2a44 0%, #2a3b5a 100%);
             color: #d4af37;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 2vw;
-            background: linear-gradient(135deg, #1a2a44 0%, #2a3b5a 100%);
         }
         #game-container {
             width: 100%;
             max-width: 850px;
             height: 92vh;
-            background-color: #2a3b5a;
+            background: #2a3b5a;
             padding: 4vw;
             border-radius: 2vw;
             box-shadow: 0 0 2vw rgba(0, 0, 0, 0.8), inset 0 0 1vw rgba(212, 175, 55, 0.2);
@@ -37,10 +36,16 @@
         }
         h1 {
             font-size: clamp(1.8rem, 5.5vw, 2.8rem);
-            margin-bottom: 2vh;
+            margin-bottom: 1vh;
             text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
             text-align: center;
             letter-spacing: 0.1rem;
+        }
+        #progress {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            text-align: center;
+            margin-bottom: 2vh;
+            color: #e6c74c;
         }
         #output {
             font-size: clamp(1rem, 3.5vw, 1.3rem);
@@ -60,7 +65,7 @@
             padding-top: 1vh;
         }
         button {
-            background-color: #d4af37;
+            background: #d4af37;
             color: #1a2a44;
             border: 2px solid #b8932e;
             padding: clamp(0.8rem, 2.5vw, 1.2rem) clamp(1.5rem, 4vw, 2.2rem);
@@ -75,7 +80,7 @@
             text-shadow: 0 0 2px rgba(26, 42, 68, 0.5);
         }
         button:hover {
-            background-color: #e6c74c;
+            background: #e6c74c;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
@@ -108,6 +113,7 @@
 <body>
     <div id="game-container">
         <h1>Chocolate Thunder: Beat the Feds</h1>
+        <div id="progress"></div>
         <div id="output"></div>
         <div id="choices"></div>
     </div>
@@ -115,14 +121,15 @@
     <script>
         const output = document.getElementById('output');
         const choicesDiv = document.getElementById('choices');
+        const progressDiv = document.getElementById('progress');
 
         const scenes = {
             intro: {
-                text: "You’re Chocolate Thunder, a free-spirit libertarian renegade tearing through life with your chocolate lab, Athena, by your side. Your silver Silverado with a black stripe wasn’t just a truck—it was your rolling fortress of freedom, packed with dog-eared copies of Mises and Rothbard, a boombox cranking outlaw jams, and Athena’s squirming newborn puppies napping in the cab. Last week, the FBI, led by Agent Hannah Montana—yes, *that* Hannah Montana—stormed your desert camp like it was a bad reality TV reboot. They nabbed your Silverado, pups and all, after you refused to unlock its secret stash of contraband freedom flags. 'No cage can hold us!' you bellowed, escaping with Athena into the night. Now, it’s time to take back your truck and save those fuzzy little anarchists before Hannah ships them off to the ATF for a fate worse than a Miley Cyrus comeback tour.",
-                choices: [{ text: "Kick off the chaos", next: "start" }]
+                text: "You’re Chocolate Thunder, a free-spirit libertarian renegade tearing through life with your chocolate lab, Athena, at your side. Your silver Silverado with a black stripe—your rolling fortress of freedom—was loaded with Mises and Rothbard paperbacks, a boombox blasting outlaw tunes, and Athena’s newborn puppies curled up in the cab. Last week, the FBI, led by Agent Hannah Montana (yep, *that* Hannah Montana), raided your desert camp like it was a reality TV sting gone wrong. They seized your truck, puppies included, after you refused to unlock its secret stash of freedom flags. 'Taxation’s theft, and so’s this!' you roared, escaping with Athena into the dusk. Now, it’s time to reclaim your ride and rescue those fuzzy anarchists before Hannah hands them over to the ATF for a fate worse than a pop star’s comeback tour.",
+                choices: [{ text: "Launch the rebellion", next: "start" }]
             },
             start: {
-                text: "You’re holed up in a dusty motel that smells like regret and stale coffee. Athena paces, growling like she’s ready to debate the feds herself. Your Silverado—and her puppies—are locked down at an FBI outpost a few miles out. You call Loagan, your chocolate milk-loving best friend who’s never without his BB gun and a carton of the good stuff. 'Loagan, the feds stole my truck and Athena’s pups,' you growl. 'I need your help to liberate ‘em.' He slurps his milk like it’s a battle cry and says, 'Let’s make those suits cry into their paperwork!' Sirens wail in the distance—time’s ticking. What’s your move?",
+                text: "You’re holed up in a dusty motel that smells like despair and burnt toast. Athena paces, growling like she’s ready to chew through bureaucracy itself. Your Silverado—and her puppies—are stashed at an FBI outpost a few miles away. You call Loagan, your chocolate milk-chugging best friend, who’s clutching a BB gun and a frothy carton. 'Loagan, the feds nabbed my truck and Athena’s pups,' you snarl. 'Help me liberate ‘em, or I’ll tax your milk stash!' He slurps loud enough to wake Mises and says, 'I’m in, Thunder—let’s make those suits cry into their W-2s!' Sirens wail closer. What’s your first move?",
                 choices: [
                     { text: "Sneak out with Athena", next: "sneakOut" },
                     { text: "Rig a BB gun trap", next: "bbGunTrap" },
@@ -130,265 +137,286 @@
                 ]
             },
             sneakOut: {
-                text: "You slip out the back door with Athena slinking beside you, her eyes glinting like a furry Rothbard. Loagan stumbles along, BB gun in one hand, chocolate milk sloshing in the other. Ahead, you spot a rusted shed—could be a goldmine or a deathtrap. The outpost looms in the distance, mocking you with its bureaucracy. Where you headed, Thunder?",
+                text: "You slip out the back with Athena slinking beside you, her eyes sharp as a tax-dodging hawk. Loagan stumbles along, BB gun in one hand, milk sloshing in the other—'Stealth’s my middle name,' he lies. Ahead, a rusted shed glints—could be a jackpot or a fed trap. The outpost looms beyond. Where to?",
                 choices: [
-                    { text: "Poke around the shed", next: "shedCheck" },
-                    { text: "Beeline for the outpost", next: "outpostApproach" },
-                    { text: "Hide in some bushes first", next: "bushHide" }
+                    { text: "Check the shed", next: "shedCheck" },
+                    { text: "Head straight to the outpost", next: "outpostApproach" },
+                    { text: "Hide in bushes first", next: "bushHide" }
                 ]
             },
             shedCheck: {
-                text: "You creak open the shed door, and Athena sniffs the air like she’s auditing the place. Inside: a crumpled map of the outpost, a dented gas can, and—score!—a flare gun Loagan calls 'the milkman’s flare-rier.' He’s already sipping his carton, grinning like he invented chocolate. Grab the loot or keep moving?",
+                text: "You nudge the shed door open, Athena sniffing like she’s auditing the joint. Inside: a crumpled outpost map, a dented gas can, and a flare gun Loagan dubs 'the milkman’s flare-rier.' He sips his carton, grinning like he invented dairy. Grab the loot or keep rolling?",
                 choices: [
-                    { text: "Snag the map, gas, and flare", next: "shedLoot" },
-                    { text: "Leave it, hit the outpost", next: "outpostApproach" },
-                    { text: "Check for traps first", next: "trapCheck" }
+                    { text: "Take map, gas, and flare", next: "shedLoot" },
+                    { text: "Skip it, hit the outpost", next: "outpostApproach" },
+                    { text: "Check for traps", next: "trapCheck" }
                 ]
             },
             shedLoot: {
-                text: "You stuff the map in your pocket, sling the gas can over your shoulder, and hand Loagan the flare gun—he’s already posing like a cowboy with a milk mustache. Athena growls—footsteps crunch outside. 'Probably just a squirrel,' Loagan whispers, 'or Hannah Montana’s glitter patrol.' Hide or face it?",
+                text: "You pocket the map, sling the gas can, and toss Loagan the flare gun—he catches it mid-sip, milk dribbling. Athena growls—footsteps crunch outside. 'Probably a raccoon,' Loagan whispers, 'or Hannah’s glitter squad.' Hide or confront?",
                 choices: [
-                    { text: "Duck behind crates", next: "shedHide" },
-                    { text: "Step out and confront", next: "shedConfront" }
+                    { text: "Hide behind crates", next: "shedHide" },
+                    { text: "Step out and face it", next: "shedConfront" }
                 ]
             },
             shedHide: {
-                text: "You cram behind crates with Athena, Loagan squeezing in, milk dripping like a leaky faucet. An FBI informant peers in, muttering, 'That renegade’s toast—pups to the ATF by dawn.' He shuffles off. Loagan whispers, 'Dawn? That’s when my milk goes bad!' Follow him or push on?",
+                text: "You duck behind crates with Athena, Loagan squeezing in, milk dripping like a busted faucet. An FBI snitch peers in, muttering, 'Thunder’s toast—pups to ATF by dawn.' He shuffles off. Loagan whispers, 'Dawn? That’s my milk expiration!' Follow or push on?",
                 choices: [
-                    { text: "Tail the snitch", next: "followInformant" },
-                    { text: "Head to the outpost", next: "outpostWithGear" }
+                    { text: "Tail the snitch", next: "followSnitch" },
+                    { text: "Head to outpost with gear", next: "outpostWithGear" }
                 ]
             },
             shedConfront: {
-                text: "You stride out, Athena baring teeth like she’s about to tax the guy. It’s an informant, eyes wide. 'Thunder?!' he yelps, dropping a radio. Loagan quips, 'Bet he’s calling for more glitter.' Snag the radio or knock him out cold?",
+                text: "You stride out, Athena baring teeth like she’s collecting back taxes. It’s an FBI snitch, eyes wide. 'Thunder?!' he yelps, dropping a radio. Loagan quips, 'Bet he’s calling for more sequins.' Snag it or knock him out?",
                 choices: [
-                    { text: "Grab the radio", next: "radioSnag" },
-                    { text: "Put him to sleep", next: "knockInformant" }
+                    { text: "Grab the radio", next: "radioGrab" },
+                    { text: "Knock him cold", next: "knockSnitch" }
                 ]
             },
             bbGunTrap: {
-                text: "You rig Loagan’s BB gun to blast the door—'Milk-powered chaos!' he cheers, chugging his carton. The FBI kicks it in—plink, plink! Pellets fly, agents yelp, and Athena barks like she’s leading the charge. Your Silverado’s out there, calling. What’s the plan?",
+                text: "You rig Loagan’s BB gun to blast the door—'Milk-fueled anarchy!' he cheers, chugging his carton. The FBI kicks it in—plink, plink! Pellets fly, agents curse, and Athena barks like she’s rallying a tax revolt. Your Silverado’s out there. What’s next?",
                 choices: [
-                    { text: "Bust out the window", next: "windowEscape" },
-                    { text: "Throw down with the suits", next: "brawlPigs" },
+                    { text: "Leap out the window", next: "windowLeap" },
+                    { text: "Brawl with the feds", next: "brawlFeds" },
                     { text: "Hide in the bathroom", next: "bathroomHide" }
                 ]
             },
             scoutSolo: {
-                text: "You ditch Loagan and his milk obsession, whispering to Athena, 'Liberty’s our co-pilot, girl.' Quoting Mises, you stalk to a ridge overlooking the outpost. Your Silverado glints under floodlights, puppy yips drifting up. A guard paces, oblivious. Strike or strategize?",
+                text: "You leave Loagan with his milk fetish, whispering to Athena, 'Liberty’s our wingman, girl.' Quoting Mises’ 'Freedom is indivisible,' you creep to a ridge overlooking the outpost. Your Silverado shines under floodlights, puppy whines echoing. A guard paces—clueless statist. Strike or plan?",
                 choices: [
                     { text: "Ambush the guard", next: "ambushGuard" },
-                    { text: "Wait for an opening", next: "waitOpening" },
-                    { text: "Hunt for a back way", next: "backWayHunt" }
+                    { text: "Wait for a gap", next: "waitGap" },
+                    { text: "Hunt a back route", next: "backRoute" }
                 ]
             },
             bushHide: {
-                text: "You dive into prickly bushes, Athena glaring like you’ve insulted her dignity. Loagan mutters, 'This is why I stick to milk—nature’s overrated.' A patrol passes, chatting about ‘Thunder’s mutts.’ Stay low or pop out?",
+                text: "You dive into thorny bushes, Athena glaring like you’ve betrayed her dignity. Loagan mutters, 'This is why milk’s indoors—nature’s a scam.' A patrol passes, chatting about ‘Thunder’s mutts.’ Stay or strike?",
                 choices: [
-                    { text: "Stay hidden", next: "bushWait" },
-                    { text: "Jump the patrol", next: "bushAmbush" }
+                    { text: "Stay low", next: "bushStay" },
+                    { text: "Ambush the patrol", next: "bushAmbush" }
                 ]
             },
             trapCheck: {
-                text: "You scan the shed for traps—Athena sniffs a tripwire tied to a bucket of... glitter? 'Hannah’s style,' Loagan snorts, sipping milk. Disarm it or grab and go?",
+                text: "You scan the shed—Athena sniffs a tripwire tied to a bucket of glitter. 'Hannah’s signature,' Loagan snorts, sipping milk. Disarm it or grab and go?",
                 choices: [
-                    { text: "Disarm the glitter bomb", next: "disarmTrap" },
-                    { text: "Take the loot and run", next: "shedLoot" }
+                    { text: "Disarm the glitter trap", next: "disarmGlitter" },
+                    { text: "Take loot and bolt", next: "shedLoot" }
                 ]
             },
-            followInformant: {
-                text: "You shadow the informant through scrubland, Athena silent as a tax-dodging ninja. He stops at a payphone, dialing. Loagan whispers, 'Bet he’s ordering more milk—for me!' Eavesdrop or take him down?",
+            followSnitch: {
+                text: "You tail the snitch through scrubland, Athena silent as a tax-evading shadow. He stops at a payphone, dialing. Loagan whispers, 'Bet he’s ordering skim milk—traitor!' Listen or pounce?",
                 choices: [
-                    { text: "Listen in", next: "eavesdropPhone" },
-                    { text: "Tackle him", next: "tackleInformant" }
+                    { text: "Eavesdrop", next: "eavesdropSnitch" },
+                    { text: "Tackle him", next: "tackleSnitch" }
                 ]
             },
-            radioSnag: {
-                text: "You swipe the radio as the informant bolts, yelling, 'You’ll pay, Thunder!' It crackles: 'Suspect near motel.' Loagan grins, 'They think I’m the brains—cute.' Fake a call or ditch it?",
+            radioGrab: {
+                text: "You snatch the radio as the snitch bolts, yelling, 'You’re done, Thunder!' It crackles: 'Suspect near motel.' Loagan grins, 'They think I’m the mastermind—adorable.' Fake a call or ditch it?",
                 choices: [
-                    { text: "Broadcast a decoy", next: "decoyCall" },
+                    { text: "Broadcast a fake call", next: "fakeCall" },
                     { text: "Toss it, move on", next: "outpostWithGear" }
                 ]
             },
-            knockInformant: {
-                text: "You slug the informant—down he goes like a sack of overtaxed potatoes. Athena sniffs his pockets: gum and a note saying, 'Flatbed ETA: midnight.' Loagan quips, 'Midnight? My milk curfew!' Outpost or dig deeper?",
+            knockSnitch: {
+                text: "You deck the snitch—he flops like a bag of overtaxed spuds. Athena sniffs: gum and a note, 'Flatbed ETA: midnight.' Loagan quips, 'Midnight? My milk’s bedtime!' Outpost or dig more?",
                 choices: [
                     { text: "Hit the outpost", next: "outpostWithGear" },
-                    { text: "Rummage more", next: "rummageShed" }
+                    { text: "Rummage the shed", next: "shedRummage" }
                 ]
             },
-            windowEscape: {
-                text: "You smash the window, Athena leaping like a furry missile, Loagan tumbling out, milk splashing everywhere. You’re in an alley; the Silverado’s on a flatbed rolling away. 'That’s my ride!' you yell. Chase or improvise?",
+            windowLeap: {
+                text: "You crash through the window, Athena soaring like a furry patriot, Loagan tumbling out, milk splashing—'I’m a dairy grenade!' You land in an alley; the Silverado’s on a flatbed rolling out. Chase or improvise?",
                 choices: [
-                    { text: "Sprint after it", next: "flatbedChase" },
-                    { text: "Steal a scooter nearby", next: "scooterSteal" },
+                    { text: "Chase on foot", next: "footChase" },
+                    { text: "Steal a nearby scooter", next: "scooterSteal" },
                     { text: "Set a road trap", next: "roadTrap" }
                 ]
             },
-            brawlPigs: {
-                text: "You swing at an agent, roaring Rothbard’s 'Freedom is self-ownership!' Athena snaps, Loagan flings his milk carton—'Take that, you dairy-hating tyrant!' One drops, but Hannah Montana aims. 'Freeze, Thunder!' Dodge or charge?",
+            brawlFeds: {
+                text: "You swing, roaring Rothbard’s 'Freedom is self-ownership!' Athena snaps, Loagan flings milk—'Taste liberty, you dairy despots!' An agent drops, but Hannah aims. 'Freeze, Thunder!' Dodge or charge?",
                 choices: [
-                    { text: "Dodge and bolt", next: "dodgeBolt" },
-                    { text: "Charge the diva", next: "chargeDiva" }
+                    { text: "Dodge and run", next: "dodgeRun" },
+                    { text: "Charge Hannah", next: "chargeHannah" }
                 ]
             },
             bathroomHide: {
-                text: "You cram into the bathroom, Athena glaring at the grimy tiles, Loagan clutching his milk like it’s gold. The FBI stomps past, radio buzzing: 'Flatbed’s rolling out.' Loagan mutters, 'They’re stealing my milk run time!' Follow or wait?",
+                text: "You cram into the bathroom, Athena glaring at the grime, Loagan clutching milk like it’s his lifeline. The FBI stomps past, radio buzzing: 'Flatbed’s moving.' Loagan mutters, 'They’re stealing my milk run!' Follow or wait?",
                 choices: [
                     { text: "Track the flatbed", next: "trackFlatbed" },
                     { text: "Wait it out", next: "waitBathroom" }
                 ]
             },
             ambushGuard: {
-                text: "You tackle the guard, Athena pinning him like a furry IRS agent. He drops a keycard and whimpers, 'Don’t hurt me, man!' Loagan laughs, 'Should’ve brought milk, buddy.' Take it or move on?",
+                text: "You tackle the guard, Athena pinning him like a furry tax collector. He drops a keycard, whimpering, 'Don’t hurt me!' Loagan laughs, 'Should’ve bribed us with milk!' Take it or move?",
                 choices: [
-                    { text: "Snag the keycard", next: "keycardSnag" },
-                    { text: "Leave him, charge in", next: "chargeInSolo" }
+                    { text: "Snag the keycard", next: "keycardGrab" },
+                    { text: "Leave him, charge in", next: "chargeSolo" }
                 ]
             },
-            waitOpening: {
-                text: "You lurk with Athena, her ears twitching like radar. The guard wanders off, but Hannah Montana struts out, taunting: 'ATF’s gonna turn those pups into chew toys!' Loagan whispers, 'She’s got worse taste than skim milk.' Rush or wait more?",
+            waitGap: {
+                text: "You lurk with Athena, her ears twitching like radar. The guard drifts off, but Hannah struts out, taunting: 'ATF’s turning those pups into chew toys!' Loagan whispers, 'Worse taste than skim milk.' Rush or wait more?",
                 choices: [
-                    { text: "Rush the truck", next: "rushTruckSolo" },
-                    { text: "Wait for her to leave", next: "waitHerOut" }
+                    { text: "Rush the truck", next: "rushSolo" },
+                    { text: "Wait her out", next: "waitHannah" }
                 ]
             },
-            backWayHunt: {
-                text: "You prowl the perimeter, Athena sniffing like a bloodhound on a tax evasion case. You find a drainage pipe—gross but doable. Loagan groans, 'My milk’ll curdle in there!' Crawl or keep hunting?",
+            backRoute: {
+                text: "You prowl the edge, Athena sniffing like she’s on a tax evasion trail. You find a drainage pipe—nasty but sneaky. Loagan groans, 'My milk’ll curdle in there!' Crawl or keep looking?",
                 choices: [
-                    { text: "Crawl the pipe", next: "pipeCrawl" },
-                    { text: "Look for a ladder", next: "ladderHunt" }
+                    { text: "Crawl through", next: "pipeCrawl" },
+                    { text: "Hunt for a ladder", next: "ladderHunt" }
                 ]
             },
             outpostApproach: {
-                text: "You hit the outpost fence, Athena growling low, Loagan wiping milk from his chin—'Gotta stay classy.' Your Silverado’s inside, Hannah Montana twirling keys like she’s auditioning for a bad music video. You’ve got a smoke bomb. What’s the play?",
+                text: "You reach the outpost fence, Athena growling low, Loagan wiping milk off his chin—'Gotta stay suave.' Your Silverado’s inside, Hannah twirling keys like she’s filming a bad video. You’ve got a smoke bomb. What’s your play?",
                 choices: [
-                    { text: "Unleash the smoke bomb", next: "smokeBomb" },
-                    { text: "Cut through the fence", next: "fenceCut" },
+                    { text: "Toss the smoke bomb", next: "smokeBomb" },
+                    { text: "Cut the fence", next: "fenceCut" },
                     { text: "Send Loagan to distract", next: "loaganDistract" }
                 ]
             },
-            eavesdropPhone: {
-                text: "You crouch near the payphone, Athena silent. The informant hisses, 'Thunder’s close—pups to ATF tonight!' Loagan mutters, 'Tonight? That’s my milk-and-cookies hour!' Take him out or slip away?",
+            bushStay: {
+                text: "You stay low, thorns poking, Athena glaring, Loagan whispering, 'Milk’s my armor!' Patrol moves on. Outpost’s close—go now or wait more?",
                 choices: [
-                    { text: "Knock him out", next: "knockPhone" },
-                    { text: "Sneak to outpost", next: "outpostWithIntel" }
+                    { text: "Head to outpost", next: "outpostApproach" },
+                    { text: "Wait longer", next: "bushWait" }
                 ]
             },
-            tackleInformant: {
-                text: "You tackle the informant into the dirt, Athena growling. He’s out, a note slipping out: 'Flatbed to canyon drop.' Loagan grins, 'Canyon drop? Sounds like my last milk spill!' Outpost or search him?",
+            bushAmbush: {
+                text: "You leap out, Athena snarling, Loagan swinging milk—'Dairy ambush!' Patrol scatters, but Hannah radios: 'ATF’s on!' Run or fight?",
                 choices: [
-                    { text: "Head to outpost", next: "outpostWithIntel" },
-                    { text: "Search his pockets", next: "pocketSearch" }
+                    { text: "Run to outpost", next: "outpostApproach" },
+                    { text: "Fight them off", next: "fightBush" }
                 ]
             },
-            decoyCall: {
-                text: "You rasp into the radio, 'Thunder’s hightailing it to Mexico!' Agents scramble south. Loagan chuckles, 'They’ll find tacos, not us!' Outpost’s open—go now or wait?",
+            disarmGlitter: {
+                text: "You snip the tripwire—glitter flops harmlessly. Loagan grins, 'Hannah’s sparkle bomb’s a dud!' Grab loot or go?",
+                choices: [
+                    { text: "Take the loot", next: "shedLoot" },
+                    { text: "Head out", next: "outpostApproach" }
+                ]
+            },
+            eavesdropSnitch: {
+                text: "You listen as the snitch hisses, 'Thunder’s near—pups to ATF tonight!' Loagan mutters, 'Tonight’s my milk-and-movie night!' Take him or slip away?",
+                choices: [
+                    { text: "Knock him out", next: "knockEavesdrop" },
+                    { text: "Slip to outpost", next: "outpostWithIntel" }
+                ]
+            },
+            tackleSnitch: {
+                text: "You tackle the snitch, Athena growling. He’s out, a note falls: 'Flatbed to canyon drop.' Loagan quips, 'Canyon drop? My last milk spill!' Search or go?",
+                choices: [
+                    { text: "Search his pockets", next: "searchSnitch" },
+                    { text: "Head to outpost", next: "outpostWithIntel" }
+                ]
+            },
+            fakeCall: {
+                text: "You rasp into the radio, 'Thunder’s fleeing to Canada!' Agents scramble north. Loagan cackles, 'They’ll find moose, not me!' Outpost’s open—go or wait?",
                 choices: [
                     { text: "Storm the outpost", next: "outpostWithRadio" },
-                    { text: "Wait for chaos", next: "chaosWait" }
+                    { text: "Wait for chaos", next: "waitChaos" }
                 ]
             },
-            rummageShed: {
-                text: "You dig deeper in the shed, Athena pawing at a box. You find a rusty wrench—'Freedom’s multitool,' Loagan quips, sipping milk. Take it or bounce?",
+            shedRummage: {
+                text: "You dig deeper, Athena pawing a box. You find a rusty wrench—'Freedom’s multitool,' Loagan quips, sipping milk. Take it or leave?",
                 choices: [
                     { text: "Grab the wrench", next: "wrenchGrab" },
                     { text: "Leave it, go", next: "outpostWithGear" }
                 ]
             },
-            flatbedChase: {
-                text: "You sprint after the flatbed, Athena bounding like a caffeinated philosopher, Loagan wheezing, 'Milk... gives me... stamina!' It veers into a canyon. Chase on foot or find wheels?",
+            footChase: {
+                text: "You sprint after the flatbed, Athena bounding like a caffeinated Mises, Loagan wheezing, 'Milk... ain’t... Usain Bolt!' It veers into a canyon. Keep running or find wheels?",
                 choices: [
-                    { text: "Keep running", next: "canyonRun" },
-                    { text: "Look for a ride", next: "rideHunt" }
+                    { text: "Chase on foot", next: "canyonChase" },
+                    { text: "Look for a ride", next: "rideSearch" }
                 ]
             },
             scooterSteal: {
-                text: "You hotwire a scooter—'Two-wheeled liberty!' you yell. Athena hops in your lap, Loagan clings on, milk sloshing. The flatbed’s ahead on a dusty road. Chase or cut through?",
+                text: "You hotwire a scooter—'Two-wheeled liberty!' you yell. Athena hops on, Loagan clings, milk sloshing—'I’m a dairy jetpack!' Flatbed’s ahead. Chase or cut?",
                 choices: [
-                    { text: "Chase on the road", next: "roadChase" },
-                    { text: "Cut through scrub", next: "scrubChase" }
+                    { text: "Chase on road", next: "scooterChase" },
+                    { text: "Cut through scrub", next: "scrubCut" }
                 ]
             },
             roadTrap: {
-                text: "You rig a trap with junk—'FBI’s about to trip over freedom!' Loagan says, spilling milk for effect. The flatbed hits it, slows, but agents jump out. Fight or grab?",
+                text: "You rig a trap with junk—'Feds’ll trip over freedom!' Loagan says, spilling milk for flair. Flatbed hits it, slows, agents jump out. Fight or grab?",
                 choices: [
                     { text: "Fight the agents", next: "fightTrap" },
                     { text: "Grab the truck", next: "grabTrap" }
                 ]
             },
-            dodgeBolt: {
-                text: "You dodge Hannah’s shot, Athena zigzagging, Loagan yelping, 'My milk’s lactose-free, not bullet-free!' You hit a ditch as the flatbed rolls. Hide or chase?",
+            dodgeRun: {
+                text: "You dodge Hannah’s shot, Athena zigzagging, Loagan yelping, 'Milk’s not Kevlar!' You hit a ditch as the flatbed rolls. Hide or pursue?",
                 choices: [
-                    { text: "Hide in the ditch", next: "ditchHide" },
-                    { text: "Chase the flatbed", next: "chaseDitch" }
+                    { text: "Hide in ditch", next: "ditchHide" },
+                    { text: "Pursue the flatbed", next: "pursueFlatbed" }
                 ]
             },
-            chargeDiva: {
-                text: "You charge Hannah, yelling, 'Liberty hits harder than your singles!' Athena leaps, Loagan swings milk. She fires—grazes you. Disarm or retreat?",
+            chargeHannah: {
+                text: "You charge Hannah, yelling, 'Liberty trumps your hits!' Athena leaps, Loagan swings milk. She fires—grazes you. Disarm or retreat?",
                 choices: [
-                    { text: "Disarm the pop star", next: "disarmDiva" },
-                    { text: "Retreat to cover", next: "retreatDiva" }
+                    { text: "Disarm her", next: "disarmHannah" },
+                    { text: "Retreat fast", next: "retreatHannah" }
                 ]
             },
             trackFlatbed: {
-                text: "You follow the flatbed’s rumble, Athena tracking, Loagan panting, 'This is why I don’t jog—milk’s heavy!' It heads to a junkyard. Sneak in or climb over?",
+                text: "You follow the flatbed’s rumble, Athena tracking, Loagan panting, 'Milk’s my turbo juice!' It heads to a junkyard. Sneak in or climb over?",
                 choices: [
-                    { text: "Sneak through gate", next: "junkyardSneak" },
-                    { text: "Climb the fence", next: "junkyardClimb" }
+                    { text: "Sneak through gate", next: "junkSneak" },
+                    { text: "Climb the fence", next: "junkClimb" }
                 ]
             },
             waitBathroom: {
-                text: "You wait, Athena glaring at a roach, Loagan whispering, 'This stall’s worse than skim milk.' The flatbed’s gone, but tire tracks lead to a garage. Go or stay?",
+                text: "You wait, Athena glaring at a roach, Loagan sipping, 'Beats skim milk jail.' Flatbed’s gone, but tracks lead to a garage. Go or stay?",
                 choices: [
-                    { text: "Follow tracks", next: "garageTrack" },
-                    { text: "Stay hidden", next: "stayBathroom" }
+                    { text: "Follow tracks", next: "garageFollow" },
+                    { text: "Stay hidden", next: "stayHidden" }
                 ]
             },
-            keycardSnag: {
-                text: "You grab the keycard, Athena nudging the guard like, 'Stay down, statist!' Your Silverado’s close, Hannah’s voice echoing: 'ATF’s prepping the pupper guillotine!' Swipe or sneak?",
+            keycardGrab: {
+                text: "You snag the keycard, Athena nudging the guard—'Stay down, statist!' Hannah’s voice crackles: 'ATF’s prepping puppy stew!' Swipe or sneak?",
                 choices: [
-                    { text: "Swipe the card", next: "cardSwipe" },
+                    { text: "Swipe the card", next: "swipeCard" },
                     { text: "Sneak closer", next: "sneakCloser" }
                 ]
             },
-            chargeInSolo: {
-                text: "You charge in, Athena barking, quoting Rothbard like a battle hymn. Hannah spins, gun up: 'Pups to ATF tonight!' Fight or dodge?",
+            chargeSolo: {
+                text: "You charge in, Athena barking Rothbard quotes, Hannah spinning, gun up: 'Pups to ATF tonight!' Fight or dodge?",
                 choices: [
                     { text: "Fight her", next: "fightSolo" },
                     { text: "Dodge and grab", next: "dodgeSolo" }
                 ]
             },
-            rushTruckSolo: {
-                text: "You rush your Silverado, Athena howling. Hannah aims, sneering, 'ATF’s got a puppy playlist lined up!' Loagan’s AWOL with his milk. Tackle or dive?",
+            rushSolo: {
+                text: "You rush the Silverado, Athena howling. Hannah aims, sneering, 'ATF’s got a puppy playlist!' Loagan’s MIA with his milk. Tackle or dive?",
                 choices: [
                     { text: "Tackle Hannah", next: "tackleSolo" },
-                    { text: "Dive for the truck", next: "diveSolo" }
+                    { text: "Dive for truck", next: "diveSolo" }
                 ]
             },
-            waitHerOut: {
-                text: "You wait as Hannah struts off, humming her old hits—'She’s no Mises,' you mutter. The Silverado’s clear, but a drone buzzes. Shoot or sprint?",
+            waitHannah: {
+                text: "You wait as Hannah struts off, humming her flops—'She’s no Rothbard,' you mutter. Silverado’s clear, but a drone buzzes. Shoot or sprint?",
                 choices: [
-                    { text: "Shoot the drone", next: "droneShoot" },
-                    { text: "Sprint to the truck", next: "sprintTruck" }
+                    { text: "Shoot the drone", next: "shootDrone" },
+                    { text: "Sprint to truck", next: "sprintTruck" }
                 ]
             },
             pipeCrawl: {
-                text: "You crawl through the pipe, Athena grumbling, Loagan whining, 'My milk’s getting muddy!' You pop out near a guard shack, Silverado across the yard. Sneak or storm?",
+                text: "You crawl the pipe, Athena grumbling, Loagan whining, 'Milk’s not waterproof!' You emerge near a guard shack, Silverado across the yard. Sneak or storm?",
                 choices: [
                     { text: "Sneak across", next: "yardSneak" },
                     { text: "Storm the shack", next: "shackStorm" }
                 ]
             },
             ladderHunt: {
-                text: "You find a rickety ladder to the outpost roof—'High ground, baby,' you say. Athena tilts her head, Loagan groans, 'Milk don’t climb!' Up or around?",
+                text: "You find a shaky ladder to the roof—'High ground, baby,' you say. Athena tilts her head, Loagan groans, 'Milk don’t climb!' Up or around?",
                 choices: [
-                    { text: "Climb to the roof", next: "roofClimb" },
+                    { text: "Climb the ladder", next: "roofClimb" },
                     { text: "Circle around", next: "circleAround" }
                 ]
             },
             smokeBomb: {
-                text: "You lob the smoke bomb—poof! The outpost’s a fog party. Hannah coughs, 'My hair!' Athena snarls, Loagan giggles, 'Smells better than skim!' Puppies yip from the Silverado. Drop the rookie or grab keys?",
+                text: "You hurl the smoke bomb—poof! Outpost’s a haze fest. Hannah coughs, 'My highlights!' Athena snarls, Loagan giggles, 'Better than skim stench!' Puppies yip from the Silverado. Drop the rookie or grab keys?",
                 choices: [
                     { text: "Drop the rookie", next: "dropRookie" },
                     { text: "Snag the keys", next: "keySnag" },
@@ -396,248 +424,653 @@
                 ]
             },
             fenceCut: {
-                text: "You slice the fence, Athena slipping through, Loagan spilling milk—'Fence vs. dairy: 1-0.' A guard dog growls near your Silverado. Bribe it or bolt?",
+                text: "You slice the fence, Athena slipping through, Loagan spilling milk—'Dairy vs. wire: 0-1.' A guard dog growls by your Silverado. Bribe or bolt?",
                 choices: [
                     { text: "Bribe with jerky", next: "bribeDog" },
                     { text: "Bolt past", next: "boltDog" }
                 ]
             },
             loaganDistract: {
-                text: "You growl, 'Loagan, make a scene!' He fires BBs at a barrel, yelling, 'Milk power!' Milk splashes, Hannah spins away. Silverado’s tank’s dry, pups whining. Siphon or risk it?",
+                text: "You growl, 'Loagan, stir it up!' He fires BBs at a barrel, yelling, 'Milk power!' Milk splashes, Hannah spins. Silverado’s tank’s dry, pups whining. Siphon or risk it?",
                 choices: [
-                    { text: "Siphon some gas", next: "siphonOutpost" },
-                    { text: "Hotwire and pray", next: "hotwirePray" }
+                    { text: "Siphon gas", next: "siphonGas" },
+                    { text: "Hotwire and pray", next: "hotwireRisk" }
                 ]
             },
-            // Mid-Game Expansion
-            canyonRun: {
-                text: "You dash into the canyon, Athena leaping rocks, Loagan panting, 'Milk... ain’t... a sprinter!' The flatbed slows at a bend. Ambush or climb above?",
+            bushWait: {
+                text: "You wait longer, thorns jabbing, Loagan muttering, 'Milk’s my only friend.' Patrol’s gone—outpost’s quiet. Go now or scout?",
                 choices: [
-                    { text: "Ambush from below", next: "canyonAmbush" },
-                    { text: "Climb for high ground", next: "canyonClimb" }
+                    { text: "Head to outpost", next: "outpostApproach" },
+                    { text: "Scout the bushes", next: "scoutBush" }
                 ]
             },
-            rideHunt: {
-                text: "You spot an old ATV—'Freedom’s chariot!' you shout. Athena hops on, Loagan clings, milk sloshing. Flatbed’s ahead. Chase or sabotage?",
+            fightBush: {
+                text: "You fight, Athena snapping, Loagan splashing milk—'Dairy justice!' Patrol retreats, but Hannah’s alerted. Run or hide?",
                 choices: [
-                    { text: "Chase it down", next: "atvChase" },
-                    { text: "Sabotage the road", next: "atvSabotage" }
+                    { text: "Run to outpost", next: "outpostApproach" },
+                    { text: "Hide again", next: "bushHideAgain" }
                 ]
             },
-            roadChase: {
-                text: "You gun the scooter down the road, Athena’s ears flapping, Loagan screaming, 'Milk’s my co-pilot!' The flatbed swerves. Ram it or cut ahead?",
+            knockEavesdrop: {
+                text: "You knock the snitch out, Athena growling. He’s down, note says: 'ATF pickup imminent.' Loagan quips, 'Imminent? Like my milk refill!' Outpost now?",
                 choices: [
-                    { text: "Ram the flatbed", next: "ramFlatbed" },
-                    { text: "Cut ahead and block", next: "blockFlatbed" }
+                    { text: "Head to outpost", next: "outpostWithIntel" },
+                    { text: "Search him", next: "searchSnitch" }
                 ]
             },
-            scrubChase: {
-                text: "You veer into scrub, thorns snagging, Athena dodging, Loagan wailing, 'My milk’s organic, not off-road!' You flank the flatbed. Jump it or wait?",
+            searchSnitch: {
+                text: "You rummage his pockets—keys and a candy wrapper. Loagan snags the candy, 'Milk’s sidekick!' Outpost or keep digging?",
                 choices: [
-                    { text: "Jump the flatbed", next: "jumpFlatbed" },
-                    { text: "Wait for a stop", next: "waitScrub" }
+                    { text: "Take keys to outpost", next: "outpostWithKeys" },
+                    { text: "Dig deeper", next: "digDeeper" }
+                ]
+            },
+            waitChaos: {
+                text: "You wait, chaos erupts—agents scatter north. Loagan grins, 'Canada’s their milk now!' Outpost’s quiet. Storm it or sneak?",
+                choices: [
+                    { text: "Storm in", next: "outpostWithRadio" },
+                    { text: "Sneak in", next: "sneakWithRadio" }
+                ]
+            },
+            wrenchGrab: {
+                text: "You grab the wrench—'Liberty’s hammer,' you say. Loagan nods, 'Good for cracking milk crates!' Outpost’s close—go now?",
+                choices: [
+                    { text: "Head to outpost", next: "outpostWithWrench" },
+                    { text: "Check shed more", next: "shedMore" }
+                ]
+            },
+            canyonChase: {
+                text: "You chase into the canyon, Athena leaping rocks, Loagan gasping, 'Milk’s... not... cardio!' Flatbed slows at a bend. Ambush or climb?",
+                choices: [
+                    { text: "Ambush below", next: "ambushCanyon" },
+                    { text: "Climb above", next: "climbCanyon" }
+                ]
+            },
+            rideSearch: {
+                text: "You spot an ATV—'Freedom’s steed!' you shout. Athena hops on, Loagan clings, milk sloshing. Flatbed’s ahead. Chase or sabotage?",
+                choices: [
+                    { text: "Chase it", next: "atvChase" },
+                    { text: "Sabotage road", next: "sabotageRoad" }
+                ]
+            },
+            scooterChase: {
+                text: "You gun the scooter, Athena’s ears flapping, Loagan screaming, 'Milk’s my jet fuel!' Flatbed swerves. Ram or block?",
+                choices: [
+                    { text: "Ram it", next: "ramScooter" },
+                    { text: "Block it", next: "blockScooter" }
+                ]
+            },
+            scrubCut: {
+                text: "You cut through scrub, thorns snagging, Athena dodging, Loagan wailing, 'Milk’s not off-road!' You flank the flatbed. Jump or wait?",
+                choices: [
+                    { text: "Jump it", next: "jumpScooter" },
+                    { text: "Wait for stop", next: "waitScooter" }
                 ]
             },
             fightTrap: {
-                text: "You fight the agents, Athena biting, Loagan splashing milk—'Taste the freedom!' One drops, but more come. Keep fighting or grab the truck?",
+                text: "You fight agents, Athena biting, Loagan splashing milk—'Dairy vengeance!' One drops, more come. Keep fighting or grab?",
                 choices: [
-                    { text: "Keep swinging", next: "keepSwinging" },
-                    { text: "Grab the Silverado", next: "grabTrapTruck" }
+                    { text: "Keep fighting", next: "keepFightingTrap" },
+                    { text: "Grab the truck", next: "grabTrap" }
                 ]
             },
             grabTrap: {
                 text: "You lunge for the Silverado, Athena leaping in, puppies yipping. Loagan trips, milk flying. Engine sputters—needs gas. Siphon or floor it?",
                 choices: [
                     { text: "Siphon quick", next: "siphonTrap" },
-                    { text: "Floor it anyway", next: "floorTrap" }
+                    { text: "Floor it", next: "floorTrap" }
                 ]
             },
             ditchHide: {
-                text: "You drop into the ditch, Athena growling, Loagan muttering, 'Milk don’t swim!' The flatbed rolls on, but a patrol nears. Stay or bolt?",
+                text: "You drop into the ditch, Athena growling, Loagan muttering, 'Milk don’t swim!' Flatbed rolls on, patrol nears. Stay or bolt?",
                 choices: [
-                    { text: "Stay low", next: "ditchStay" },
-                    { text: "Bolt for it", next: "ditchBolt" }
+                    { text: "Stay low", next: "stayDitch" },
+                    { text: "Bolt for it", next: "boltDitch" }
                 ]
             },
-            chaseDitch: {
-                text: "You chase from the ditch, Athena sprinting, Loagan lagging, 'Milk... slows me... down!' The flatbed hits a bridge. Jump or swim?",
+            pursueFlatbed: {
+                text: "You pursue, Athena sprinting, Loagan lagging, 'Milk’s... my anchor!' Flatbed hits a bridge. Jump or swim?",
                 choices: [
-                    { text: "Jump the bridge", next: "bridgeJump" },
-                    { text: "Swim under", next: "swimUnder" }
+                    { text: "Jump bridge", next: "jumpBridge" },
+                    { text: "Swim under", next: "swimBridge" }
                 ]
             },
-            disarmDiva: {
-                text: "You twist Hannah’s gun away, Athena snarling, Loagan cheering, 'Pop star down, milk up!' She kicks free, radioing: 'ATF’s got the pups!’ Truck or her?",
+            disarmHannah: {
+                text: "You twist Hannah’s gun away, Athena snarling, Loagan cheering, 'Milk beats pop!' She kicks free, radioing: 'ATF’s got pups!' Truck or her?",
                 choices: [
-                    { text: "Go for the truck", next: "truckAfterDiva" },
-                    { text: "Pin her down", next: "pinDiva" }
+                    { text: "Go for truck", next: "truckHannah" },
+                    { text: "Pin her down", next: "pinHannah" }
                 ]
             },
-            retreatDiva: {
-                text: "You retreat, Athena covering, Loagan tripping over his carton. Hannah cackles, 'Pups are ATF snacks!' Flatbed’s pulling out. Chase or regroup?",
+            retreatHannah: {
+                text: "You retreat, Athena covering, Loagan slipping—'Milk’s my skidmark!' Hannah cackles, 'Pups are ATF snacks!' Flatbed pulls out. Chase or regroup?",
                 choices: [
-                    { text: "Chase it", next: "chaseAfterDiva" },
-                    { text: "Regroup with Loagan", next: "regroupDiva" }
+                    { text: "Chase it", next: "chaseHannahFlatbed" },
+                    { text: "Regroup", next: "regroupHannah" }
                 ]
             },
-            junkyardSneak: {
-                text: "You sneak through the junkyard gate, Athena slinking, Loagan whispering, 'Milk’s stealth fuel!' The Silverado’s parked, flatbed idle. Steal or sabotage?",
+            junkSneak: {
+                text: "You sneak through the gate, Athena slinking, Loagan whispering, 'Milk’s my cloak!' Silverado’s parked, flatbed idle. Steal or sabotage?",
                 choices: [
                     { text: "Steal the truck", next: "stealJunk" },
-                    { text: "Sabotage the flatbed", next: "sabotageJunk" }
+                    { text: "Sabotage flatbed", next: "sabotageJunk" }
                 ]
             },
-            junkyardClimb: {
-                text: "You scale the fence, Athena scrambling, Loagan slipping—'Milk ain’t a climber!' A guard dog barks below, near your Silverado. Quiet it or rush?",
+            junkClimb: {
+                text: "You scale the fence, Athena scrambling, Loagan flailing—'Milk ain’t Spiderman!' Guard dog barks below, near Silverado. Quiet or rush?",
                 choices: [
-                    { text: "Quiet the mutt", next: "quietMutt" },
+                    { text: "Quiet the dog", next: "quietDog" },
                     { text: "Rush the truck", next: "rushJunk" }
                 ]
             },
-            garageTrack: {
-                text: "You follow tracks to a garage, Athena sniffing, Loagan panting, 'Milk’s my GPS!' Your Silverado’s inside, guarded. Sneak in or blow the door?",
+            garageFollow: {
+                text: "You follow tracks to a garage, Athena sniffing, Loagan panting, 'Milk’s my compass!' Silverado’s inside, guarded. Sneak or blow it?",
                 choices: [
-                    { text: "Sneak inside", next: "garageSneak" },
-                    { text: "Blow it open", next: "garageBlow" }
+                    { text: "Sneak in", next: "sneakGarage" },
+                    { text: "Blow the door", next: "blowGarage" }
                 ]
             },
-            stayBathroom: {
-                text: "You stay put, Athena glaring, Loagan sipping, 'This beats decaf jail.' Tracks fade—flatbed’s gone. Loagan finds a back exit. Take it or wait more?",
+            stayHidden: {
+                text: "You stay, Athena glaring, Loagan sipping, 'Skim jail’s worse.' Tracks fade—flatbed’s gone. Back exit’s open. Take it or wait?",
                 choices: [
-                    { text: "Take the exit", next: "backExit" },
-                    { text: "Wait longer", next: "waitLonger" }
+                    { text: "Take exit", next: "exitGarage" },
+                    { text: "Wait more", next: "waitMore" }
                 ]
             },
-            cardSwipe: {
-                text: "You swipe the keycard—click! The Silverado’s gate opens, puppies yipping. Hannah’s voice crackles: 'ATF’s sharpening the guillotine!' Drive or check?",
+            swipeCard: {
+                text: "You swipe the card—click! Gate opens, puppies yipping. Hannah crackles: 'ATF’s sharpening puppy knives!' Drive or check?",
                 choices: [
-                    { text: "Drive out", next: "driveCard" },
-                    { text: "Check the truck", next: "checkCard" }
+                    { text: "Drive out", next: "driveSwipe" },
+                    { text: "Check truck", next: "checkSwipe" }
                 ]
             },
             sneakCloser: {
-                text: "You creep closer, Athena silent, Loagan whispering, 'Milk’s my ninja juice!' Hannah’s by the Silverado, taunting: 'ATF loves puppy stew!' Rush or pick?",
+                text: "You creep closer, Athena silent, Loagan whispering, 'Milk’s my ninja juice!' Hannah’s by the Silverado, taunting: 'ATF loves pup stew!' Rush or pick?",
                 choices: [
                     { text: "Rush her", next: "rushCloser" },
-                    { text: "Pick the lock", next: "pickCloser" }
+                    { text: "Pick the lock", next: "pickLock" }
                 ]
             },
-            // Endgame Scenes
+            fightSolo: {
+                text: "You fight Hannah, Athena snapping, yelling, 'No rulers!' She retreats, flatbed rolls. Chase or grab?",
+                choices: [
+                    { text: "Chase her", next: "chaseSolo" },
+                    { text: "Grab truck", next: "grabSolo" }
+                ]
+            },
+            dodgeSolo: {
+                text: "You dodge, snag the Silverado, pups yipping. Hannah escapes, yelling: 'ATF’s coming!' Drive or hunt?",
+                choices: [
+                    { text: "Drive off", next: "driveSolo" },
+                    { text: "Hunt her", next: "huntSolo" }
+                ]
+            },
+            tackleSolo: {
+                text: "You tackle Hannah, Athena pinning, she drops keys, screaming: 'ATF’s pup plan!’ Grab keys or truck?",
+                choices: [
+                    { text: "Grab keys", next: "keysSolo" },
+                    { text: "Take truck", next: "truckSolo" }
+                ]
+            },
+            diveSolo: {
+                text: "You dive for the truck, Athena leaping, pups safe. Hannah shoots—misses! Drive or fight?",
+                choices: [
+                    { text: "Drive away", next: "driveDive" },
+                    { text: "Fight back", next: "fightDive" }
+                ]
+            },
+            shootDrone: {
+                text: "You shoot the drone—miss! It buzzes, Hannah cackling, 'ATF’s pup chow time!' Run or hide?",
+                choices: [
+                    { text: "Run to truck", next: "runDrone" },
+                    { text: "Hide in brush", next: "hideDrone" }
+                ]
+            },
+            sprintTruck: {
+                text: "You sprint, Athena bounding, Silverado’s yours, pups yipping. Drone spots you, Hannah yells: 'ATF’s here!' Drive or shoot?",
+                choices: [
+                    { text: "Drive off", next: "driveSprint" },
+                    { text: "Shoot drone", next: "shootSprint" }
+                ]
+            },
+            yardSneak: {
+                text: "You sneak across, Athena low, Loagan whispering, 'Milk’s my camo!' Silverado’s near, guard napping. Steal or sabotage?",
+                choices: [
+                    { text: "Steal it", next: "stealYard" },
+                    { text: "Sabotage guard", next: "sabotageGuard" }
+                ]
+            },
+            shackStorm: {
+                text: "You storm the shack, Athena barking, Loagan swinging milk—'Dairy chaos!' Guard drops a keycard. Grab or rush?",
+                choices: [
+                    { text: "Grab keycard", next: "keycardShack" },
+                    { text: "Rush truck", next: "rushShack" }
+                ]
+            },
+            roofClimb: {
+                text: "You climb, Athena scrambling, Loagan groaning—'Milk’s not a sherpa!' On the roof, Silverado’s below. Drop or flare?",
+                choices: [
+                    { text: "Drop down", next: "dropRoof" },
+                    { text: "Fire flare", next: "flareRoof" }
+                ]
+            },
+            circleAround: {
+                text: "You circle, Athena sniffing, Loagan sipping—'Milk’s my radar!' Back gate’s lightly guarded. Sneak or charge?",
+                choices: [
+                    { text: "Sneak through", next: "sneakGate" },
+                    { text: "Charge gate", next: "chargeGate" }
+                ]
+            },
             dropRookie: {
-                text: "You deck the rookie—thud! Smoke clears, Silverado’s yours, Athena sniffing her pups. Loagan cheers, 'Milk beats muscle!' Hannah’s gone, ATF threat looms. Ride or hunt?",
+                text: "You slug the rookie—thud! Smoke clears, Silverado’s yours, Athena sniffing pups. Loagan cheers, 'Milk beats glitter!' Hannah’s gone, ATF threat looms. Ride or hunt?",
                 choices: [
                     { text: "Ride free", next: "rideFree" },
                     { text: "Hunt Hannah", next: "huntHannah" }
                 ]
             },
             keySnag: {
-                text: "You swipe the keys, Silverado roaring, puppies tumbling. Athena leaps in, chopper buzzing. Hannah yells, 'ATF’s got a puppy BBQ!' Burn rubber or hunker?",
+                text: "You swipe keys, Silverado roaring, pups tumbling. Athena leaps in, chopper buzzes. Hannah yells, 'ATF’s got a pup BBQ!' Burn rubber or hunker?",
                 choices: [
                     { text: "Burn rubber", next: "burnRubber" },
                     { text: "Hunker down", next: "hunkerDown" }
                 ]
             },
             hotwireSmoke: {
-                text: "You hotwire the Silverado, sparks flying, Athena guarding, Loagan whooping, 'Milk-powered getaway!' Alarm screams, Hannah taunts: 'ATF’s pup-sicle time!' Floor it or kill it?",
+                text: "You hotwire the Silverado, sparks flying, Athena guarding, Loagan whooping—'Milk-powered escape!' Alarm blares, Hannah taunts: 'ATF’s pup-sicle time!' Floor it or kill it?",
                 choices: [
                     { text: "Floor it", next: "floorSmoke" },
-                    { text: "Kill the alarm", next: "killSmoke" }
+                    { text: "Kill alarm", next: "killAlarm" }
                 ]
             },
             bribeDog: {
-                text: "You toss jerky—'Freedom snacks!'—and the dog wags, chowing down. Loagan laughs, 'Milk’s next!' Silverado’s yours, pups yip. Drive or check?",
+                text: "You toss jerky—'Freedom treats!'—dog wags, chowing down. Loagan laughs, 'Milk’s next!' Silverado’s yours, pups yip. Drive or check?",
                 choices: [
                     { text: "Drive off", next: "driveBribe" },
-                    { text: "Check the cab", next: "checkBribe" }
+                    { text: "Check cab", next: "checkBribe" }
                 ]
             },
             boltDog: {
-                text: "You bolt past the dog—it lunges, but Athena growls it off. Loagan trips, milk flying, 'Dog’s a fed!' Silverado’s open. Hotwire or search?",
+                text: "You bolt past—the dog lunges, Athena growls it off. Loagan trips, milk flying, 'Dog’s a fed!' Silverado’s open. Hotwire or search?",
                 choices: [
                     { text: "Hotwire it", next: "hotwireBolt" },
-                    { text: "Search for keys", next: "searchBolt" }
+                    { text: "Search keys", next: "searchBolt" }
                 ]
             },
-            siphonOutpost: {
-                text: "You siphon gas, Silverado purring, pups safe. Loagan grins, 'Milk and gas—perfect combo!' Hannah’s voice fades. Drive or secure?",
+            siphonGas: {
+                text: "You siphon gas, Silverado purring, pups safe. Loagan grins, 'Milk and gas—dream team!' Hannah’s voice fades. Drive or secure?",
                 choices: [
                     { text: "Drive away", next: "driveSiphon" },
-                    { text: "Secure the truck", next: "secureSiphon" }
+                    { text: "Secure truck", next: "secureSiphon" }
                 ]
             },
-            hotwirePray: {
-                text: "You hotwire it—sputters! Tank’s dry, agents close. Loagan panics, 'Milk can’t fix this!' Athena snarls. Run or fight?",
+            hotwireRisk: {
+                text: "You hotwire—sputter! Tank’s dry, agents close. Loagan panics, 'Milk can’t fuel this!' Athena snarls. Run or fight?",
                 choices: [
-                    { text: "Run for it", next: "runPray" },
-                    { text: "Fight back", next: "fightPray" }
+                    { text: "Run away", next: "runRisk" },
+                    { text: "Fight back", next: "fightRisk" }
                 ]
             },
-            canyonAmbush: {
-                text: "You ambush from below, Athena leaping, Loagan firing BBs—'Milk storm!' Flatbed stops, agents scatter. Grab it or chase Hannah?",
+            ambushCanyon: {
+                text: "You ambush, Athena leaping, Loagan firing BBs—'Milk storm!' Flatbed stops, agents scatter. Grab or chase Hannah?",
                 choices: [
-                    { text: "Grab the Silverado", next: "grabCanyon" },
-                    { text: "Chase Hannah", next: "chaseHannahCanyon" }
+                    { text: "Grab Silverado", next: "grabCanyon" },
+                    { text: "Chase Hannah", next: "chaseCanyon" }
                 ]
             },
-            canyonClimb: {
-                text: "You climb above, Athena scrambling, Loagan slipping, 'Milk ain’t a rope!' You spot the flatbed below. Drop down or signal Loagan?",
+            climbCanyon: {
+                text: "You climb, Athena scrambling, Loagan slipping—'Milk ain’t a rope!' Flatbed’s below. Drop or signal?",
                 choices: [
-                    { text: "Drop onto it", next: "dropCanyon" },
+                    { text: "Drop down", next: "dropCanyon" },
                     { text: "Signal Loagan", next: "signalCanyon" }
                 ]
             },
             atvChase: {
-                text: "You gun the ATV, Athena riding shotgun, Loagan screaming, 'Milk’s my turbo!' Flatbed’s ahead. Ram it or flank?",
+                text: "You gun the ATV, Athena shotgun, Loagan screaming, 'Milk’s my nitro!' Flatbed’s ahead. Ram or flank?",
                 choices: [
-                    { text: "Ram the flatbed", next: "ramATV" },
-                    { text: "Flank and board", next: "flankATV" }
+                    { text: "Ram it", next: "ramATV" },
+                    { text: "Flank it", next: "flankATV" }
                 ]
             },
-            atvSabotage: {
+            sabotageRoad: {
                 text: "You rig a rockslide—'Nature’s tax cut!'—flatbed swerves, stops. Agents jump out, Hannah yells, 'ATF’s pup plan B!' Fight or grab?",
                 choices: [
-                    { text: "Fight them", next: "fightATV" },
-                    { text: "Grab the truck", next: "grabATV" }
+                    { text: "Fight them", next: "fightSabotage" },
+                    { text: "Grab truck", next: "grabSabotage" }
                 ]
             },
-            // Endgame Outcomes
-            rideFree: { text: "You peel out with Athena and her pups, wind howling, Loagan toasting with milk. 'Freedom tastes better than skim!' Victory!", choices: [] },
-            huntHannah: { text: "You hunt Hannah, but she traps you in glitter—'Sparkly doom!' Pups lost. Game over!", choices: [] },
-            burnRubber: { text: "You burn rubber, chopper fading, pups yipping, Loagan cheering, 'Milk beats missiles!' Win!", choices: [] },
-            hunkerDown: { text: "You hunker, chopper blasts. Loagan cries, 'My milk!’ Pups gone. Game over!", choices: [] },
-            floorSmoke: { text: "You floor it, alarm blaring, pups safe, Loagan yelling, 'Milk run success!' Victory!", choices: [] },
-            killSmoke: { text: "You kill the alarm, roll out smooth with pups. Loagan: 'Silent as skim!' Win!", choices: [] },
-            driveBribe: { text: "You drive off, pups yipping, dog waving goodbye. Loagan: 'Jerky’s my co-star!' Freedom!", choices: [] },
-            checkBribe: { text: "You check—FBI tracker! Agents swarm. Loagan: 'Jerky betrayal!' Game over!", choices: [] },
-            hotwireBolt: { text: "You hotwire it, roll out with pups, Loagan: 'Dog’s a critic!' Victory!", choices: [] },
-            searchBolt: { text: "You search—dog bites! Agents catch you. Pups lost. Game over!", choices: [] },
-            driveSiphon: { text: "You drive away, pups safe, Loagan toasting, 'Gas and milk—unbeatable!' Win!", choices: [] },
-            secureSiphon: { text: "You secure it—trap springs! Hannah cackles. Pups gone. Game over!", choices: [] },
-            runPray: { text: "You run, but flatbed escapes. Loagan: 'Milk’s out!’ Pups lost. Game over!", choices: [] },
-            fightPray: { text: "You fight, but agents overwhelm. Pups to ATF. Game over!", choices: [] },
-            grabCanyon: { text: "You grab the Silverado, pups yipping, Loagan: 'Milk-powered heist!' Victory!", choices: [] },
-            chaseHannahCanyon: { text: "You chase Hannah, she vanishes in glitter. Pups lost. Game over!", choices: [] },
-            dropCanyon: { text: "You drop, land on the Silverado, pups safe. Loagan: 'Milk from above!' Win!", choices: [] },
-            signalCanyon: { text: "Loagan signals—misses! Agents swarm. Pups gone. Game over!", choices: [] },
-            ramATV: { text: "You ram it—crash! Agents nab you. Loagan: 'Milk’s totaled!’ Game over!", choices: [] },
-            flankATV: { text: "You flank, board the flatbed, save pups. Loagan: 'Milk maneuver!' Victory!", choices: [] },
-            fightATV: { text: "You fight, but more come. Pups lost. Loagan: 'Milk ran dry!’ Game over!", choices: [] },
-            grabATV: { text: "You grab the truck, pups yipping, Loagan: 'Milk’s the MVP!' Win!", choices: [] }
+            ramScooter: {
+                text: "You ram the flatbed—crash! Scooter flips, Loagan yells, 'Milk’s no airbag!' Agents swarm. Fight or run?",
+                choices: [
+                    { text: "Fight back", next: "fightRam" },
+                    { text: "Run away", next: "runRam" }
+                ]
+            },
+            blockScooter: {
+                text: "You block it, flatbed stops, Athena leaps in, pups safe. Loagan cheers, 'Milk blockade!' Drive or check?",
+                choices: [
+                    { text: "Drive off", next: "driveBlock" },
+                    { text: "Check truck", next: "checkBlock" }
+                ]
+            },
+            jumpScooter: {
+                text: "You jump the flatbed, land hard, Athena with you, pups yipping. Loagan falls, 'Milk’s grounded!' Drive or help?",
+                choices: [
+                    { text: "Drive away", next: "driveJump" },
+                    { text: "Help Loagan", next: "helpJump" }
+                ]
+            },
+            waitScooter: {
+                text: "You wait—it stops, agents jump off. Athena growls, Loagan whispers, 'Milk’s my patience!' Steal or ambush?",
+                choices: [
+                    { text: "Steal truck", next: "stealScooter" },
+                    { text: "Ambush them", next: "ambushScooter" }
+                ]
+            },
+            keepFightingTrap: {
+                text: "You keep swinging, Athena biting, Loagan splashing—'Milk tsunami!' More agents pile in. Retreat or grab?",
+                choices: [
+                    { text: "Retreat", next: "retreatTrap" },
+                    { text: "Grab truck", next: "grabTrap" }
+                ]
+            },
+            siphonTrap: {
+                text: "You siphon gas, Silverado roars, pups safe. Loagan escapes, 'Milk’s my savior!' Drive or check?",
+                choices: [
+                    { text: "Drive off", next: "driveTrap" },
+                    { text: "Check truck", next: "checkTrap" }
+                ]
+            },
+            floorTrap: {
+                text: "You floor it—sputter! Tank’s dry, agents close. Loagan cries, 'Milk’s out!' Run or fight?",
+                choices: [
+                    { text: "Run away", next: "runTrap" },
+                    { text: "Fight them", next: "fightTrapEnd" }
+                ]
+            },
+            stayDitch: {
+                text: "You stay, Athena low, Loagan muttering, 'Milk’s my bunker!' Patrol passes, flatbed’s gone. Track or wait?",
+                choices: [
+                    { text: "Track it", next: "trackDitch" },
+                    { text: "Wait more", next: "waitDitch" }
+                ]
+            },
+            boltDitch: {
+                text: "You bolt, Athena sprinting, Loagan tripping—'Milk’s my anchor!' Flatbed’s ahead. Jump or flank?",
+                choices: [
+                    { text: "Jump it", next: "jumpDitch" },
+                    { text: "Flank it", next: "flankDitch" }
+                ]
+            },
+            jumpBridge: {
+                text: "You jump, land on the flatbed, Athena with you, pups safe. Loagan yells, 'Milk’s airborne!' Drive or fight?",
+                choices: [
+                    { text: "Drive off", next: "driveBridge" },
+                    { text: "Fight agents", next: "fightBridge" }
+                ]
+            },
+            swimBridge: {
+                text: "You swim, flatbed escapes, Loagan flails—'Milk don’t float!' Agents spot you. Fight or run?",
+                choices: [
+                    { text: "Fight back", next: "fightSwim" },
+                    { text: "Run away", next: "runSwim" }
+                ]
+            },
+            truckHannah: {
+                text: "You grab the truck, pups yipping, Athena in. Hannah escapes, yelling: 'ATF’s coming!' Drive or chase?",
+                choices: [
+                    { text: "Drive off", next: "driveHannah" },
+                    { text: "Chase her", next: "chaseHannahEnd" }
+                ]
+            },
+            pinHannah: {
+                text: "You pin Hannah, Athena growling, Loagan cheering—'Milk pins pop!' She slips free, flatbed rolls. Chase or grab?",
+                choices: [
+                    { text: "Chase her", next: "chasePin" },
+                    { text: "Grab truck", next: "grabPin" }
+                ]
+            },
+            chaseHannahFlatbed: {
+                text: "You chase, Athena bounding, Loagan lagging—'Milk’s my ballast!' Flatbed hits a junkyard. Sneak or storm?",
+                choices: [
+                    { text: "Sneak in", next: "junkSneak" },
+                    { text: "Storm it", next: "stormJunk" }
+                ]
+            },
+            regroupHannah: {
+                text: "You regroup, Loagan panting, 'Milk’s my oxygen!' Flatbed’s gone, tracks lead to garage. Follow or wait?",
+                choices: [
+                    { text: "Follow tracks", next: "garageFollow" },
+                    { text: "Wait it out", next: "waitRegroup" }
+                ]
+            },
+            stealJunk: {
+                text: "You steal the Silverado, pups yipping, Athena in. Loagan cheers, 'Milk heist!' Drive or check?",
+                choices: [
+                    { text: "Drive off", next: "driveJunk" },
+                    { text: "Check truck", next: "checkJunk" }
+                ]
+            },
+            sabotageJunk: {
+                text: "You sabotage the flatbed—tires pop! Agents scatter, Silverado’s yours. Loagan: 'Milk sabotage!' Drive or fight?",
+                choices: [
+                    { text: "Drive away", next: "driveSabotageJunk" },
+                    { text: "Fight them", next: "fightJunk" }
+                ]
+            },
+            quietDog: {
+                text: "You toss jerky, dog wags, Loagan laughs—'Milk’s backup!' Silverado’s free, pups yip. Drive or check?",
+                choices: [
+                    { text: "Drive off", next: "driveQuiet" },
+                    { text: "Check cab", next: "checkQuiet" }
+                ]
+            },
+            rushJunk: {
+                text: "You rush, dog bites, Loagan yells—'Milk’s no shield!' Agents swarm. Fight or run?",
+                choices: [
+                    { text: "Fight back", next: "fightRush" },
+                    { text: "Run away", next: "runRush" }
+                ]
+            },
+            sneakGarage: {
+                text: "You sneak in, Athena low, Loagan whispering—'Milk’s my stealth!' Silverado’s there, unguarded. Hotwire or search?",
+                choices: [
+                    { text: "Hotwire it", next: "hotwireGarage" },
+                    { text: "Search keys", next: "searchGarage" }
+                ]
+            },
+            blowGarage: {
+                text: "You blow the door—boom! Athena barks, Loagan spills milk—'Dairy dynamite!' Guards rush. Fight or grab?",
+                choices: [
+                    { text: "Fight them", next: "fightBlow" },
+                    { text: "Grab truck", next: "grabBlow" }
+                ]
+            },
+            exitGarage: {
+                text: "You take the exit, Athena sniffing, Loagan panting—'Milk’s my exit pass!' Silverado’s outside, guarded. Sneak or charge?",
+                choices: [
+                    { text: "Sneak past", next: "sneakExit" },
+                    { text: "Charge in", next: "chargeExit" }
+                ]
+            },
+            waitMore: {
+                text: "You wait, Athena restless, Loagan sipping—'Milk’s my clock!' Garage quiets—Silverado’s moved. Track or give up?",
+                choices: [
+                    { text: "Track it", next: "trackMore" },
+                    { text: "Give up", next: "giveUp" }
+                ]
+            },
+            scoutBush: {
+                text: "You scout, finding a hidden path to the outpost. Loagan whispers, 'Milk’s my compass!' Take it or return?",
+                choices: [
+                    { text: "Take the path", next: "outpostApproach" },
+                    { text: "Return to bushes", next: "bushHide" }
+                ]
+            },
+            bushHideAgain: {
+                text: "You hide again, thorns jabbing, Loagan muttering, 'Milk’s my shield!' Patrol passes—outpost’s near. Go now?",
+                choices: [
+                    { text: "Head to outpost", next: "outpostApproach" },
+                    { text: "Stay hidden", next: "bushStay" }
+                ]
+            },
+            outpostWithKeys: {
+                text: "You reach the outpost with the snitch’s keys, Athena growling, Loagan sipping—'Milk’s my keychain!' Silverado’s close. Unlock or sneak?",
+                choices: [
+                    { text: "Unlock the gate", next: "swipeCard" },
+                    { text: "Sneak around", next: "sneakCloser" }
+                ]
+            },
+            digDeeper: {
+                text: "You dig more—find a flare! Loagan grins, 'Milk’s flare buddy!' Outpost’s waiting. Take it or go?",
+                choices: [
+                    { text: "Take flare to outpost", next: "outpostWithIntel" },
+                    { text: "Leave it, go", next: "outpostWithKeys" }
+                ]
+            },
+            sneakWithRadio: {
+                text: "You sneak in as chaos reigns, Athena low, Loagan whispering—'Milk’s my decoy!' Silverado’s unguarded. Hotwire or search?",
+                choices: [
+                    { text: "Hotwire it", next: "hotwireSmoke" },
+                    { text: "Search for keys", next: "keySnag" }
+                ]
+            },
+            outpostWithWrench: {
+                text: "You hit the outpost with the wrench, Athena growling, Loagan sipping—'Milk’s my wrench lube!' Silverado’s near. Break in or sneak?",
+                choices: [
+                    { text: "Break the gate", next: "smokeBomb" },
+                    { text: "Sneak around", next: "sneakCloser" }
+                ]
+            },
+            shedMore: {
+                text: "You rummage more, finding a smoke bomb. Loagan cheers, 'Milk’s smoky friend!' Outpost’s close—go now?",
+                choices: [
+                    { text: "Take it to outpost", next: "outpostWithGear" },
+                    { text: "Leave it, go", next: "outpostApproach" }
+                ]
+            },
+            driveSwipe: { text: "Victory! You peel out, Athena’s pups yipping, Loagan raising his milk in triumph: 'Freedom tastes better than skim, baby!' The Silverado roars into the sunset—liberty reclaimed!", choices: [] },
+            checkSwipe: { text: "Game Over! You check the cab—bam, a tracker! Agents swarm, Hannah cackling, 'Milk can’t outrun GPS!' The pups are ATF-bound, and your freedom’s toast.", choices: [] },
+            rushCloser: { text: "Game Over! You rush Hannah—she shoots, you drop, Loagan wails, 'Milk’s no armor!' The pups are lost to the ATF’s clutches.", choices: [] },
+            pickLock: { text: "Victory! You pick the lock, Silverado’s yours, pups tumbling free. Loagan grins, 'Milk unlocks everything!' You ride off into the dusk—free at last!", choices: [] },
+            chaseSolo: { text: "Game Over! You chase Hannah into a glitter trap—'Sparkly doom!' she laughs. The flatbed escapes, pups doomed to ATF hands.", choices: [] },
+            grabSolo: { text: "Victory! You snag the truck, pups yipping, Loagan shouting, 'Milk beats feds!' The Silverado tears free—liberty reigns!", choices: [] },
+            driveSolo: { text: "Victory! You drive off, pups safe, Loagan toasting, 'Milk’s my co-pilot!' The open road welcomes you home!", choices: [] },
+            huntSolo: { text: "Game Over! You hunt Hannah—she ambushes with glitter and goons. Pups are lost, and your rebellion’s snuffed.", choices: [] },
+            keysSolo: { text: "Victory! You grab the keys, roar off, pups yipping—'Milk and metal!' Loagan cheers. Freedom’s yours again!", choices: [] },
+            truckSolo: { text: "Victory! You take the truck, pups safe, Loagan yelling, 'Milk triumphs!' The Silverado escapes—liberty lives!", choices: [] },
+            driveDive: { text: "Victory! You peel out, pups yipping, Loagan shouting, 'Milk’s my turbo!' The feds fade in the dust—freedom wins!", choices: [] },
+            fightDive: { text: "Game Over! You fight Hannah—she outguns you. Pups are ATF-bound, Loagan crying, 'Milk failed us!'", choices: [] },
+            runDrone: { text: "Victory! You sprint to the truck, pups safe, Loagan cheering, 'Milk beats tech!' You ride off—free and clear!", choices: [] },
+            hideDrone: { text: "Game Over! You hide—the drone tags you. Agents swarm, pups lost, Hannah sneers, 'Milk’s no cloak!'", choices: [] },
+            driveSprint: { text: "Victory! You burn rubber, pups yipping, Loagan yelling, 'Milk outruns drones!' Freedom’s yours once more!", choices: [] },
+            shootSprint: { text: "Game Over! You shoot—miss! Agents pile in, pups gone, Loagan wails, 'Milk’s no aim!'", choices: [] },
+            stealYard: { text: "Victory! You steal the Silverado, pups safe, Loagan grinning, 'Milk heist complete!' You tear into the night—free!", choices: [] },
+            sabotageGuard: { text: "Game Over! You sabotage—the guard wakes, calls backup. Pups are lost, Loagan sobs, 'Milk misfired!'", choices: [] },
+            keycardShack: { text: "Victory! You swipe the keycard, pups yipping, Loagan cheering, 'Milk unlocks freedom!' You drive off—liberty reclaimed!", choices: [] },
+            rushShack: { text: "Game Over! You rush—guards overwhelm you. Pups are ATF-bound, Loagan cries, 'Milk’s no shield!'", choices: [] },
+            dropRoof: { text: "Victory! You drop, snag the truck, pups safe—'Milk from above!' Loagan shouts. You roar away—free!", choices: [] },
+            flareRoof: { text: "Game Over! You fire the flare—miss! Agents swarm, pups lost, Loagan wails, 'Milk flared out!'", choices: [] },
+            sneakGate: { text: "Victory! You sneak through, grab the truck, pups yipping—'Milk stealth!' Loagan cheers. Freedom’s yours!", choices: [] },
+            chargeGate: { text: "Game Over! You charge—guards pile in. Pups are lost, Loagan sobs, 'Milk’s no battering ram!'", choices: [] },
+            rideFree: { text: "Victory! You peel out, pups yipping, Loagan toasting, 'Milk beats skim every time!' The Silverado roars free—liberty reigns supreme!", choices: [] },
+            huntHannah: { text: "Game Over! You hunt Hannah—she traps you in glitter, cackling, 'Sparkly doom!' Pups are ATF chow, and your rebellion’s done.", choices: [] },
+            burnRubber: { text: "Victory! You burn out, chopper fading, pups safe—'Milk beats missiles!' Loagan yells. The road is yours—freedom lives!", choices: [] },
+            hunkerDown: { text: "Game Over! You hunker—the chopper blasts. Pups are gone, Loagan cries, 'Milk’s no bunker!'", choices: [] },
+            floorSmoke: { text: "Victory! You floor it, alarm screaming, pups safe—'Milk run success!' Loagan shouts. You escape—free!", choices: [] },
+            killAlarm: { text: "Victory! You kill the alarm, roll out quiet, pups yipping—'Milk’s silent victory!' Loagan grins. Liberty’s yours!", choices: [] },
+            driveBribe: { text: "Victory! You drive off, pups safe, dog waving—'Milk’s co-star!' Loagan cheers. The Silverado rides free!", choices: [] },
+            checkBribe: { text: "Game Over! You check—a tracker! Agents swarm, Hannah laughs, 'Milk can’t sniff tech!' Pups are lost.", choices: [] },
+            hotwireBolt: { text: "Victory! You hotwire it, pups safe, Loagan shouting, 'Milk beats mutts!' You peel out—freedom’s back!", choices: [] },
+            searchBolt: { text: "Game Over! You search—the dog bites! Agents nab you, pups gone, Loagan wails, 'Milk’s no bait!'", choices: [] },
+            driveSiphon: { text: "Victory! You drive off, pups yipping, Loagan toasting, 'Milk and gas—unstoppable!' The road is yours!", choices: [] },
+            secureSiphon: { text: "Game Over! You secure it—a trap springs! Hannah wins, pups lost, Loagan cries, 'Milk’s trapped!'", choices: [] },
+            runRisk: { text: "Game Over! You run—the flatbed escapes. Pups are ATF-bound, Loagan sobs, 'Milk’s out of gas!'", choices: [] },
+            fightRisk: { text: "Game Over! You fight—agents overwhelm. Pups are gone, Loagan wails, 'Milk’s no fists!'", choices: [] },
+            grabCanyon: { text: "Victory! You grab the Silverado, pups safe, Loagan cheering, 'Milk storm wins!' You ride off—free!", choices: [] },
+            chaseCanyon: { text: "Game Over! You chase—Hannah traps you. Pups are lost, Loagan cries, 'Milk’s no lasso!'", choices: [] },
+            dropCanyon: { text: "Victory! You drop, pups safe, Loagan shouting, 'Milk drop success!' The Silverado escapes—liberty lives!", choices: [] },
+            signalCanyon: { text: "Game Over! Loagan signals—misses! Agents swarm, pups gone, Loagan sobs, 'Milk misfired!'", choices: [] },
+            ramATV: { text: "Game Over! You ram—crash! Agents nab you, pups lost, Loagan wails, 'Milk’s no crash pad!'", choices: [] },
+            flankATV: { text: "Victory! You flank, grab the truck, pups yipping—'Milk flank FTW!' Loagan cheers. Freedom’s yours!", choices: [] },
+            fightSabotage: { text: "Game Over! You fight—more agents pile in. Pups are lost, Loagan cries, 'Milk’s overrun!'", choices: [] },
+            grabSabotage: { text: "Victory! You grab it, pups safe—'Milk rock rules!' Loagan shouts. You peel out—free!", choices: [] },
+            fightRam: { text: "Game Over! You fight—agents swarm. Pups are gone, Loagan sobs, 'Milk’s no fighter!'", choices: [] },
+            runRam: { text: "Game Over! You run—the flatbed escapes. Pups are lost, Loagan wails, 'Milk’s too slow!'", choices: [] },
+            driveBlock: { text: "Victory! You drive off, pups safe, Loagan cheering, 'Milk blockade wins!' The road is yours!", choices: [] },
+            checkBlock: { text: "Game Over! You check—a tracker! Agents swarm, pups gone, Hannah laughs, 'Milk’s blind!'", choices: [] },
+            driveJump: { text: "Victory! You drive, pups safe, Loagan limping—'Milk’s fine!' he yells. Freedom’s reclaimed!", choices: [] },
+            helpJump: { text: "Game Over! You help—agents catch you. Pups are lost, Loagan cries, 'Milk’s too loyal!'", choices: [] },
+            stealScooter: { text: "Victory! You steal it, pups yipping, Loagan shouting, 'Milk steal rocks!' You ride free!", choices: [] },
+            ambushScooter: { text: "Victory! You ambush, grab the truck, pups safe—'Milk ambush FTW!' Loagan cheers. Liberty lives!", choices: [] },
+            retreatTrap: { text: "Game Over! You retreat—the flatbed escapes. Pups are gone, Loagan sobs, 'Milk’s retreat sucks!'", choices: [] },
+            driveTrap: { text: "Victory! You drive off, pups safe, Loagan cheering, 'Milk escape FTW!' The Silverado’s free!", choices: [] },
+            checkTrap: { text: "Game Over! You check—a tracker! Agents nab you, pups lost, Loagan cries, 'Milk’s no tech!'", choices: [] },
+            runTrap: { text: "Game Over! You run—the flatbed escapes. Pups are gone, Loagan wails, 'Milk’s too late!'", choices: [] },
+            fightTrapEnd: { text: "Game Over! You fight—agents win. Pups are lost, Loagan sobs, 'Milk’s no match!'", choices: [] },
+            trackDitch: { text: "Victory! You track it, find the truck, pups safe—'Milk tracks rule!' Loagan cheers. Freedom’s yours!", choices: [] },
+            waitDitch: { text: "Game Over! You wait—the flatbed vanishes. Pups are lost, Loagan cries, 'Milk’s too slow!'", choices: [] },
+            jumpDitch: { text: "Victory! You jump, grab the truck, pups safe—'Milk jump wins!' Loagan shouts. You’re free!", choices: [] },
+            flankDitch: { text: "Victory! You flank, snag the truck, pups yipping—'Milk flank FTW!' Loagan cheers. Liberty lives!", choices: [] },
+            driveBridge: { text: "Victory! You drive off, pups safe, Loagan yelling, 'Milk bridge rules!' The road is yours!", choices: [] },
+            fightBridge: { text: "Game Over! You fight—agents swarm. Pups are lost, Loagan sobs, 'Milk’s no bridge!'", choices: [] },
+            fightSwim: { text: "Game Over! You fight—agents win. Pups are gone, Loagan cries, 'Milk don’t swim!'", choices: [] },
+            runSwim: { text: "Game Over! You run—the flatbed escapes. Pups are lost, Loagan wails, 'Milk’s sunk!'", choices: [] },
+            driveHannah: { text: "Victory! You drive off, pups safe, Loagan cheering, 'Milk outruns pop!' Freedom’s reclaimed!", choices: [] },
+            chaseHannahEnd: { text: "Game Over! You chase—Hannah traps you. Pups are lost, Loagan sobs, 'Milk’s no hunter!'", choices: [] },
+            chasePin: { text: "Game Over! You chase—Hannah escapes. Pups are gone, Loagan cries, 'Milk’s too slow!'", choices: [] },
+            grabPin: { text: "Victory! You grab it, pups yipping, Loagan shouting, 'Milk pins FTW!' You ride free!", choices: [] },
+            stormJunk: { text: "Game Over! You storm—agents swarm. Pups are lost, Loagan wails, 'Milk’s no storm!'", choices: [] },
+            waitRegroup: { text: "Game Over! You wait—the flatbed’s gone. Pups are ATF-bound, Loagan sobs, 'Milk’s too late!'", choices: [] },
+            driveJunk: { text: "Victory! You drive off, pups safe, Loagan cheering, 'Milk junk rules!' The Silverado’s free!", choices: [] },
+            checkJunk: { text: "Game Over! You check—a tracker! Agents nab you, pups lost, Loagan cries, 'Milk’s blind!'", choices: [] },
+            driveSabotageJunk: { text: "Victory! You drive, pups safe—'Milk sabotage FTW!' Loagan yells. Freedom lives!", choices: [] },
+            fightJunk: { text: "Game Over! You fight—agents win. Pups are gone, Loagan sobs, 'Milk’s no fists!'", choices: [] },
+            driveQuiet: { text: "Victory! You drive, pups yipping, Loagan cheering, 'Milk quiet wins!' The road is yours!", choices: [] },
+            checkQuiet: { text: "Game Over! You check—a tracker! Agents swarm, pups lost, Hannah laughs, 'Milk’s no sniffer!'", choices: [] },
+            fightRush: { text: "Game Over! You fight—agents overwhelm. Pups are gone, Loagan cries, 'Milk’s no rush!'", choices: [] },
+            runRush: { text: "Game Over! You run—the flatbed escapes. Pups are lost, Loagan wails, 'Milk’s too slow!'", choices: [] },
+            hotwireGarage: { text: "Victory! You hotwire it, pups safe—'Milk garage FTW!' Loagan cheers. You ride free!", choices: [] },
+            searchGarage: { text: "Game Over! You search—guards catch you. Pups are lost, Loagan sobs, 'Milk’s no seeker!'", choices: [] },
+            fightBlow: { text: "Game Over! You fight—agents swarm. Pups are gone, Loagan cries, 'Milk’s no boom!'", choices: [] },
+            grabBlow: { text: "Victory! You grab it, pups yipping—'Milk blow wins!' Loagan shouts. Freedom’s yours!", choices: [] },
+            sneakExit: { text: "Victory! You sneak, grab the truck, pups safe—'Milk sneak FTW!' Loagan cheers. Liberty lives!", choices: [] },
+            chargeExit: { text: "Game Over! You charge—guards win. Pups are lost, Loagan sobs, 'Milk’s no charge!'", choices: [] },
+            trackMore: { text: "Victory! You track it, find the truck, pups safe—'Milk tracks rule!' Loagan yells. You’re free!", choices: [] },
+            giveUp: { text: "Game Over! You give up—pups are lost to the ATF. Loagan wails, 'Milk quits—freedom’s dead!'", choices: [] }
         };
 
         let currentScene = 'intro';
+        let moveCount = 0;
+        let wins = 0;
+        let losses = 0;
+
         displayScene();
 
         function displayScene() {
             const scene = scenes[currentScene];
             output.innerHTML = scene.text;
             choicesDiv.innerHTML = '';
+            moveCount++;
+
+            // Update progress
+            progressDiv.textContent = `Moves: ${moveCount} | Wins: ${wins} | Losses: ${losses}`;
 
             if (scene.choices.length === 0) {
+                if (scene.text.startsWith("Victory!")) {
+                    wins++;
+                    progressDiv.textContent = `Moves: ${moveCount} | Wins: ${wins} | Losses: ${losses}`;
+                    output.innerHTML += "<br><br><strong>Freedom Prevails!</strong>";
+                } else {
+                    losses++;
+                    progressDiv.textContent = `Moves: ${moveCount} | Wins: ${wins} | Losses: ${losses}`;
+                    output.innerHTML += "<br><br><strong>Liberty Lost!</strong>";
+                }
+
                 const restartButton = document.createElement('button');
                 restartButton.textContent = 'Play Again, Renegade!';
                 restartButton.onclick = () => {
                     currentScene = 'intro';
+                    moveCount = 0;
                     displayScene();
                 };
                 choicesDiv.appendChild(restartButton);
