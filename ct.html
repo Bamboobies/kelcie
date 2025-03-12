@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chocolate Thunder: Reclaim the Silverado - Hard Mode (Fixed)</title>
+    <title>Chocolate Thunder: Reclaim the Silverado - Hard Mode</title>
     <style>
         * {
             margin: 0;
@@ -122,6 +122,12 @@
         const output = document.getElementById('output');
         const choicesDiv = document.getElementById('choices');
         const statusDiv = document.getElementById('status');
+
+        // Check if DOM elements are loaded
+        if (!output || !choicesDiv || !statusDiv) {
+            document.body.innerHTML += "<p style='color: red;'>Error: Game elements not found. Check HTML IDs.</p>";
+            throw new Error("DOM elements missing");
+        }
 
         let gameState = {
             fuel: 5,    // Silverado fuel (0-10)
@@ -700,7 +706,7 @@
             hangarCharge: {
                 text: "You charge—ATF fires, Loagan ducks—'Milk’s no charge!' Silverado’s inside, pups whining. Break in or retreat?",
                 choices: [
-                    { text: "Break in (Ammo -1)", next: "hangarBreak", cost Process: { ammo: 1 } },
+                    { text: "Break in (Ammo -1)", next: "hangarBreak", cost: { ammo: 1 } },
                     { text: "Retreat (Morale -2)", next: "canyonRetreat", cost: { morale: 2 } }
                 ]
             },
@@ -873,7 +879,10 @@
 
         let currentScene = 'intro';
 
-        displayScene();
+        // Run after DOM is fully loaded
+        window.onload = () => {
+            displayScene();
+        };
 
         function updateStatus() {
             statusDiv.textContent = `Fuel: ${gameState.fuel} | Ammo: ${gameState.ammo} | Morale: ${gameState.morale} | Moves: ${gameState.moves} | Wins: ${gameState.wins} | Losses: ${gameState.losses}`;
@@ -888,7 +897,12 @@
 
         function displayScene() {
             const scene = scenes[currentScene];
-            output.innerHTML = scene.text;
+            if (!scene) {
+                output.innerHTML = "Error: Scene not found!";
+                return;
+            }
+
+            output.innerHTML = scene.text || "No text available";
             choicesDiv.innerHTML = '';
             gameState.moves++;
             updateStatus();
@@ -936,7 +950,6 @@
                         currentScene = choice.next;
                         displayScene();
                     };
-                    // Disable only if resources are insufficient (allow going to 0)
                     button.disabled = (choice.cost && (
                         (choice.cost.fuel && gameState.fuel < choice.cost.fuel) ||
                         (choice.cost.ammo && gameState.ammo < choice.cost.ammo) ||
@@ -946,7 +959,6 @@
                     choicesDiv.appendChild(button);
                 });
 
-                // If all choices are disabled, end game based on critical resource
                 if (allChoicesDisabled) {
                     if (gameState.fuel <= 0) currentScene = 'stranded';
                     else if (gameState.ammo <= 0) currentScene = 'outOfAmmo';
