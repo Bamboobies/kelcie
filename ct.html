@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chocolate Thunder: Evade the Feds</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+        }
+        #game-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        button {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #ff6666;
+        }
+        #output {
+            margin-bottom: 20px;
+            min-height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Chocolate Thunder: Evade the Feds</h1>
+        <div id="output"></div>
+        <div id="choices"></div>
+    </div>
+
+    <script>
+        const output = document.getElementById('output');
+        const choicesDiv = document.getElementById('choices');
+
+        // Game states
+        const scenes = {
+            start: {
+                text: "You are Chocolate Thunder, a legendary outlaw with a heart of gold. The feds are hot on your trail after your latest heist. You're hiding in an abandoned warehouse. You hear sirens in the distance. What do you do?",
+                choices: [
+                    { text: "Sneak out the back door", next: "backDoor" },
+                    { text: "Hide in a crate", next: "crate" },
+                    { text: "Climb to the roof", next: "roof" }
+                ]
+            },
+            backDoor: {
+                text: "You slip out the back door into a dark alley. The sirens are getting closer. You see a motorcycle parked nearby and a sewer grate you could pry open. What's your move?",
+                choices: [
+                    { text: "Take the motorcycle", next: "motorcycle" },
+                    { text: "Enter the sewer", next: "sewer" }
+                ]
+            },
+            crate: {
+                text: "You climb into a dusty crate and hold your breath. The feds burst in, searching the warehouse. You hear one agent getting close to your crate. Do you...",
+                choices: [
+                    { text: "Stay still and silent", next: "staySilent" },
+                    { text: "Burst out and run", next: "burstOut" }
+                ]
+            },
+            roof: {
+                text: "You climb to the roof and spot a neighboring building you could jump to. The feds are entering the warehouse below. What's your next step?",
+                choices: [
+                    { text: "Jump to the next building", next: "jump" },
+                    { text: "Lay low on the roof", next: "layLow" }
+                ]
+            },
+            motorcycle: {
+                text: "You hop on the motorcycle and speed off, the wind in your hair. The feds spot you and give chase in their cars. You see a narrow alley ahead or a highway ramp. Where do you go?",
+                choices: [
+                    { text: "Take the alley", next: "alleyWin" },
+                    { text: "Hit the highway", next: "highwayLose" }
+                ]
+            },
+            sewer: {
+                text: "You drop into the sewer and wade through the muck. The feds lose your trail, but you hear footsteps echoing behind you. Do you keep moving or hide?",
+                choices: [
+                    { text: "Keep moving", next: "sewerWin" },
+                    { text: "Hide in the shadows", next: "sewerLose" }
+                ]
+            },
+            staySilent: {
+                text: "You stay perfectly still. The agent moves past your crate, and eventually, the feds leave. You’ve evaded them... for now. Victory!",
+                choices: []
+            },
+            burstOut: {
+                text: "You burst out of the crate, startling the feds, but they quickly surround you with guns drawn. 'Freeze, Chocolate Thunder!' Game over.",
+                choices: []
+            },
+            jump: {
+                text: "You leap to the next building and roll to safety. The feds don’t see you, and you escape into the night. Chocolate Thunder lives another day!",
+                choices: []
+            },
+            layLow: {
+                text: "You lay low, but a fed spots you from below and calls for backup. Helicopters arrive, and you’re caught. Game over.",
+                choices: []
+            },
+            alleyWin: {
+                text: "You zip through the narrow alley, losing the feds in the tight turns. You’re free, Chocolate Thunder! Victory!",
+                choices: []
+            },
+            highwayLose: {
+                text: "You hit the highway, but the feds call in reinforcements. A roadblock stops you cold. Game over.",
+                choices: []
+            },
+            sewerWin: {
+                text: "You keep moving through the sewer and emerge miles away, free from the feds. Chocolate Thunder triumphs again!",
+                choices: []
+            },
+            sewerLose: {
+                text: "You hide, but the footsteps get closer. A fed shines a light right on you. 'Gotcha!' Game over.",
+                choices: []
+            }
+        };
+
+        // Start the game
+        let currentScene = 'start';
+        displayScene();
+
+        function displayScene() {
+            const scene = scenes[currentScene];
+            output.innerHTML = scene.text;
+            choicesDiv.innerHTML = '';
+
+            if (scene.choices.length === 0) {
+                const restartButton = document.createElement('button');
+                restartButton.textContent = 'Play Again';
+                restartButton.onclick = () => {
+                    currentScene = 'start';
+                    displayScene();
+                };
+                choicesDiv.appendChild(restartButton);
+            } else {
+                scene.choices.forEach(choice => {
+                    const button = document.createElement('button');
+                    button.textContent = choice.text;
+                    button.onclick = () => {
+                        currentScene = choice.next;
+                        displayScene();
+                    };
+                    choicesDiv.appendChild(button);
+                });
+            }
+        }
+    </script>
+</body>
+</html>
