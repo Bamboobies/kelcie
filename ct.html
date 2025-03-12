@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chocolate Thunder: Reclaim the Silverado - Hard Mode</title>
+    <title>Chocolate Thunder: Reclaim the Silverado - Hard Mode (Fixed)</title>
     <style>
         * {
             margin: 0;
@@ -700,7 +700,7 @@
             hangarCharge: {
                 text: "You charge—ATF fires, Loagan ducks—'Milk’s no charge!' Silverado’s inside, pups whining. Break in or retreat?",
                 choices: [
-                    { text: "Break in (Ammo -1)", next: "hangarBreak", cost: { ammo: 1 } },
+                    { text: "Break in (Ammo -1)", next: "hangarBreak", cost Process: { ammo: 1 } },
                     { text: "Retreat (Morale -2)", next: "canyonRetreat", cost: { morale: 2 } }
                 ]
             },
@@ -880,9 +880,9 @@
         }
 
         function checkGameOver() {
-            if (gameState.fuel <= 0) return 'stranded';
-            if (gameState.ammo <= 0 && scenes[currentScene].choices.some(c => c.cost && c.cost.ammo)) return 'outOfAmmo';
-            if (gameState.morale <= 0) return 'desertion';
+            if (gameState.fuel < 0) return 'stranded';
+            if (gameState.ammo < 0) return 'outOfAmmo';
+            if (gameState.morale < 0) return 'desertion';
             return null;
         }
 
@@ -919,6 +919,7 @@
                 };
                 choicesDiv.appendChild(restartButton);
             } else {
+                let allChoicesDisabled = true;
                 scene.choices.forEach(choice => {
                     const button = document.createElement('button');
                     button.textContent = choice.text;
@@ -935,13 +936,23 @@
                         currentScene = choice.next;
                         displayScene();
                     };
+                    // Disable only if resources are insufficient (allow going to 0)
                     button.disabled = (choice.cost && (
-                        (choice.cost.fuel && gameState.fuel <= choice.cost.fuel) ||
-                        (choice.cost.ammo && gameState.ammo <= choice.cost.ammo) ||
-                        (choice.cost.morale && gameState.morale <= choice.cost.morale)
+                        (choice.cost.fuel && gameState.fuel < choice.cost.fuel) ||
+                        (choice.cost.ammo && gameState.ammo < choice.cost.ammo) ||
+                        (choice.cost.morale && gameState.morale < choice.cost.morale)
                     ));
+                    if (!button.disabled) allChoicesDisabled = false;
                     choicesDiv.appendChild(button);
                 });
+
+                // If all choices are disabled, end game based on critical resource
+                if (allChoicesDisabled) {
+                    if (gameState.fuel <= 0) currentScene = 'stranded';
+                    else if (gameState.ammo <= 0) currentScene = 'outOfAmmo';
+                    else if (gameState.morale <= 0) currentScene = 'desertion';
+                    displayScene();
+                }
             }
         }
     </script>
